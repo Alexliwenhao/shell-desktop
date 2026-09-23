@@ -1,0 +1,30 @@
+# Desktop Host operations compose around the existing Web bundle. Compatibility
+# mode keeps upstream ownership of the browser carrier and rendered UI.
+- insert:
+    - id: desktop-shell
+      name: shell-desktop
+      config:
+        mode: compatibility
+    - id: desktop-terminal
+      name: shell-desktop/terminal
+      disabled: !!js process.platform === 'linux'
+    - id: desktop-diagnostics
+      name: shell-desktop/diagnostics
+    - id: desktop-notifications
+      name: shell-desktop/notifications
+    - id: desktop-pnpm
+      name: shell-desktop/pnpm
+    - id: desktop-remote
+      name: shell-desktop/remote
+    - id: desktop-profiles
+      name: shell-desktop/profiles
+    - id: desktop-updates
+      name: shell-desktop/updates
+
+# A desktop launch has no terminal operator waiting for the Web readiness line.
+- id: web-runtime
+  config:
+    openBrowser: false
+    printUrl: false
+    surfaceContext: true
+    trustedHosts: []
