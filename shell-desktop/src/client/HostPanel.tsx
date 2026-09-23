@@ -1,7 +1,7 @@
 /** Saved-host manager for the Desktop AI-Shell left panel. */
 
 import { useCallback, useEffect, useState } from 'react'
-import { PlugZap, Plus, Server, TerminalSquare, Trash2 } from 'lucide-react'
+import { Check, PlugZap, Plus, Server, TerminalSquare, Trash2 } from 'lucide-react'
 import type { RemoteBridgeApi, RemoteHost } from './remote-api.ts'
 
 /** Left-panel host manager props. */
@@ -35,6 +35,8 @@ export function HostPanel({ api, onOpenHost, onOpenLocal }: HostPanelProps) {
   const [creating, setCreating] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
+  /** Host armed for removal: the button turns into a check and confirms on the next click. */
+  const [confirmingId, setConfirmingId] = useState<string>()
 
   const refresh = useCallback(async (): Promise<void> => {
     try {
@@ -132,21 +134,46 @@ export function HostPanel({ api, onOpenHost, onOpenLocal }: HostPanelProps) {
 
       <div className="dshAishellHostList">
         {hosts.length === 0 && <p className="dshAishellPanelHint">还没有主机。添加 SSH 主机后可在中央工作台打开终端，并让 AI 在同一台主机上执行。</p>}
-        {hosts.map(host => (
+        {hosts.map(host => {
+          const confirming = confirmingId === host.id
+          return (
           <div className="dshAishellHostRow" key={host.id}>
             <span className="dshAishellHostGlyph" aria-hidden="true"><Server /></span>
-            <button type="button" className="dshAishellHostOpen" onClick={() => { onOpenHost(host) }}>
+            <button
+              type="button"
+              className="dshAishellHostOpen"
+              onClick={() => {
+                setConfirmingId(undefined)
+                onOpenHost(host)
+              }}
+            >
               <strong>{host.name}</strong>
               <small>{host.username}@{host.host}:{String(host.port)}</small>
             </button>
-            <button type="button" className="dshAishellHostIconButton" aria-label={`删除 ${host.name}`} disabled={busy} onClick={() => { void remove(host.id) }}>
-              <Trash2 aria-hidden="true" />
+            <button
+              type="button"
+              className="dshAishellHostIconButton dshAishellHostDeleteButton"
+              data-confirm={confirming || undefined}
+              title={confirming ? '再点一次确认删除' : `删除 ${host.name}`}
+              aria-label={confirming ? `确认删除 ${host.name}` : `删除 ${host.name}`}
+              disabled={busy}
+              onClick={() => {
+                if (!confirming) {
+                  setConfirmingId(host.id)
+                  return
+                }
+                setConfirmingId(undefined)
+                void remove(host.id)
+              }}
+            >
+              {confirming ? <Check aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
             </button>
             <button type="button" className="dshAishellHostIconButton" aria-label={`连接 ${host.name}`} disabled={busy} onClick={() => { onOpenHost(host) }}>
               <PlugZap aria-hidden="true" />
             </button>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {error !== undefined && <p className="dshAishellPanelError" role="alert">{error}</p>}

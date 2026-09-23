@@ -30,6 +30,9 @@
 | 21 | 内测声明改为 Host 自动确认（不再弹给用户） | 已修复 | `src/desktop-onboarding.ts`：Host 启动即写入 `ui-onboarding.welcomeNoticeVersion` |
 | 22 | 深色模式下终端内容看不见 | 已修复（待人工确认） | 终端改为跟随主题的独立调色板（深色=深底白字），由 `terminal-theme.ts` 提供 |
 | 23 | 项目独立：整体改名 Shell Desktop，剥离 dsh-desktop | 已修复 | 新仓库 `Alexliwenhao/shell-desktop`；包名 `shell-desktop(-beta)`、appId `com.shelldesktop.app(.beta)`、目录与全部内部标识 `shell-desktop-*` |
+| 24 | 文件面板的删除按钮无二次确认，容易误操作 | 已修复 | `FilePanel` 行内移除删除按钮（不暴露文件删除入口） |
+| 25 | 主机删除按钮无二次确认，容易误操作 | 已修复 | `HostPanel` 补二次确认：首次点击变红 ✓（`data-confirm`），再次点击才删除；点击主机行取消 |
+| 26 | 需要一套功能截图 + 功能说明，作为产品视频素材 | 已完成 | `docs/screenshots/`（20 张，CDP 自动采集）+ `docs/screenshots/README.md`（清单 / 讲解要点 / 分镜 / 待补拍）；采集器 `scripts/capture-feature-screenshots.cjs` |
 
 ## 细节
 
@@ -138,6 +141,17 @@
 - 有意保留：`DSH_DESKTOP_*`/`__DSH_DESKTOP_*` 环境变量与桥接全局、`X-DSH-Desktop-*` 请求头、`DSH-Desktop-*` 产物名、`dsh-community-market`/`dsh-community-fabric` 包名、`dshdesktop.cn` 服务地址（属旧官方服务）、`deepseek-harness`/`DeepSeek Harness`/`@deepseek-ai/*`/`@agents-anywhere/*`、`.agents/notes/**` 与 `docs/evidence/**` 历史记录、`_deprecated/**`。
 - 连带修复（改名暴露的既有问题）：① 托盘「窗口模式」子菜单在上一轮改动中丢失 → 恢复并加入 `aishell` 模式；② 桌面设置页（`settings.section`/`settings.action`）早前被有意移除 → 相关测试改为按现状断言；③ `installBrandMark` 需要 client logger 且会多注册一个槽位 → 客户端 spec 补 logger 并按名字筛选注册；④ 本地窗口 partition 前缀统一，policy 正则同步。
 - 验证：stable 全量 1373 例 / beta 全量 — 失败数 20 / 19，**逐条对照 HEAD 基线 worktree（`git worktree add` + 依赖 junction）确认全部为 Windows 平台预存失败**（`module-resolution` 用 POSIX `file:///tmp` URL、`compatibility-shell` 用正斜杠正则、pnpm PATH 断言、NSIS 产物依赖等），无改名引入的失败；`check:desktop-variants`/`check:vendored-runtime`/`check:architecture`/`verify-layout`/两包 typecheck 均通过。
+
+### 24 / 25 危险操作的二次确认
+- 需求（用户）：文件面板的删除按钮没有二次确认，容易误操作 → 文件面板不要展示删除按钮；主机删除参考会话删除补上二次确认。
+- 实现：`FilePanel.tsx` 删除行内删除按钮与 `remove()` 处理器（不暴露文件删除入口）；`HostPanel.tsx` 与会话一致的行内二次确认——`confirmingId` 状态 + `data-confirm`，首次点击图标由垃圾桶变 ✓（`title`=再点一次确认删除，`aria-label`=确认删除 <主机名>），第二次才调用 `removeHost`，点击主机行清除待确认态。
+- 涉及：`src/client/FilePanel.tsx`、`src/client/HostPanel.tsx`（beta 同步；`check:desktop-variants` 通过，两包 typecheck 通过）。
+- 证据：CDP 实测——文件面板 `trashIcons=0`/`ariaDelete=0`（23 行均无删除入口）；主机首次点击 `data-confirm=true`、图标变 check、行数 2→2（未删除）、点击主机行后确认态取消；截图 `19-session-delete-confirm.png` / `20-host-delete-confirm.png`。
+
+### 26 功能截图素材与说明
+- 产物：`docs/screenshots/` 20 张（01 总览、02 会话分组、03 新建会话、04 主机面板、05 新建主机、06 远端文件面板、07 本地终端、08 终端命令、09 选中、10 引用进对话、11/12 AI 对话、13/14 设置、15–18 深浅主题、19/20 删除二次确认）+ `docs/screenshots/README.md`（清单与讲解要点、按模块的功能说明、60–90 秒分镜、待手工补拍清单）。
+- 采集器：`scripts/capture-feature-screenshots.cjs`（Playwright 1.59 + CDP `Page.captureScreenshot`，逐步容错，自动关残留弹窗，自动连主机以拍到真实远端目录）。
+- 环境要点：本机无交互桌面（`GetForegroundWindow` 为 Idle），系统级点击注入无效；改用 `--remote-debugging-port=9222` + CDP 驱动，并追加 `--disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling` 以避免窗口被遮挡时截图超时。
 
 ## 已知未完成 / 待确认
 

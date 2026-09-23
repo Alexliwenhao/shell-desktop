@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowUp, FileText, Folder, FolderPlus, RefreshCw, Trash2, X } from 'lucide-react'
+import { ArrowUp, FileText, Folder, FolderPlus, RefreshCw, X } from 'lucide-react'
 import type { RemoteBridgeApi, RemoteFileItem } from './remote-api.ts'
 
 /** Remote file browser props. */
@@ -82,12 +82,6 @@ export function FilePanel({ api, hostId }: FilePanelProps) {
       .catch(cause => { setError(cause instanceof Error ? cause.message : String(cause)) })
   }
 
-  const remove = (item: RemoteFileItem): void => {
-    void api.sftpDelete(hostId, item.path)
-      .then(() => load(cwd))
-      .catch(cause => { setError(cause instanceof Error ? cause.message : String(cause)) })
-  }
-
   const mkdir = (): void => {
     const name = window.prompt('新建目录名称')
     if (name === null || name.trim() === '') return
@@ -127,9 +121,6 @@ export function FilePanel({ api, hostId }: FilePanelProps) {
             <button type="button" className="dshAishellHostOpen" title={item.path} onClick={() => { openEntry(item) }}>
               <strong>{item.name}</strong>
               <small>{item.directory ? '目录' : formatSize(item.size)}</small>
-            </button>
-            <button type="button" className="dshAishellHostIconButton" aria-label={`删除 ${item.name}`} onClick={() => { remove(item) }}>
-              <Trash2 aria-hidden="true" />
             </button>
           </div>
         ))}
