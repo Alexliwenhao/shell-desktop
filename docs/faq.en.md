@@ -46,4 +46,4 @@ Packaged applications check for stable releases in the background but never inst
 
 ## Where can I download the app or report a problem?
 
-Download from the [project download page](https://www.dshdesktop.cn/) or the [latest GitHub Release](https://github.com/Alexliwenhao/shell-desktop/releases/latest). Check the [troubleshooting section](user-guide.en.md#troubleshooting) first. If the problem remains, open a [GitHub Issue](https://github.com/Alexliwenhao/shell-desktop/issues/new/choose) with the operating system, app version, reproduction steps, and error details.
+Download from the [latest GitHub Release](https://github.com/Alexliwenhao/shell-desktop/releases/latest). Check the [troubleshooting section](user-guide.en.md#troubleshooting) first. If the problem remains, open a [GitHub Issue](https://github.com/Alexliwenhao/shell-desktop/issues/new/choose) with the operating system, app version, reproduction steps, and error details.

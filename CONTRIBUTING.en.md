@@ -6,9 +6,8 @@ Thank you for wanting to contribute to Shell Desktop. This is a community projec
 
 - Report problems or odd behavior in an [issue](https://github.com/Alexliwenhao/shell-desktop/issues): include your operating system (macOS / Windows), application version, and reproduction steps.
 - Feature ideas and improvement suggestions are welcome as issues too.
-- Join the [community channels](README.en.md#community) (WeChat group, QQ group, Discord) and help other users.
+- Join the [community](README.en.md#community) by reviewing pull requests and answering issues.
 - Write tutorials or experience posts, or help improve and translate the documentation.
-- Suggest ecosystem projects for the [related links](README.en.md#friendly-links) section.
 
 ## Plugin authors: extend the ecosystem
 
@@ -48,7 +47,6 @@ corepack yarn dev     # launch the application when a graphical session is avail
 
 ## Join the technical team
 
-If you would like to join our technical team, contact us at [t4wefan@qq.com](mailto:t4wefan@qq.com).
 
 ## Code of conduct
 

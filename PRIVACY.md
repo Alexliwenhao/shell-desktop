@@ -5,32 +5,32 @@
 - **Version:** 1.0
 - **Effective and last updated:** August 26, 2026
 
-Shell Desktop is a local-first, open-source desktop application. This policy explains what information the official Shell Desktop distribution and official online services process, why they process it, who receives it, and what choices you have.
+Shell Desktop is a local-first, open-source desktop application. This policy explains what information this project’s builds send, why they process it, who receives it, and what choices you have.
 
-In this policy, “we” means the **Anywhere Labs project maintainer team** that maintains and publishes the official Shell Desktop distribution under the [`anywhere-labs`](https://github.com/anywhere-labs) GitHub organization and operates the official `dshdesktop.cn` services. Shell Desktop is an independent community project and has no affiliation, partnership, authorization, or endorsement relationship with DeepSeek.
+In this policy, “we” means the maintainer of this repository ([Alexliwenhao/shell-desktop](https://github.com/Alexliwenhao/shell-desktop)). Shell Desktop is an independent community project and has no affiliation, partnership, authorization, or endorsement relationship with DeepSeek. This project operates no online service of its own. The application's automatic update check still points at the legacy `dshdesktop.cn` endpoints inherited from the previous distribution; those endpoints are controlled by their operator, not by this project, and the address can be disabled or replaced from source.
 
-For privacy questions or rights requests, email [t4wefan@qq.com](mailto:t4wefan@qq.com). Do not put installation identifiers, logs, credentials, or other private information in a public GitHub Issue.
+For privacy questions or rights requests, email [wenhaoli392@gmail.com](mailto:wenhaoli392@gmail.com). Do not put installation identifiers, logs, credentials, or other private information in a public GitHub Issue.
 
 ## 1. Scope
 
 This policy applies to:
 
-- Shell Desktop provided through the [official GitHub repository](https://github.com/Alexliwenhao/shell-desktop) and official release channels;
-- the official website, version-check service, and download redirects under `https://www.dshdesktop.cn/`; and
+- Shell Desktop provided through the [GitHub repository](https://github.com/Alexliwenhao/shell-desktop) and its release pages;
+- the legacy version-check and download endpoints under `https://www.dshdesktop.cn/` (operated by the previous distribution, not by this project); and
 - privacy requests, support email, or issue reports that you voluntarily send to the project maintainers.
 
-This policy does not control processing performed by third-party forks, modified builds, third-party distributors, model providers, plugins, marketplace sources, or package services. If a third-party build still calls the hard-coded official `dshdesktop.cn` endpoints, this policy applies to the information those official endpoints actually receive, but not to other processing by that build or its distributor.
+This policy does not control processing performed by third-party forks, modified builds, third-party distributors, model providers, plugins, marketplace sources, or package services. If a build still calls the hard-coded legacy `dshdesktop.cn` endpoints, the processing performed by those endpoints is controlled by their operator, not by this project.
 
 ## 2. Summary
 
 - Shell Desktop profiles, settings, workspaces, sessions, logs, and crash files remain on your device by default.
-- The official update service does not require a Shell Desktop account. Its version-check code does not intentionally send prompts, responses, file contents, workspace paths, profile names, session contents, API keys, MAC addresses, or hardware serial numbers.
+- The update check requires no account. Its version-check code does not intentionally send prompts, responses, file contents, workspace paths, profile names, session contents, API keys, MAC addresses, or hardware serial numbers.
 - Packaged macOS and Windows builds check for updates by default and send a locally generated, persistently stored random installation UUID. This is a pseudonymous identifier that may qualify as personal data under applicable law. It is not a hardware ID and does not guarantee one value per physical machine.
 - Installer downloads do not receive that installation UUID from Desktop, although the website, download host, and network infrastructure still receive ordinary network metadata.
 - Diagnostic archives are created locally only when you export them and are never uploaded automatically by Shell Desktop.
 - Model services, plugins, marketplace sources, and package services that you choose process data under their own terms. They do not become subject to this policy merely because Shell Desktop can connect to them.
 
-## 3. Official version checks
+## 3. Version checks (legacy endpoint)
 
 ### 3.1 When the request occurs
 
@@ -50,7 +50,7 @@ The client explicitly adds:
 - `X-DSH-Desktop-Installation-Id: <random UUID v4>`.
 - `X-DSH-Desktop-Version: <canonical installed stable version>`.
 
-The application adds no query parameters or request body to this GET request. Like every internet request, the official service and its infrastructure also receive the IP address, request time, TLS and connection details, and standard request metadata generated by the networking stack. That metadata may include a User-Agent, cookies, accepted compression, and operating-system or runtime-version information. The current code does not explicitly require the Electron network session to omit existing credentials, so we do not promise that a version request can never include session data. We also do not describe “two headers explicitly set by the client” as “only two fields leave the device.”
+The application adds no query parameters or request body to this GET request. Like every internet request, the legacy endpoint operator and its infrastructure also receive the IP address, request time, TLS and connection details, and standard request metadata generated by the networking stack. That metadata may include a User-Agent, cookies, accepted compression, and operating-system or runtime-version information. The current code does not explicitly require the Electron network session to omit existing credentials, so we do not promise that a version request can never include session data. We also do not describe “two headers explicitly set by the client” as “only two fields leave the device.”
 
 The version-check code does not intentionally attach prompts, responses, file contents, workspace paths, profile names, session contents, model credentials, MAC addresses, or hardware serial numbers.
 
@@ -87,12 +87,12 @@ We do not use the installation UUID for advertising profiles or cross-service tr
 
 | Scenario | Trigger | Information that may be processed | Purpose and recipients |
 | --- | --- | --- | --- |
-| Installer download | You click a download or confirm a download after an update is found | IP address, time, standard network metadata, and the platform shown by the `/mac` or `/windows` path | `dshdesktop.cn`, its hosting service, and the final download host use this information to deliver the file, protect the service, and measure download service usage. Desktop does not add the installation UUID to the download request. |
+| Installer download | You click a download or confirm a download after an update is found | IP address, time, standard network metadata, and the platform shown by the `/mac` or `/windows` path | The legacy endpoint operator, its hosting service, and the final download host use this information to deliver the file, protect the service, and measure download service usage. Desktop does not add the installation UUID to the download request. |
 | Website visit | You open the website in a browser | IP address, time, browser and device network metadata, and the requested page | Website hosting and network infrastructure use it to deliver the page, protect the service, and diagnose failures. |
 | GitHub Issue, discussion, or contribution | You submit it | Account details, text, attachments, code, and metadata that you make public | GitHub and the project maintainers use it to process issues, contributions, and community communications. Public submissions are publicly visible. |
 | Email and support material | You send it | Email address, message, attachments, and diagnostics or environment details that you choose to provide | [QQ Mail](https://mail.qq.com/), your sending provider, and the project maintainers use it to deliver and respond to the message, investigate problems, and retain necessary correspondence. |
 
-As of this policy's effective date, the website and official APIs are hosted by [Vercel](https://vercel.com/), so Vercel directly processes the installation UUID, IP address, and request headers that reach the API. Stable release state uses [Upstash](https://upstash.com/); the repository proves only that the backend reads release state, and this policy does not claim that the Desktop installation UUID is forwarded to Upstash. Official installer downloads currently redirect to files hosted by [ModelScope](https://modelscope.cn/). A download redirect target may set its own cookies or other session identifiers and processes the request under its own policy. We will update this section when a provider or download host changes.
+As of this policy's effective date, this project operates no service and receives none of this data. The application’s update check targets the legacy endpoints described in Section 3; their hosting, downstream processors, and retention are controlled by their operator. Change or disable that address in the source to keep the check entirely local. A download redirect target may set its own cookies or other session identifiers and processes the request under its own policy. We will update this section when a provider or download host changes.
 
 ## 5. Information stored locally by default
 
@@ -108,7 +108,7 @@ The following information remains on your device by default rather than being up
 | Local crash files | Electron Crashpad collects them locally and is configured not to upload to a crash server. They may contain fragments of process memory. |
 | Diagnostic ZIP archives | Created only when you export one. They may contain logs, system and version information, paths, workspace or session IDs, bounded lifecycle and plugin IDs, and crash files within a shared 50 MiB evidence budget. The application retains the three newest archives that it manages; copies you make elsewhere are outside that limit. |
 | System notifications | Turn and job notices use generic completion or failure copy without session names, user text, job contents, or error details; update notices include the available version. The operating system handles them locally without a Shell Desktop remote-push service. Notification history or cross-device synchronization depends on your system account settings. |
-| Installation UUID | Stored as described in Section 3 and sent to the official update endpoint during a version check. |
+| Installation UUID | Stored as described in Section 3 and sent to the legacy update endpoint during a version check. |
 
 Credential masking reduces risk but cannot guarantee that a log or diagnostic archive contains no sensitive information. Review an archive and remove information you do not want a recipient to see before sharing it.
 
@@ -153,7 +153,7 @@ Upload a backup only to a WebDAV service or GitHub account you trust. The select
 
 ### 6.4 Optional upstream telemetry
 
-Upstream DSH session telemetry is `DISABLED` in Desktop's default composition. If you or a deployment operator explicitly sets `DSH_TELEMETRY_MODE` to `FULL` or `FEEDBACK_ONLY`, raw session telemetry may be sent with the upstream anonymous user ID to `https://harness-telemetry.deepseeksvc.com/v1/logs` or the endpoint configured in `DSH_TELEMETRY_OTLP_URL`. That processing is controlled by the upstream configuration and recipient policy and is not the Anywhere Labs official update service.
+Upstream DSH session telemetry is `DISABLED` in Desktop's default composition. If you or a deployment operator explicitly sets `DSH_TELEMETRY_MODE` to `FULL` or `FEEDBACK_ONLY`, raw session telemetry may be sent with the upstream anonymous user ID to `https://harness-telemetry.deepseeksvc.com/v1/logs` or the endpoint configured in `DSH_TELEMETRY_OTLP_URL`. That processing is controlled by the upstream configuration and recipient policy and is not this project’s update flow.
 
 ### 6.5 External links
 
@@ -169,7 +169,7 @@ LAN traffic normally does not pass through Anywhere Labs, but a person who conne
 
 ## 8. Sharing, processors, and international transfers
 
-The legal basis depends on your jurisdiction and the specific processing. Downloads, support, and third-party connections that you initiate are used to fulfill your request. Where that basis is recognized, version checks and necessary network logs rely on our legitimate interests in delivering secure, reliable updates and protecting the official service. Legal obligations rely on the relevant law, and non-essential processing that requires consent can rely only on valid consent. A jurisdiction that does not recognize legitimate interests for the processing does not acquire such a basis merely from this policy. Section 11 explains the current consent limitation for the stable installation UUID and your right to object.
+The legal basis depends on your jurisdiction and the specific processing. Downloads, support, and third-party connections that you initiate are used to fulfill your request. Where that basis is recognized, version checks and necessary network logs rely on legitimate interests in delivering secure, reliable updates and protecting the legacy endpoint. Legal obligations rely on the relevant law, and non-essential processing that requires consent can rely only on valid consent. A jurisdiction that does not recognize legitimate interests for the processing does not acquire such a basis merely from this policy. Section 11 explains the current consent limitation for the stable installation UUID and your right to object.
 
 We disclose or permit processing only in the following circumstances:
 
@@ -187,21 +187,21 @@ Vercel, Upstash, GitHub, npm, ModelScope, model providers, and community sources
 We determine retention as follows:
 
 - local installation UUIDs, logs, and diagnostic archives follow the rules in Sections 3 and 5;
-- raw official-service request logs, including any UUID, IP address, and network metadata they contain, are retained only for the shortest period reasonably needed to deliver updates, maintain security, prevent abuse, diagnose failures, and produce de-identified aggregate statistics. They are then deleted or irreversibly de-identified unless a longer period is legally required;
+- raw legacy-endpoint request logs, including any UUID, IP address, and network metadata they contain, are retained only for the shortest period reasonably needed to deliver updates, maintain security, prevent abuse, diagnose failures, and produce de-identified aggregate statistics. They are then deleted or irreversibly de-identified unless a longer period is legally required;
 - support email and issue records are retained until responding, dispute handling, or security follow-up no longer reasonably requires them. Public GitHub content is also subject to your controls and GitHub's retention rules; and
 - third-party recipients retain information under their own policies and your arrangements with them.
 
-Official-service infrastructure and logging settings can change, so this policy states the purpose and deletion conditions used to determine the period instead of inventing a fixed number of days that has not been verified against server configuration. You can ask about current processing and retention through the privacy contact email.
+Legacy-endpoint infrastructure and logging settings can change, so this policy states the purpose and deletion conditions used to determine the period instead of inventing a fixed number of days that has not been verified against server configuration. You can ask about current processing and retention through the privacy contact email.
 
 ## 10. Security
 
-Official internet endpoints use HTTPS. Desktop creates private directory and file permissions for the local installation UUID and constrains navigation, remote images, and catalog requests. Crashpad does not upload automatically, and diagnostic export warns about its privacy boundary.
+The legacy internet endpoints use HTTPS. Desktop creates private directory and file permissions for the local installation UUID and constrains navigation, remote images, and catalog requests. Crashpad does not upload automatically, and diagnostic export warns about its privacy boundary.
 
 No measure provides absolute security. Third-party plugins, privileged local processes, copied user data, publicly shared diagnostics, and unauthenticated LAN access can cross Desktop's intended boundaries. LAN HTTP is not an end-to-end encrypted channel.
 
 ## 11. Your choices and rights
 
-Depending on applicable law, you may have rights to access, copy, correct, delete, or restrict processing of personal data; withdraw consent; object to particular processing; receive a portable copy; and complain to a supervisory authority. Contact [t4wefan@qq.com](mailto:t4wefan@qq.com). To locate version-service records, we may ask you to provide your local installation UUID privately. Do not publish it.
+Depending on applicable law, you may have rights to access, copy, correct, delete, or restrict processing of personal data; withdraw consent; object to particular processing; receive a portable copy; and complain to a supervisory authority. Contact [wenhaoli392@gmail.com](mailto:wenhaoli392@gmail.com). To locate records held by the legacy endpoint operator, you may be asked to provide your local installation UUID privately. Do not publish it.
 
 We cannot remotely delete files on your device. You can remove relevant local data while the application is closed; deleting the installation UUID causes a new value to be generated at the next launch. Data that has already been irreversibly aggregated or can no longer be linked to you may not be recoverable or individually deletable.
 
@@ -215,6 +215,6 @@ Shell Desktop is a tool for developers and people able to manage a local computi
 
 ## 13. Changes to this policy
 
-When data categories, purposes, official recipients, or user choices change materially, we will update this policy, its effective date, and the repository history. Where law requires renewed notice or consent for a material change, we will complete that step before the relevant processing begins.
+When data categories, purposes, third-party recipients, or user choices change materially, we will update this policy, its effective date, and the repository history. Where law requires renewed notice or consent for a material change, we will complete that step before the relevant processing begins.
 
 The Chinese and English versions of this policy have equal authority. If they diverge, read them together and notify us through the privacy contact email so that we can correct them.
