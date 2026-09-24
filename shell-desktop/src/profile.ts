@@ -141,9 +141,17 @@ const MARKET_PACKAGE_NAMES: ReadonlySet<string> = new Set([
  * @returns a supported desktop shell mode.
  */
 export function parseDesktopShellMode(value: unknown): DesktopShellMode {
-  if (value === undefined) return DEFAULT_DESKTOP_SHELL_MODE
-  if (value === 'compatibility' || value === 'extended' || value === 'advanced' || value === 'aishell') return value
-  throw new Error(`${BIN_NAME}: ${DESKTOP_SETTINGS_NAMESPACE}.mode must be "compatibility", "extended", "advanced", or "aishell"`)
+  // AI Shell is the only shipped shell. Stored legacy modes from earlier
+  // releases are ignored rather than rejected: an upgraded installation keeps
+  // booting the one shell instead of failing or falling back to another.
+  if (value === undefined
+    || value === 'aishell'
+    || value === 'compatibility'
+    || value === 'extended'
+    || value === 'advanced') {
+    return DEFAULT_DESKTOP_SHELL_MODE
+  }
+  throw new Error(`${BIN_NAME}: ${DESKTOP_SETTINGS_NAMESPACE}.mode must be "aishell"`)
 }
 
 /** Parse the requested loopback Web port and reject values Node cannot listen on. */

@@ -44,7 +44,6 @@ describe('electronPlatformStrategy', () => {
     expect(strategy.platform).toBe('win32')
     expect(strategy.updateDownloadPlatform).toBe('win32')
     expect(strategy.canPickDirectory).toBe(true)
-    expect(strategy.canToggleShellMode).toBe(true)
 
     strategy.configureApplication(icon, 'Shell Desktop')
     strategy.configureWindow(window as never)
@@ -66,7 +65,6 @@ describe('electronPlatformStrategy', () => {
     expect(strategy.platform).toBe('darwin')
     expect(strategy.updateDownloadPlatform).toBe('darwin')
     expect(strategy.canPickDirectory).toBe(false)
-    expect(strategy.canToggleShellMode).toBe(true)
 
     strategy.configureApplication(icon, 'Shell Desktop')
     strategy.configureWindow(window as never)
@@ -86,7 +84,6 @@ describe('electronPlatformStrategy', () => {
     expect(strategy.platform).toBe('linux')
     expect(strategy.updateDownloadPlatform).toBeUndefined()
     expect(strategy.canPickDirectory).toBe(false)
-    expect(strategy.canToggleShellMode).toBe(false)
 
     strategy.configureApplication({} as never, 'Shell Desktop')
     strategy.configureWindow(window as never)

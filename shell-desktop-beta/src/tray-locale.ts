@@ -15,11 +15,6 @@ export type DesktopTrayLabelKey =
   | 'openTerminal'
   | 'profile'
   | 'quit'
-  | 'shellMode'
-  | 'advanced'
-  | 'aishell'
-  | 'compatibility'
-  | 'extended'
   | 'installStable'
   | 'unavailableForDesktop'
   | 'updateAvailable'
@@ -37,11 +32,6 @@ const labels: Record<DesktopLocale, Record<DesktopTrayLabelKey, (value: string) 
     openTerminal: () => 'Open DSH Terminal',
     profile: profileName => `Profile: ${profileName}`,
     quit: () => 'Quit',
-    shellMode: mode => `Mode: ${mode}`,
-    advanced: () => 'Enhanced Mode',
-    aishell: () => 'AI Shell Mode',
-    compatibility: () => 'Compatibility Mode',
-    extended: () => 'Extended Window',
     installStable: () => 'Install Stable Edition…',
     unavailableForDesktop: profileName => `${profileName} (Unavailable for Desktop)`,
     updateAvailable: version => `Shell Desktop ${version} Available`,
@@ -58,11 +48,6 @@ const labels: Record<DesktopLocale, Record<DesktopTrayLabelKey, (value: string) 
     openTerminal: () => '打开 DSH 终端',
     profile: profileName => `Profile：${profileName}`,
     quit: () => '退出',
-    shellMode: mode => `模式：${mode}`,
-    advanced: () => '增强模式',
-    aishell: () => 'AI Shell 模式',
-    compatibility: () => '兼容模式',
-    extended: () => '扩展窗口',
     installStable: () => '安装稳定版…',
     unavailableForDesktop: profileName => `${profileName}（不可用于桌面端）`,
     updateAvailable: version => `Shell Desktop ${version} 可用`,

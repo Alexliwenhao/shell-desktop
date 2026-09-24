@@ -10,7 +10,6 @@ export interface ElectronPlatformStrategy {
   readonly platform: DesktopPlatform
   readonly updateDownloadPlatform: DesktopDownloadPlatform | undefined
   readonly canPickDirectory: boolean
-  readonly canToggleShellMode: boolean
   configureApplication(
     icon: NativeImage,
     productName: string,
@@ -25,7 +24,6 @@ class WindowsPlatformStrategy implements ElectronPlatformStrategy {
   readonly platform = 'win32'
   readonly updateDownloadPlatform = 'win32'
   readonly canPickDirectory = true
-  readonly canToggleShellMode = true
 
   configureApplication(
     _icon: NativeImage,
@@ -48,7 +46,6 @@ class MacPlatformStrategy implements ElectronPlatformStrategy {
   readonly platform = 'darwin'
   readonly updateDownloadPlatform = 'darwin'
   readonly canPickDirectory = false
-  readonly canToggleShellMode = true
 
   private applicationName: string | undefined
 
@@ -82,7 +79,6 @@ class LinuxPlatformStrategy implements ElectronPlatformStrategy {
   readonly platform = 'linux'
   readonly updateDownloadPlatform = undefined
   readonly canPickDirectory = false
-  readonly canToggleShellMode = false
 
   configureApplication(
     _icon: NativeImage,

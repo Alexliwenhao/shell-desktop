@@ -38,6 +38,7 @@
 | 29 | plan 模式下 `terminal_run` 仍能执行命令（应改为提交卡片） | 已修复 | `src/remote.ts`：`planModeActive` 改为走 preset 作用域的 plan 服务（与提示词策略同一优先级）；补 3 个用例 |
 | 30 | 计划模式截图缺失（含「最后手动点击执行」的镜头） | 已完成 | 新增 `11-plan-mode-entry` / `12-plan-mode-active` / `13-plan-command-card` / `14-plan-command-executed`，README 更新为 24 张；采集器新增窗口还原与 PrintWindow 兜底（`scripts/capture-window.ps1`） |
 | 31 | 裁剪第一步：删除原项目内容（社区文档、历史记录、废弃补丁、旧图片） | 已完成 | 删除 `dsh-community-fabric/`、`_deprecated/`、`docs/evidence/`、`.agents/`、根 `assets/`；同步清理 workspace/门禁/文档引用，lockfile 重装 |
+| 32 | 裁剪第二步（B1a）：只保留 AI Shell —— 去掉窗口模式切换与回退 | 已完成（B1b 待续） | 托盘删除「窗口模式」子菜单与 `canToggleShellMode`；启动时把存储的旧模式一律解析为 `aishell`；托盘模式文案删除。兼容/扩展/增强外壳代码删除（B1b）未做 |
 
 ## 细节
 
@@ -182,6 +183,14 @@
 - 双语文档：`docs/plugin-development.i18n.yaml` 哈希重算（`git hash-object`）。
 - 未跟踪但保留：`.workbuddy/`、`artifacts/`（视频工作目录）不入库。
 - 验证：`yarn install` 刷新 lockfile；`check:layout`（含双语/架构/vendored-runtime/变体/verify-layout）；两版 typecheck；相关 spec。
+
+### 32 裁剪第二步（B1a）：只保留 AI Shell（去除模式切换与回退）
+- 背景：用户反馈「打完包启动还是老界面（DeepSeek Harness）」；根因之一是多模式仍然存在——存储的会话/设置里的 `mode` 可把应用解析成兼容模式，托盘还能切换。
+- 改动：① `electron-runtime.ts` 删除托盘「窗口模式」子菜单与 `changeMode`；② `electron-platform.ts` 删除 `canToggleShellMode`；③ `tray-locale.ts` 删除 `shellMode` 及四种模式文案；④ `profile.ts` 的 `parseDesktopShellMode` 把 `compatibility/extended/advanced` 一律解析为 `aishell`（不报错，避免升级后无法启动），非法值仍报错；⑤ `AGENTS.md` 改为「AI Shell 是唯一外壳」。
+- 连带效果：`desktop-network.ts` 的 `desktopBrowserAccessAvailable(mode)` 只在 compatibility 下为真 → 现在恒为假，普通浏览器访问/LAN 暴露在设置解析层即被收回（与 D2 目标一致）。
+- 测试更新：`electron-runtime.spec.ts` 删除托盘模式选择器用例组与 6 处 `Mode:` 断言；`profile.spec.ts` 7 处按新行为改为 `aishell`（含 ui-layout 置为 disabled）；`electron-platform.spec.ts` 去除 3 处断言。
+- 证据：两版 `check:desktop-variants` 198 文件对齐；两版 typecheck 0；`profile.spec` 51/51 通过；`electron-runtime.spec` 仅剩既有 Windows 平台失败（preload 路径分隔符，属基线）。
+- 未做（B1b）：删除兼容/扩展/增强的 Host/Client 外壳实现（`compatibility-shell.ts`、`AdvancedFrame`、`ExtendedFrame`、`compatibility-chrome` 等）与相应 spec/文档。
 
 ## 已知未完成 / 待确认
 

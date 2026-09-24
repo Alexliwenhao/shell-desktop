@@ -23,7 +23,7 @@ This repository owns the desktop product around an unmodified DeepSeek Harness c
 - `dsh-community-market/` owns the community-market shell. Until its runtime is implemented, it remains a private documentation scaffold and must not declare loadable DSH or package entry points.
 - The outer repository and all owned packages use the root Yarn release with `nodeLinker: node-modules`.
 - The upstream submodule keeps its own pnpm workspace. Run upstream commands through the root `upstream:*` scripts, whose Yarn portable-shell commands enter the submodule before invoking Corepack.
-- Compatibility mode must run the upstream default client without overrides. Advanced presentation belongs to desktop-owned client plugins and may replace documented slots or services through profile composition.
+- AI Shell is the only shipped shell: the desktop always composes the AI Shell profile, and a stored legacy mode (`compatibility`/`extended`/`advanced`) is ignored at startup. Presentation still belongs to desktop-owned client plugins, which may replace documented slots or services through profile composition.
 - Keep graphical application launch explicit. Builds, typechecks, unit tests, and Loader smokes must remain headless-safe.
 - Commit before major changes of direction and keep the submodule pin update separate from desktop behavior changes.
 - Keep the repository topology and package-manager split consistent with the pinned-upstream and isolated-Yarn-workspace decision recorded in the Git history of this file.

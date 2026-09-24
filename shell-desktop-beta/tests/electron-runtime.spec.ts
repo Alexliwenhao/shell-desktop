@@ -395,7 +395,7 @@ describe('Electron desktop runtime', () => {
     vi.restoreAllMocks()
   })
 
-  it('uses the independent macOS compatibility frame, Dock icon, and template tray image', async () => {
+  it('uses the independent macOS window frame, Dock icon, and template tray image', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     electron.app.getPreferredSystemLanguages.mockReturnValue(['zh-Hans-CN', 'en-US'])
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
@@ -450,9 +450,6 @@ describe('Electron desktop runtime', () => {
     })
     expect(electron.templateIcon.setTemplateImage).toHaveBeenCalledWith(true)
     expect(electron.trays[0]?.image).toBe(electron.templateIcon)
-    expect(electron.menuTemplates[0]).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Mode: Compatibility Mode', enabled: true }),
-    ]))
 
     const titleListener = electron.browserWindowOn.mock.calls.find(([event]) => event === 'page-title-updated')?.[1]
     expect(titleListener).toEqual(expect.any(Function))
@@ -802,9 +799,6 @@ describe('Electron desktop runtime', () => {
     expect(electron.app.dock.setIcon).not.toHaveBeenCalled()
     expect(electron.Menu.setApplicationMenu).not.toHaveBeenCalled()
     expect(electron.browserWindows[0]?.removeMenu).not.toHaveBeenCalled()
-    expect(electron.menuTemplates[0]).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Mode: Compatibility Mode', enabled: false }),
-    ]))
 
     await release()
   })
@@ -1241,7 +1235,6 @@ describe('Electron desktop runtime', () => {
     expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label))
       .toEqual(expect.arrayContaining([
         '打开 Shell Desktop Beta',
-        '模式：兼容模式',
         '退出',
       ]))
 
@@ -1250,7 +1243,6 @@ describe('Electron desktop runtime', () => {
     expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label))
       .toEqual(expect.arrayContaining([
         'Open Shell Desktop Beta',
-        'Mode: Compatibility Mode',
         'Quit',
       ]))
 
@@ -1260,7 +1252,6 @@ describe('Electron desktop runtime', () => {
     expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label))
       .toEqual(expect.arrayContaining([
         '打开 Shell Desktop Beta',
-        '模式：兼容模式',
         '退出',
       ]))
 
@@ -1754,51 +1745,6 @@ describe('Electron desktop runtime', () => {
     await release()
   })
 
-  describe.each(['darwin', 'win32', 'linux'] as const)('tray mode selector on %s', platform => {
-    it.each([
-      ['compatibility', 'en'], ['compatibility', 'zh'],
-      ['extended', 'en'], ['extended', 'zh'],
-      ['advanced', 'en'], ['advanced', 'zh'],
-      ['aishell', 'en'], ['aishell', 'zh'],
-    ].filter(([mode]) => platform !== 'linux' || mode === 'compatibility') as Array<['compatibility' | 'extended' | 'advanced' | 'aishell', 'en' | 'zh']>)('lists all modes with %s selected (%s)', async (mode, locale) => {
-      vi.spyOn(process, 'platform', 'get').mockReturnValue(platform)
-      const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
-      const requestModeChange = vi.fn(async () => {})
-      const runtime = new ElectronDesktopRuntime(async () => {})
-      const release = runtime.schedule({ ...spec, mode, requestModeChange, readLocalePreference: () => locale })
-      await runtime.mountScheduled()
-
-      const modes = ['compatibility', 'extended', 'advanced', 'aishell'] as const
-      const labels = locale === 'zh' ? ['兼容模式', '扩展窗口', '增强模式', 'AI Shell 模式'] : ['Compatibility Mode', 'Extended Window', 'Enhanced Mode', 'AI Shell Mode']
-      const title = locale === 'zh' ? `模式：${labels[modes.indexOf(mode)]}` : `Mode: ${labels[modes.indexOf(mode)]}`
-      type Item = { label?: string, type?: string, checked?: boolean, enabled?: boolean, click?: () => void, submenu?: Item[] }
-      const menu = electron.menuTemplates.at(-1) as Item[]
-      const selectors = menu.filter(item => item.label === title)
-      expect(selectors).toHaveLength(1)
-      expect(selectors[0]?.enabled).toBe(platform !== 'linux')
-      expect(selectors[0]?.click).toBeUndefined()
-      const submenu = selectors[0]?.submenu
-      expect(submenu).toHaveLength(4)
-      expect(submenu?.map(item => item.label)).toEqual(labels)
-      expect(menu.some(item => labels.includes(item.label ?? ''))).toBe(false)
-      expect(submenu?.filter(item => item.checked)).toHaveLength(1)
-
-      for (const [index, target] of modes.entries()) {
-        const item = submenu?.[index]
-        expect(item).toEqual(expect.objectContaining({
-          type: 'radio', checked: target === mode, enabled: platform !== 'linux',
-        }))
-        requestModeChange.mockClear()
-        item?.click?.()
-        if (target === mode || platform === 'linux') {
-          expect(requestModeChange).not.toHaveBeenCalled()
-        } else {
-          await vi.waitFor(() => { expect(requestModeChange).toHaveBeenCalledExactlyOnceWith(target) })
-        }
-      }
-      await release()
-    })
-  })
 
   it('rebuilds ordered effect-scoped tray contributions without replacing native commands', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
@@ -1833,7 +1779,6 @@ describe('Electron desktop runtime', () => {
       'Open Shell Desktop Beta', undefined,
       'Earlier Tool', 'Later Tool', undefined,
       'Check for Updates…', undefined,
-      'Mode: Compatibility Mode', undefined,
       'Quit',
     ])
     expect(electron.menuTemplates.at(-1)).toEqual(expect.arrayContaining([
@@ -2619,7 +2564,7 @@ describe('Electron desktop runtime', () => {
     expect(electron.dialog.showMessageBox).not.toHaveBeenCalled()
   })
 
-  it('uses advanced macOS material options and offers compatibility mode', async () => {
+  it('uses advanced macOS material options', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     electron.nativeTheme.themeSource = 'light'
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
@@ -2645,9 +2590,6 @@ describe('Electron desktop runtime', () => {
       transparent: true,
       vibrancy: 'sidebar',
     }))
-    expect(electron.menuTemplates[0]).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Mode: Enhanced Mode', enabled: true }),
-    ]))
 
     runtime.setThemeSource('system')
     expect(electron.nativeTheme.themeSource).toBe('system')
@@ -2707,9 +2649,6 @@ describe('Electron desktop runtime', () => {
     expect(electron.contentViews).toHaveLength(2)
     expect(electron.browserWindowOptions[0]).not.toHaveProperty('transparent')
     expect(electron.browserWindowOptions[0]).not.toHaveProperty('backgroundMaterial')
-    expect(electron.menuTemplates[0]).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Mode: Extended Window', enabled: true }),
-    ]))
 
     await release()
   })

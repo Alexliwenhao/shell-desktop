@@ -379,7 +379,7 @@ virtualStoreDirMaxLength: 60
     expect(() => ensureDesktopProfile(home)).toThrow('dsh.profile.bundles must be an array')
   })
 
-  it('assembles the Host shell without replacing the upstream client shell in compatibility mode', () => {
+  it('assembles the Host shell without replacing the upstream client shell', () => {
     const home = temporaryHome()
     writeFileSync(join(home, 'settings.yaml'), [
       'shell-desktop:',
@@ -397,7 +397,7 @@ virtualStoreDirMaxLength: 60
     }))
     expect(patches).toContainEqual(expect.objectContaining({
       id: 'desktop-shell',
-      config: expect.objectContaining({ mode: 'compatibility' }),
+      config: expect.objectContaining({ mode: 'aishell' }),
     }))
     expect(patches).toContainEqual(expect.objectContaining({
       id: 'webserver',
@@ -428,15 +428,20 @@ virtualStoreDirMaxLength: 60
     expect(readFileSync(prepared.rootConfig, 'utf8')).toBe('[]\n')
     expect(prepared.homeDir).toBe(home)
     expect(fileURLToPath(prepared.bareModuleBaseUrl)).toBe(join(prepared.profile.dir, 'package.json'))
-    expect(prepared.mode).toBe('compatibility')
+    expect(prepared.mode).toBe('aishell')
     expect(prepared.openBrowser).toBe(false)
     expect(prepared.networkExposure).toBe('loopback')
     expect(prepared.lanAddresses).toEqual([])
     expect(Object.isFrozen(prepared.lanAddresses)).toBe(true)
 
     const rows = composeEntries([prepared.patches])
+    // The AI shell replaces the upstream layout with its own frame while the
+    // sidebar and conversation rows stay upstream-owned.
+    expect(rows.find(row => row.id === 'ui-layout')).toEqual(expect.objectContaining({
+      name: '@deepseek-ai/dsh-client-ui-layout',
+      disabled: true,
+    }))
     for (const [id, name] of [
-      ['ui-layout', '@deepseek-ai/dsh-client-ui-layout'],
       ['ui-sidebar', '@deepseek-ai/dsh-client-ui-sidebar'],
       ['ui-conversation', '@deepseek-ai/dsh-client-ui-conversation'],
     ] as const) {
@@ -802,13 +807,13 @@ virtualStoreDirMaxLength: 60
     const prepared = prepareDesktopProfile(undefined, home, 'darwin')
     const rows = composeEntries([prepared.patches])
 
-    expect(prepared.mode).toBe('advanced')
+    expect(prepared.mode).toBe('aishell')
     expect(prepared.port).toBe(43_189)
     expect(prepared.openBrowser).toBe(false)
     expect(prepared.networkExposure).toBe('loopback')
     expect(rows.find(row => row.id === 'desktop-shell')).toEqual(expect.objectContaining({
       disabled: false,
-      config: expect.objectContaining({ mode: 'advanced', port: 43_189 }),
+      config: expect.objectContaining({ mode: 'aishell', port: 43_189 }),
     }))
     expect(rows.find(row => row.id === 'webserver')).toEqual(expect.objectContaining({
       name: '@deepseek-ai/dsh-host-webserver',
@@ -848,7 +853,7 @@ virtualStoreDirMaxLength: 60
     expect(persona?.personaPrefix).toContain('terminal_run')
   })
 
-  it('keeps legacy browser intent but clamps LAN exposure when compatibility mode is selected', () => {
+  it('withdraws legacy browser intent because the AI shell grants no ordinary-browser access', () => {
     const home = temporaryHome()
     writeFileSync(join(home, 'settings.yaml'), [
       'shell-desktop:',
@@ -863,9 +868,9 @@ virtualStoreDirMaxLength: 60
     const rows = composeEntries([prepared.patches])
 
     expect(prepared).toMatchObject({
-      mode: 'compatibility',
-      openBrowser: true,
-      networkExposure: 'lan',
+      mode: 'aishell',
+      openBrowser: false,
+      networkExposure: 'loopback',
     })
     expect(rows.find(row => row.id === 'desktop-webserver')).toEqual(expect.objectContaining({
       config: { host: '127.0.0.1', port: 43_189 },
@@ -875,7 +880,7 @@ virtualStoreDirMaxLength: 60
     }))
   })
 
-  it('replaces the official root layout for extended window mode while retaining its occupants', () => {
+  it('replaces the official root layout for the AI shell while retaining its occupants', () => {
     const home = temporaryHome()
     writeFileSync(join(home, 'settings.yaml'), [
       'shell-desktop:',
@@ -889,7 +894,7 @@ virtualStoreDirMaxLength: 60
     const rows = composeEntries([prepared.patches])
 
     expect(prepared).toEqual(expect.objectContaining({
-      mode: 'extended',
+      mode: 'aishell',
       macosMaterial: 'off',
       windowsMaterial: 'mica',
     }))
@@ -898,21 +903,21 @@ virtualStoreDirMaxLength: 60
     expect(rows.find(row => row.id === 'ui-conversation')?.disabled).toBe(false)
     expect(rows.find(row => row.id === 'desktop-shell')).toEqual(expect.objectContaining({
       config: expect.objectContaining({
-        mode: 'extended',
+        mode: 'aishell',
         macosMaterial: 'off',
         windowsMaterial: 'mica',
       }),
     }))
   })
 
-  it('reads JSON settings and defaults an absent desktop namespace to the AI shell mode', () => {
+  it('reads JSON settings and resolves every stored mode to the AI shell mode', () => {
     const home = temporaryHome()
     const path = join(home, 'desktop-settings.json')
     writeFileSync(path, JSON.stringify({ 'shell-desktop': { mode: 'advanced' } }))
 
-    expect(readDesktopShellMode({ path })).toBe('advanced')
+    expect(readDesktopShellMode({ path })).toBe('aishell')
     expect(desktopStartupSettingsFromSettings({ 'shell-desktop': { mode: 'advanced', port: 43_189 } })).toEqual({
-      mode: 'advanced',
+      mode: 'aishell',
       port: 43_189,
       macosMaterial: 'transparent',
       windowsMaterial: 'off',
@@ -920,7 +925,7 @@ virtualStoreDirMaxLength: 60
       networkExposure: 'loopback',
     })
     expect(desktopStartupSettingsFromSettings({ 'shell-desktop': { mode: 'advanced' } })).toEqual({
-      mode: 'advanced',
+      mode: 'aishell',
       port: 43_120,
       macosMaterial: 'transparent',
       windowsMaterial: 'off',
@@ -930,7 +935,7 @@ virtualStoreDirMaxLength: 60
     expect(desktopShellModeFromSettings({ unrelated: { enabled: true } })).toBe('aishell')
   })
 
-  it('treats legacy LAN exposure as browser access only in compatibility mode', () => {
+  it('withdraws legacy LAN exposure because the AI shell grants no ordinary-browser access', () => {
     expect(desktopStartupSettingsFromSettings({
       'shell-desktop': {
         mode: 'advanced',
@@ -938,7 +943,7 @@ virtualStoreDirMaxLength: 60
         networkExposure: 'lan',
       },
     })).toMatchObject({
-      mode: 'advanced',
+      mode: 'aishell',
       openBrowser: false,
       networkExposure: 'loopback',
     })
@@ -949,9 +954,9 @@ virtualStoreDirMaxLength: 60
         networkExposure: 'lan',
       },
     })).toMatchObject({
-      mode: 'compatibility',
-      openBrowser: true,
-      networkExposure: 'lan',
+      mode: 'aishell',
+      openBrowser: false,
+      networkExposure: 'loopback',
     })
   })
 
@@ -959,7 +964,7 @@ virtualStoreDirMaxLength: 60
     expect(() => desktopShellModeFromSettings([])).toThrow('must be a map')
     expect(() => desktopShellModeFromSettings({ 'shell-desktop': true })).toThrow('settings must be a map')
     expect(() => desktopShellModeFromSettings({ 'shell-desktop': { mode: 'glass' } })).toThrow(
-      'must be "compatibility", "extended", "advanced", or "aishell"',
+      'must be "aishell"',
     )
     for (const port of [-1, 1.5, 65_536, '43189']) {
       expect(() => desktopStartupSettingsFromSettings({ 'shell-desktop': { port } })).toThrow(
