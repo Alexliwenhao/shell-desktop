@@ -982,8 +982,7 @@ describe('published package surface', () => {
 
     expect(classify([
       'docs/architecture.md',
-      '.agents/notes/implemented/architecture/decision.md',
-      '.agents/notes/implemented/architecture/decision.i18n.yaml',
+      'docs/plugin-development.i18n.yaml',
       'dsh-community-market/docs/schema.json',
       '.github/ISSUE_TEMPLATE/feature_request.yml',
     ])).toBe('false')

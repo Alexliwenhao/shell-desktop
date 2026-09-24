@@ -6,7 +6,7 @@ const changedPaths = readFileSync(0)
   .filter(Boolean)
 
 const productCriticalDocument = /(?:^|\/)(?:LICENSE(?:\.[^/]*)?|THIRD_PARTY_NOTICES\.md)$/u
-const documentationPath = /^(?:docs\/|\.agents\/notes\/|\.github\/(?:ISSUE_TEMPLATE\/|PULL_REQUEST_TEMPLATE))/u
+const documentationPath = /^(?:docs\/|\.github\/(?:ISSUE_TEMPLATE\/|PULL_REQUEST_TEMPLATE))/u
 const nestedDocumentationPath = /\/docs\//u
 const documentationFile = /(?:\.mdx?|\.i18n\.ya?ml)$/u
 

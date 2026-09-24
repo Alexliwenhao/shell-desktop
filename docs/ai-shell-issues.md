@@ -37,6 +37,7 @@
 | 28 | 计划模式命令卡片重复出现（同一条命令显示两张卡） | 已修复 | `proposed-commands.ts`：`start` 不再折叠全部 matches，只读 start match，重放不再重复计数；新增回归用例 |
 | 29 | plan 模式下 `terminal_run` 仍能执行命令（应改为提交卡片） | 已修复 | `src/remote.ts`：`planModeActive` 改为走 preset 作用域的 plan 服务（与提示词策略同一优先级）；补 3 个用例 |
 | 30 | 计划模式截图缺失（含「最后手动点击执行」的镜头） | 已完成 | 新增 `11-plan-mode-entry` / `12-plan-mode-active` / `13-plan-command-card` / `14-plan-command-executed`，README 更新为 24 张；采集器新增窗口还原与 PrintWindow 兜底（`scripts/capture-window.ps1`） |
+| 31 | 裁剪第一步：删除原项目内容（社区文档、历史记录、废弃补丁、旧图片） | 已完成 | 删除 `dsh-community-fabric/`、`_deprecated/`、`docs/evidence/`、`.agents/`、根 `assets/`；同步清理 workspace/门禁/文档引用，lockfile 重装 |
 
 ## 细节
 
@@ -142,7 +143,7 @@
 - 目标（用户）：整套独立为开源项目，剥离 dsh-desktop；新仓库 `https://github.com/Alexliwenhao/shell-desktop`；包名与 appId 全部替换；保留 `deepseek-harness` 技术归属。
 - 范围：文本层 352 个文件 / 约 2200 处 + 仓库 slug 18 个文件 / 58 处（旧 slug 是 `deepseek-harness-desktop`，不是 `dsh-desktop`）；目录 `dsh-plugin-desktop/` → `shell-desktop/`、`dsh-plugin-desktop-beta/` → `shell-desktop-beta/`；`yarn install` 刷新 lockfile 与 patch。
 - 改名清单：包名/bin（`shell-desktop`、`shell-desktop-beta`）、appId（`com.shelldesktop.app` / `.beta`）、本地窗口 session partition（`shell-desktop-*` + `local-window-policy` 正则）、渲染器访问头（`x-shell-desktop-renderer`）、设置命名空间（`shell-desktop` / `shell-desktop-notifications`）、profile patch row 名、CI/脚本/文档/README/PRIVACY/issue 模板/upstream.json。
-- 有意保留：`DSH_DESKTOP_*`/`__DSH_DESKTOP_*` 环境变量与桥接全局、`X-DSH-Desktop-*` 请求头、`dsh-community-market`/`dsh-community-fabric` 包名、`dshdesktop.cn` 服务地址（属旧官方服务）、`deepseek-harness`/`DeepSeek Harness`/`@deepseek-ai/*`/`@agents-anywhere/*`、`.agents/notes/**` 与 `docs/evidence/**` 历史记录、`_deprecated/**`。
+- 有意保留：`DSH_DESKTOP_*`/`__DSH_DESKTOP_*` 环境变量与桥接全局、`X-DSH-Desktop-*` 请求头、`dsh-community-market` 包名、`dshdesktop.cn` 服务地址（属旧官方服务）、`deepseek-harness`/`DeepSeek Harness`/`@deepseek-ai/*`/`@agents-anywhere/*`。（`.agents/notes/**`、`docs/evidence/**`、`_deprecated/**`、`dsh-community-fabric` 与旧 `assets/` 已在 #31 裁剪中删除。）
 - 连带修复（改名暴露的既有问题）：① 托盘「窗口模式」子菜单在上一轮改动中丢失 → 恢复并加入 `aishell` 模式；② 桌面设置页（`settings.section`/`settings.action`）早前被有意移除 → 相关测试改为按现状断言；③ `installBrandMark` 需要 client logger 且会多注册一个槽位 → 客户端 spec 补 logger 并按名字筛选注册；④ 本地窗口 partition 前缀统一，policy 正则同步。
 - 验证：stable 全量 1373 例 / beta 全量 — 失败数 20 / 19，**逐条对照 HEAD 基线 worktree（`git worktree add` + 依赖 junction）确认全部为 Windows 平台预存失败**（`module-resolution` 用 POSIX `file:///tmp` URL、`compatibility-shell` 用正斜杠正则、pnpm PATH 断言、NSIS 产物依赖等），无改名引入的失败；`check:desktop-variants`/`check:vendored-runtime`/`check:architecture`/`verify-layout`/两包 typecheck 均通过。
 
@@ -175,6 +176,13 @@
 - 采集流程（脚本步骤 11–14，均先保留当前会话，不再导航到「主机」以免会话面板切走）：11 在输入框敲 `/plan` 唤起指令面板（`plan 进入或退出计划模式`）；12 选中并回车，输入行出现 **Plan** 标识；13 发送「看一下这台机器的磁盘使用情况」，轮询等待模型提交 `propose_command` 卡片；14 点卡片上的「执行」，卡片变「已发送」、命令在真实终端回显。
 - 证据：`docs/screenshots/11-plan-mode-entry.png` … `14-plan-command-executed.png`（1925×1022，与既有素材同规格）；`02-new-session.png` 同步重拍。
 
+### 31 裁剪第一步（C1）：删除原项目内容
+- 范围（用户已批准的裁剪方案 C）：`dsh-community-fabric/`（社区互操作 RFC 脚手架）、`_deprecated/`（runtime 0.1.1-rc.2 旧补丁）、`docs/evidence/`（历史证据与截图）、`.agents/`（上游 Agent Notes 与双语记录）、根 `assets/`（hero/chat 截图、sponsors、社区二维码）。
+- 同步引用清理：`.gitignore`（fabric lib 行）、根 `package.json`（workspaces 变为 `shell-desktop`/`shell-desktop-beta`/`dsh-community-market`，`check` 去掉 fabric）、`scripts/verify-layout.mjs`（fabric 断言全删）、`scripts/classify-ci-changes.mjs`（docs-only 模式去掉 `.agents/notes/`）、两版 `tests/package.spec.ts`（分类器样例改用 `docs/plugin-development.i18n.yaml`）、`AGENTS.md`（删除 fabric 条目与 Agent Note 链接）、`CONTRIBUTING(.en).md`、`docs/README(.en).md`、`docs/architecture(.en).md`、`docs/plugin-ecosystem(.en).md`、`docs/plugin-development(.en).md`。
+- 双语文档：`docs/plugin-development.i18n.yaml` 哈希重算（`git hash-object`）。
+- 未跟踪但保留：`.workbuddy/`、`artifacts/`（视频工作目录）不入库。
+- 验证：`yarn install` 刷新 lockfile；`check:layout`（含双语/架构/vendored-runtime/变体/verify-layout）；两版 typecheck；相关 spec。
+
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
@@ -182,6 +190,6 @@
 - #22 深色终端修复需人工确认：打开终端 → 设置→外观 切浅色/深色，终端文字应始终可读。
 - #28/#29 需要人工确认：至少跑一次「/plan → 提问 → 点执行」，应只出现一张卡片、且模型不再直接执行命令。
 - 「打包后仍启动老界面」：本轮已用修复后代码重建并逐项验证——`dist/win-unpacked`、`Setup.exe` 安装副本、`Portable.zip` 解包副本三者的窗口标题均为 `AI Shell Desktop`、页面 URL 均带 `shell-desktop-mode=aishell`（截图：`%TEMP%\opencode\installed-verify.png`、`portable-verify.png`）。若仍看到 DeepSeek Harness 老界面，请记录启动的确切文件（或快捷方式目标）；另外：开始菜单存在一个**失效旧快捷方式** `Shell Desktop.lnk` → 已删除的 `dsh-plugin-desktop\dist\win-unpacked\Shell Desktop.exe`，建议一并清理。
-- 改名后的待办：① 桌面设置页（模式/材质/市场通知/浏览器访问）在早前 AI Shell 改动中已被移除，目前只有托盘能切窗口模式——浏览器访问、通知、材质暂无 UI 入口，需要产品决策是否恢复该页；② `dshdesktop.cn` 更新服务仍是旧官方地址，独立项目需自建或关闭（代码里的请求地址保留原值以保持功能可用）；③ `.agents/notes/**`、`docs/evidence/**` 保留旧名（历史记录），如需一并改名请另行确认；④ 本机开发工作目录仍叫 `dsh-desktop`，重命名目录/推送新仓库由你完成。
+- 改名后的待办：① 桌面设置页（模式/材质/市场通知/浏览器访问）在早前 AI Shell 改动中已被移除，目前只有托盘能切窗口模式——浏览器访问、通知、材质暂无 UI 入口，需要产品决策是否恢复该页；② `dshdesktop.cn` 更新服务仍是旧官方地址，独立项目需自建或关闭（代码里的请求地址保留原值以保持功能可用，D3 裁剪会直接移除更新检查）；③ `.agents/notes/**`、`docs/evidence/**`、`_deprecated/**` 已随 #31 裁剪删除；④ 本机开发工作目录仍叫 `dsh-desktop`，重命名目录/推送新仓库由你完成。
 - 打包产物为未签名安装包：新机器首启可能出现 SmartScreen「未知发布者」。
 - 本机 `~/.dsh/settings.yaml` 的 `ui-theme.preference` 目前为 `dark`（排查问题时所改），可自行切回 `system`。

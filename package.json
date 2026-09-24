@@ -18,7 +18,6 @@
   "workspaces": [
     "shell-desktop",
     "shell-desktop-beta",
-    "dsh-community-fabric",
     "dsh-community-market"
   ],
   "resolutions": {
@@ -602,7 +601,7 @@
     "check:vendored-runtime": "node scripts/sync-vendored-runtime.mjs --check --channel stable && node scripts/sync-vendored-runtime.mjs --check --channel beta",
     "check:desktop-variants": "node scripts/verify-desktop-variants.mjs",
     "check:layout": "yarn check:bilingual-docs && yarn check:architecture && yarn check:vendored-runtime && yarn check:desktop-variants && node scripts/verify-layout.mjs",
-    "check": "yarn check:layout && yarn workspace dsh-community-fabric check && yarn workspace dsh-community-market check && yarn workspace shell-desktop check && yarn workspace shell-desktop-beta check",
+    "check": "yarn check:layout && yarn workspace dsh-community-market check && yarn workspace shell-desktop check && yarn workspace shell-desktop-beta check",
     "dev": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dev",
     "start": "yarn workspace shell-desktop start",
     "package:dir": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop package:dir",

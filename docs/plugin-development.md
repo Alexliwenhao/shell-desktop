@@ -1,6 +1,6 @@
 # Shell Desktop 插件开发
 
-> **当前接口与 Draft 请勿混淆：** 本文介绍现在可用的 DSH/Cordis 与 Desktop service。`dsh-community-fabric` 中的 manifest、capability 和统一事件模型仍处于[社区 RFC Draft](../dsh-community-fabric/README.zh.md)，尚不能作为依赖或发布目标。
+> **接口状态：** 本文介绍的 DSH/Cordis 与 Desktop service 都是当前可用接口，可以直接作为依赖和发布目标。
 
 ## 先理解两层插件
 
@@ -211,4 +211,4 @@ DSH 的插件生态正在快速增长。插件越多，它们能否协同工作�
 - **声明清晰**：明确声明依赖的 service 和 slot，不依赖运行时巧合。
 - **兼容优先**：升级保持向后兼容，不破坏已有组合。
 
-倡议是活文档，随生态实践更新，接受社区讨论和修订。插件市场上线后，遵循共同约定的插件将更容易被发现、安装和判断兼容性，让"按规范开发"成为对每个作者都有利的选择。完整愿景见 [DSH 插件生态倡议书](plugin-ecosystem.md)；未来互操作 contract 的讨论见 [DSH Community Fabric](../dsh-community-fabric/README.zh.md)。
+倡议是活文档，随生态实践更新，接受社区讨论和修订。插件市场上线后，遵循共同约定的插件将更容易被发现、安装和判断兼容性，让"按规范开发"成为对每个作者都有利的选择。完整愿景见 [DSH 插件生态倡议书](plugin-ecosystem.md)。

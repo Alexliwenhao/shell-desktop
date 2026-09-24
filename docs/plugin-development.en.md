@@ -1,6 +1,6 @@
 # Shell Desktop Plugin Development
 
-> **Do not confuse current APIs with a Draft:** this guide describes working DSH/Cordis and Desktop services. The manifest, capability, and unified event model in `dsh-community-fabric` remains a [community RFC Draft](../dsh-community-fabric/README.md) and cannot yet be used as a dependency or release target.
+> **API status:** the DSH/Cordis and Desktop services in this guide are current, usable interfaces. They can be used as dependencies and release targets today.
 
 ## Understand the two plugin layers
 
@@ -211,4 +211,4 @@ To that end we are starting a development-conventions initiative and hope it bec
 - **Declare clearly**: state the services and slots you depend on; do not rely on runtime coincidences.
 - **Compatibility first**: keep upgrades backward compatible and never break existing compositions.
 
-The manifesto is a living document that follows ecosystem practice and accepts community discussion and revisions. Once the plugin marketplace ships, plugins following shared conventions will be easier to discover, install, and evaluate for compatibility, making convention-driven development the beneficial choice for every author. See the [DSH plugin ecosystem manifesto](plugin-ecosystem.en.md) for the vision and [DSH Community Fabric](../dsh-community-fabric/README.md) for the proposed future interoperability contract.
+The manifesto is a living document that follows ecosystem practice and accepts community discussion and revisions. Once the plugin marketplace ships, plugins following shared conventions will be easier to discover, install, and evaluate for compatibility, making convention-driven development the beneficial choice for every author. See the [DSH plugin ecosystem manifesto](plugin-ecosystem.en.md) for the vision.

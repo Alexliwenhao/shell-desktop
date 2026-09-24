@@ -15,7 +15,6 @@ const workspace = readJson('package.json')
 const upstream = readJson('upstream.json')
 const stablePlugin = readJson('shell-desktop/package.json')
 const betaPlugin = readJson('shell-desktop-beta/package.json')
-const fabric = readJson('dsh-community-fabric/package.json')
 const market = readJson('dsh-community-market/package.json')
 const upstreamPackage = readJson('deepseek-harness/package.json')
 
@@ -31,20 +30,17 @@ if (workspace.packageManager !== 'yarn@4.18.0') {
 if (JSON.stringify(workspace.workspaces) !== JSON.stringify([
   'shell-desktop',
   'shell-desktop-beta',
-  'dsh-community-fabric',
   'dsh-community-market',
 ])) {
-  fail('the root Yarn workspace must contain the desktop, community-fabric, and community-market packages')
+  fail('the root Yarn workspace must contain the desktop and community-market packages')
 }
 for (const [name, manifest] of [
   ['shell-desktop', stablePlugin],
   ['shell-desktop-beta', betaPlugin],
-  ['dsh-community-fabric', fabric],
   ['dsh-community-market', market],
 ]) {
   if (manifest.packageManager !== undefined) fail(`${name} must inherit the root Yarn release`)
 }
-if (fabric.name !== 'dsh-community-fabric') fail('the Fabric workspace must own dsh-community-fabric')
 if (market.name !== 'dsh-community-market') fail('the market workspace must own dsh-community-market')
 const claudePath = resolve(root, 'CLAUDE.md')
 const claudeStat = lstatSync(claudePath)
@@ -63,8 +59,6 @@ for (const legacyFile of [
   'shell-desktop/pnpm-workspace.yaml',
   'shell-desktop-beta/pnpm-lock.yaml',
   'shell-desktop-beta/pnpm-workspace.yaml',
-  'dsh-community-fabric/pnpm-lock.yaml',
-  'dsh-community-fabric/pnpm-workspace.yaml',
   'dsh-community-market/pnpm-lock.yaml',
   'dsh-community-market/pnpm-workspace.yaml',
 ]) {
@@ -84,7 +78,6 @@ for (const [owner, manifest] of [
   ['root', workspace],
   ['stable desktop', stablePlugin],
   ['beta desktop', betaPlugin],
-  ['fabric', fabric],
   ['market', market],
 ]) {
   for (const field of ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies', 'resolutions']) {
