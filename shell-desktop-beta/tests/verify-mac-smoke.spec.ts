@@ -58,7 +58,7 @@ function options(
   const value: MacSmokeVerificationOptions = {
     distDir: '/release/dist',
     productName: 'Shell Desktop Beta',
-    listDmgs: () => ['/release/dist/DSH-Desktop-Beta-2.0.1.dmg'],
+    listDmgs: () => ['/release/dist/AI-Shell-Desktop-Beta-2.0.1.dmg'],
     makeMountPoint: () => '/private/tmp/shell-desktop-dmg-smoke-test',
     run: (command, args) => { calls.push({ command, args: [...args] }) },
     removeMountPoint,
@@ -104,14 +104,14 @@ describe('macOS DMG smoke artifact verification', () => {
 
     expect(verifyMacSmoke(harness.value)).toEqual({
       appPath,
-      dmgPath: '/release/dist/DSH-Desktop-Beta-2.0.1.dmg',
+      dmgPath: '/release/dist/AI-Shell-Desktop-Beta-2.0.1.dmg',
     })
 
     expect(harness.calls).toEqual([
       {
         command: 'hdiutil',
         args: [
-          'attach', '/release/dist/DSH-Desktop-Beta-2.0.1.dmg',
+          'attach', '/release/dist/AI-Shell-Desktop-Beta-2.0.1.dmg',
           '-mountpoint', value.root, '-nobrowse', '-readonly',
         ],
       },
@@ -147,7 +147,7 @@ describe('macOS DMG smoke artifact verification', () => {
     expect(harness.calls).toEqual([
       {
         command: 'hdiutil',
-        args: ['attach', '/release/dist/DSH-Desktop-Beta-2.0.1.dmg', '-mountpoint', value.root, '-nobrowse', '-readonly'],
+        args: ['attach', '/release/dist/AI-Shell-Desktop-Beta-2.0.1.dmg', '-mountpoint', value.root, '-nobrowse', '-readonly'],
       },
       { command: 'hdiutil', args: ['detach', value.root] },
     ])

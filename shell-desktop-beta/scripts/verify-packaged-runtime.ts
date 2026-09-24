@@ -295,7 +295,10 @@ function runPackagedElectron(
     encoding: 'utf8',
     env: environment,
     shell: false,
-    timeout: 60_000,
+    // A cold packaged executable (over 200 MB) can take far longer than a warm
+    // one while the packager is still finishing and the platform scans the new
+    // file, so the spawn budget stays generous.
+    timeout: 180_000,
     windowsHide: true,
   })
   return {
@@ -374,7 +377,13 @@ export function smokePackagedElectronRuntime(
   ] as const
   try {
     for (const check of checks) {
-      const result = run(executable, ['--expose-internals', check.entry, ...check.args], environment)
+      const args = ['--expose-internals', check.entry, ...check.args]
+      let result = run(executable, args, environment)
+      if (result.error !== undefined) {
+        // Retry once: a cold start that timed out is not evidence that the
+        // packaged runtime is broken, and the packager is still running.
+        result = run(executable, args, environment)
+      }
       if (result.error !== undefined) {
         throw new Error(`shell-desktop: packaged ${check.label} smoke could not start`, {
           cause: result.error,

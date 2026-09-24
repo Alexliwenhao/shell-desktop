@@ -305,7 +305,7 @@ export function buildWindowsNsisAb(options: WindowsNsisAbBuildOptions): WindowsN
     )
   }
 
-  const installerName = `DSH-Desktop-${version}-x64-Setup.exe`
+  const installerName = `AI-Shell-Desktop-${version}-x64-Setup.exe`
   const directInstaller = join(directOutput, installerName)
   const stagedInstaller = join(stagedOutput, installerName)
   assertPortableExecutable(directInstaller, 'direct-extract NSIS installer')

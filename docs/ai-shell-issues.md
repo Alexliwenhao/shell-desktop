@@ -24,7 +24,7 @@
 | 15 | 终端已有 AI 会话时，点“新建会话”无效（复用了旧会话） | 已修复（待人工确认） | `newSession` 强制新建并重绑终端 |
 | 16 | 历史会话要支持删除 | 已修复（待人工确认） | 历史行删除按钮：点一次变 ✓（红），再点一次才真正删除；失败会在面板提示 |
 | 17 | 文件的默认路径是 `/` | 已修复（待人工确认） | `FilePanel` 初始加载远端根目录 `/`（不再用 `.`） |
-| 18 | 产品改名：Shell Desktop → Shell Desktop，窗口标题 AI Shell Desktop | 已修复 | 全包（`src`/`tests`/`scripts`/`build`/文档）改文案；保留机器键（`DSH-Desktop-*` 产物名、`X-DSH-Desktop-*` 头、`shell-desktop` 包名） |
+| 18 | 产品改名：Shell Desktop → Shell Desktop，窗口标题 AI Shell Desktop | 已修复 | 全包（`src`/`tests`/`scripts`/`build`/文档）改文案；保留机器键（`X-DSH-Desktop-*` 头、`shell-desktop` 包名；产物名后在 #27 一并改名） |
 | 19 | logo 全部换成 `JLY.png` | 已修复 | 矢量化四面体标 → `build/app-icon.png` / `tray-icon.svg` → 生成 ICO/托盘/应用图标；应用内占用 `conversation.hero.brand.mark` 槽位 |
 | 20 | 首次启动的初始化向导要全部去掉（市场/手机连接/浏览器页删除） | 已修复 | 删除 Setup Wizard（窗口/契约/文案/状态/native-ui/vite 入口/测试）；启动直接进主界面，模式默认 AI Shell |
 | 21 | 内测声明改为 Host 自动确认（不再弹给用户） | 已修复 | `src/desktop-onboarding.ts`：Host 启动即写入 `ui-onboarding.welcomeNoticeVersion` |
@@ -32,7 +32,11 @@
 | 23 | 项目独立：整体改名 Shell Desktop，剥离 dsh-desktop | 已修复 | 新仓库 `Alexliwenhao/shell-desktop`；包名 `shell-desktop(-beta)`、appId `com.shelldesktop.app(.beta)`、目录与全部内部标识 `shell-desktop-*` |
 | 24 | 文件面板的删除按钮无二次确认，容易误操作 | 已修复 | `FilePanel` 行内移除删除按钮（不暴露文件删除入口） |
 | 25 | 主机删除按钮无二次确认，容易误操作 | 已修复 | `HostPanel` 补二次确认：首次点击变红 ✓（`data-confirm`），再次点击才删除；点击主机行取消 |
-| 26 | 需要一套功能截图 + 功能说明，作为产品视频素材 | 已完成 | `docs/screenshots/`（20 张，CDP 自动采集）+ `docs/screenshots/README.md`（清单 / 讲解要点 / 分镜 / 待补拍）；采集器 `scripts/capture-feature-screenshots.cjs` |
+| 26 | 需要一套功能截图 + 功能说明，作为产品视频素材 | 已完成 | `docs/screenshots/`（20 张，按使用顺序编号，CDP 自动采集）+ `docs/screenshots/README.md`（清单 / 讲解要点 / 分镜 / 待补拍）；采集器 `scripts/capture-feature-screenshots.cjs` |
+| 27 | 出包产物名要去掉 DSH，改用 AI Shell Desktop 命名 | 已修复 | 产物名 `AI-Shell-Desktop-<version>-x64-Setup.exe` / `-Portable.zip`（Beta 为 `AI-Shell-Desktop-Beta-*`）；更新器文件名同步；协议头 `X-DSH-Desktop-*` 仍保留 |
+| 28 | 计划模式命令卡片重复出现（同一条命令显示两张卡） | 已修复 | `proposed-commands.ts`：`start` 不再折叠全部 matches，只读 start match，重放不再重复计数；新增回归用例 |
+| 29 | plan 模式下 `terminal_run` 仍能执行命令（应改为提交卡片） | 已修复 | `src/remote.ts`：`planModeActive` 改为走 preset 作用域的 plan 服务（与提示词策略同一优先级）；补 3 个用例 |
+| 30 | 计划模式截图缺失（含「最后手动点击执行」的镜头） | 已完成 | 新增 `11-plan-mode-entry` / `12-plan-mode-active` / `13-plan-command-card` / `14-plan-command-executed`，README 更新为 24 张；采集器新增窗口还原与 PrintWindow 兜底（`scripts/capture-window.ps1`） |
 
 ## 细节
 
@@ -103,11 +107,11 @@
 - 会话日志：`~/.dsh/sessions/**/session.v3.jsonl.zstd`（多帧 zstd，逐帧解压）。
 - 窗口截图/点击：`PrintWindow(hwnd, hdc, 2)`（`CopyFromScreen` 会截到覆盖窗口）；点击用 `SetCursorPos` + `mouse_event`。
 - 打包（本机无 corepack 时）：`DSH_PACKAGE_CHECK_ALREADY_RAN=1`（先手动跑过 `check:win-package`）+ `yarn workspace shell-desktop dist:win` / `dist:win-portable`；AA 物料固定用 `DSH_AA_SOURCE_REF=pinned` 走本地 `vendor/agents-anywhere` 校验，避免联网重建。
-- 产物：`shell-desktop/dist/DSH-Desktop-<version>-x64-Setup.exe`（NSIS，未签名）与 `...-Portable.zip`；解包目录 `dist/win-unpacked/Shell Desktop.exe`。
+- 产物：`shell-desktop/dist/AI-Shell-Desktop-<version>-x64-Setup.exe`（NSIS，未签名）与 `...-Portable.zip`；解包目录 `dist/win-unpacked/Shell Desktop.exe`。
 
 ### 18 产品改名（Shell Desktop）
 - 范围：`src/**`、`tests/**`、`scripts/**`、`build/installer.nsh`、`build/assistedMessages.yml`、包内 README/THIRD_PARTY_NOTICES/plugin-services 文档；`DeepSeek Harness Desktop → AI Shell Desktop`、`Shell Desktop(Beta) → Shell Desktop(Beta)`。
-- 刻意不改（机器键）：产物名 `DSH-Desktop-*`、更新请求头 `X-DSH-Desktop-*`、npm 包名/bin 别名 `shell-desktop`(`-beta`)/`shell-desktop`、`appId`。
+- 刻意不改（机器键）：更新请求头 `X-DSH-Desktop-*`、npm 包名/bin 别名 `shell-desktop`(`-beta`)、`appId`。（产物名原为 `DSH-Desktop-*`，后在 #27 改为 `AI-Shell-Desktop-*`。）
 - 连带影响：应用数据目录从 `%APPDATA%\Shell Desktop` 变为 `%APPDATA%\Shell Desktop`；旧目录数据不会自动迁移（首启会进安装向导）。本机已手工把旧目录中的 profile-setup/profile-selection/preferences/identity 等拷入新目录。
 - 变体校验：`scripts/verify-desktop-variants.mjs` 的 `normalizeIdentity` 已由 `Shell Desktop Beta` 改为 `Shell Desktop Beta`；`check:desktop-variants` 通过（203 个共享源文件对齐）。
 
@@ -138,7 +142,7 @@
 - 目标（用户）：整套独立为开源项目，剥离 dsh-desktop；新仓库 `https://github.com/Alexliwenhao/shell-desktop`；包名与 appId 全部替换；保留 `deepseek-harness` 技术归属。
 - 范围：文本层 352 个文件 / 约 2200 处 + 仓库 slug 18 个文件 / 58 处（旧 slug 是 `deepseek-harness-desktop`，不是 `dsh-desktop`）；目录 `dsh-plugin-desktop/` → `shell-desktop/`、`dsh-plugin-desktop-beta/` → `shell-desktop-beta/`；`yarn install` 刷新 lockfile 与 patch。
 - 改名清单：包名/bin（`shell-desktop`、`shell-desktop-beta`）、appId（`com.shelldesktop.app` / `.beta`）、本地窗口 session partition（`shell-desktop-*` + `local-window-policy` 正则）、渲染器访问头（`x-shell-desktop-renderer`）、设置命名空间（`shell-desktop` / `shell-desktop-notifications`）、profile patch row 名、CI/脚本/文档/README/PRIVACY/issue 模板/upstream.json。
-- 有意保留：`DSH_DESKTOP_*`/`__DSH_DESKTOP_*` 环境变量与桥接全局、`X-DSH-Desktop-*` 请求头、`DSH-Desktop-*` 产物名、`dsh-community-market`/`dsh-community-fabric` 包名、`dshdesktop.cn` 服务地址（属旧官方服务）、`deepseek-harness`/`DeepSeek Harness`/`@deepseek-ai/*`/`@agents-anywhere/*`、`.agents/notes/**` 与 `docs/evidence/**` 历史记录、`_deprecated/**`。
+- 有意保留：`DSH_DESKTOP_*`/`__DSH_DESKTOP_*` 环境变量与桥接全局、`X-DSH-Desktop-*` 请求头、`dsh-community-market`/`dsh-community-fabric` 包名、`dshdesktop.cn` 服务地址（属旧官方服务）、`deepseek-harness`/`DeepSeek Harness`/`@deepseek-ai/*`/`@agents-anywhere/*`、`.agents/notes/**` 与 `docs/evidence/**` 历史记录、`_deprecated/**`。
 - 连带修复（改名暴露的既有问题）：① 托盘「窗口模式」子菜单在上一轮改动中丢失 → 恢复并加入 `aishell` 模式；② 桌面设置页（`settings.section`/`settings.action`）早前被有意移除 → 相关测试改为按现状断言；③ `installBrandMark` 需要 client logger 且会多注册一个槽位 → 客户端 spec 补 logger 并按名字筛选注册；④ 本地窗口 partition 前缀统一，policy 正则同步。
 - 验证：stable 全量 1373 例 / beta 全量 — 失败数 20 / 19，**逐条对照 HEAD 基线 worktree（`git worktree add` + 依赖 junction）确认全部为 Windows 平台预存失败**（`module-resolution` 用 POSIX `file:///tmp` URL、`compatibility-shell` 用正斜杠正则、pnpm PATH 断言、NSIS 产物依赖等），无改名引入的失败；`check:desktop-variants`/`check:vendored-runtime`/`check:architecture`/`verify-layout`/两包 typecheck 均通过。
 
@@ -149,15 +153,35 @@
 - 证据：CDP 实测——文件面板 `trashIcons=0`/`ariaDelete=0`（23 行均无删除入口）；主机首次点击 `data-confirm=true`、图标变 check、行数 2→2（未删除）、点击主机行后确认态取消；截图 `19-session-delete-confirm.png` / `20-host-delete-confirm.png`。
 
 ### 26 功能截图素材与说明
-- 产物：`docs/screenshots/` 20 张（01 总览、02 会话分组、03 新建会话、04 主机面板、05 新建主机、06 远端文件面板、07 本地终端、08 终端命令、09 选中、10 引用进对话、11/12 AI 对话、13/14 设置、15–18 深浅主题、19/20 删除二次确认）+ `docs/screenshots/README.md`（清单与讲解要点、按模块的功能说明、60–90 秒分镜、待手工补拍清单）。
+- 产物：`docs/screenshots/`（现为 24 张，见 #30：01 总览、02 新建会话、03 主机面板、04 新建主机、05 远端终端、06 终端命令、07 选中、08 引用进对话、09/10 AI 对话、11–14 计划模式、15 文件面板、16 会话分组、17/18 设置、19–22 深浅主题、23/24 删除二次确认）+ `docs/screenshots/README.md`（清单与讲解要点、按模块的功能说明、60–90 秒分镜、待手工补拍清单）。
 - 采集器：`scripts/capture-feature-screenshots.cjs`（Playwright 1.59 + CDP `Page.captureScreenshot`，逐步容错，自动关残留弹窗，自动连主机以拍到真实远端目录）。
+- 采集器补充：每次截图前用 `scripts/capture-window.ps1 -RestoreOnly` 还原/置前窗口（最小化窗口不产生合成帧 → CDP 截图会挂起），合成帧失败时回退到 PrintWindow 抓窗。
 - 环境要点：本机无交互桌面（`GetForegroundWindow` 为 Idle），系统级点击注入无效；改用 `--remote-debugging-port=9222` + CDP 驱动，并追加 `--disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling` 以避免窗口被遮挡时截图超时。
+
+### 28 计划模式命令卡片重复渲染
+- 现象：一次 `propose_command` 调用在对话末尾出现两张一模一样的「待执行命令」卡片（会话日志确认只有 1 次 tool/call）。
+- 根因：`proposed-commands.ts` 的 `start(context)` 折叠了 `context.matches`（全部已匹配事件）；引擎在重放/重整 Context 时先以「start match + 逐条 update」重建，于是同一条 `tool/call` 被 `start` 与后续 `update` 各计一次。
+- 修复：`start: (_context, match) => ({ commands: proposedCommandsOf([match]) })`，只读自己的 start match（`turn/start` 恒为空），与引擎契约一致；同步更新结构类型与两版测试。
+- 证据：`tests/client-proposed-commands.spec.ts` 新增「重放只计一次」用例（两版通过）；重采的 `13-plan-command-card.png` 只有一张卡片。
+
+### 29 plan 模式下 terminal_run 未被拦截
+- 现象：进入 plan 模式后模型仍用 `terminal_run` 直接执行命令（截图流程因此拿不到命令卡片；用户侧表现为「计划模式没有拦住执行」）。
+- 根因：`src/remote.ts` 的执行闸门 `planModeActive(ctx, agent)` 读的是 **host 平面** 的 `ctx.get('planMode')` 实例，而会话的 plan 状态由 preset 隔离域内的实例承载（`isolate: { planMode: true }`，`/plan` 命令切换的也是它）；提示词策略用的 `agentPlanModeActive` 已经按 preset 优先解析，闸门却用了旧实现。
+- 修复：`planModeActive` 改为委托 `agentPlanModeActive`（`presets.serviceFor(agent,'planMode')` 优先，缺失时回退 host 实例），两版同步。
+- 证据：`tests/remote-plan-mode.spec.ts` 新增 3 例（preset 激活 → 拒绝执行；仅 host 平面激活 → 拒绝；preset 未激活而 host 激活 → 放行），共 17 例通过；重采的 `13/14` 截图由模型提交卡片、用户点击执行。
+
+### 30 计划模式截图补充（含手动执行镜头）
+- 需求（用户）：计划模式要展示「AI 提交命令卡片 → 用户手动点击执行」的完整链路。
+- 采集流程（脚本步骤 11–14，均先保留当前会话，不再导航到「主机」以免会话面板切走）：11 在输入框敲 `/plan` 唤起指令面板（`plan 进入或退出计划模式`）；12 选中并回车，输入行出现 **Plan** 标识；13 发送「看一下这台机器的磁盘使用情况」，轮询等待模型提交 `propose_command` 卡片；14 点卡片上的「执行」，卡片变「已发送」、命令在真实终端回显。
+- 证据：`docs/screenshots/11-plan-mode-entry.png` … `14-plan-command-executed.png`（1925×1022，与既有素材同规格）；`02-new-session.png` 同步重拍。
 
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
 - 「选择目录…」在 AI Shell 下走的是 Desktop 原生选择器（Host 校验路径）；原生弹窗是否按预期出现尚未截图确认。
 - #22 深色终端修复需人工确认：打开终端 → 设置→外观 切浅色/深色，终端文字应始终可读。
+- #28/#29 需要人工确认：至少跑一次「/plan → 提问 → 点执行」，应只出现一张卡片、且模型不再直接执行命令。
+- 「打包后仍启动老界面」：本轮已用修复后代码重建并逐项验证——`dist/win-unpacked`、`Setup.exe` 安装副本、`Portable.zip` 解包副本三者的窗口标题均为 `AI Shell Desktop`、页面 URL 均带 `shell-desktop-mode=aishell`（截图：`%TEMP%\opencode\installed-verify.png`、`portable-verify.png`）。若仍看到 DeepSeek Harness 老界面，请记录启动的确切文件（或快捷方式目标）；另外：开始菜单存在一个**失效旧快捷方式** `Shell Desktop.lnk` → 已删除的 `dsh-plugin-desktop\dist\win-unpacked\Shell Desktop.exe`，建议一并清理。
 - 改名后的待办：① 桌面设置页（模式/材质/市场通知/浏览器访问）在早前 AI Shell 改动中已被移除，目前只有托盘能切窗口模式——浏览器访问、通知、材质暂无 UI 入口，需要产品决策是否恢复该页；② `dshdesktop.cn` 更新服务仍是旧官方地址，独立项目需自建或关闭（代码里的请求地址保留原值以保持功能可用）；③ `.agents/notes/**`、`docs/evidence/**` 保留旧名（历史记录），如需一并改名请另行确认；④ 本机开发工作目录仍叫 `dsh-desktop`，重命名目录/推送新仓库由你完成。
 - 打包产物为未签名安装包：新机器首启可能出现 SmartScreen「未知发布者」。
 - 本机 `~/.dsh/settings.yaml` 的 `ui-theme.preference` 目前为 `dark`（排查问题时所改），可自行切回 `system`。

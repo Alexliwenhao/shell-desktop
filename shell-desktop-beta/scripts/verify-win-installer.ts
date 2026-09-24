@@ -90,7 +90,7 @@ export function verifyWindowsInstaller(
   const distDir = join(options.desktopRoot, 'dist')
   const installerPath = join(
     distDir,
-    `DSH-Desktop-Beta-${options.version}-x64-Setup.exe`,
+    `AI-Shell-Desktop-Beta-${options.version}-x64-Setup.exe`,
   )
   const applicationPath = join(distDir, 'win-unpacked', 'Shell Desktop Beta.exe')
 

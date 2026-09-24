@@ -12,7 +12,7 @@ function options(overrides: Partial<MacReleaseVerificationOptions> = {}) {
   const value: MacReleaseVerificationOptions = {
     distDir: '/release/dist',
     productName: 'Shell Desktop Beta',
-    listDmgs: () => ['/release/dist/DSH-Desktop-Beta-2.0.0-universal.dmg'],
+    listDmgs: () => ['/release/dist/AI-Shell-Desktop-Beta-2.0.0-universal.dmg'],
     makeMountPoint: () => '/private/tmp/shell-desktop-dmg-test',
     run: (command, args) => { calls.push({ command, args: [...args] }) },
     removeMountPoint,
@@ -28,14 +28,14 @@ describe('macOS release artifact verification', () => {
 
     expect(verifyMacRelease(harness.value)).toEqual({
       appPath,
-      dmgPath: '/release/dist/DSH-Desktop-Beta-2.0.0-universal.dmg',
+      dmgPath: '/release/dist/AI-Shell-Desktop-Beta-2.0.0-universal.dmg',
     })
 
     expect(harness.calls).toEqual([
       {
         command: 'hdiutil',
         args: [
-          'attach', '/release/dist/DSH-Desktop-Beta-2.0.0-universal.dmg',
+          'attach', '/release/dist/AI-Shell-Desktop-Beta-2.0.0-universal.dmg',
           '-mountpoint', '/private/tmp/shell-desktop-dmg-test', '-nobrowse', '-readonly',
         ],
       },

@@ -368,7 +368,7 @@
       "!node_modules/fs-ext/build/**"
     ],
     "mac": {
-      "artifactName": "DSH-Desktop-Beta-${version}-${arch}.${ext}",
+      "artifactName": "AI-Shell-Desktop-Beta-${version}-${arch}.${ext}",
       "target": [
         "dir"
       ],
@@ -401,7 +401,7 @@
           ]
         }
       ],
-      "artifactName": "DSH-Desktop-Beta-${version}-${arch}-Portable.${ext}",
+      "artifactName": "AI-Shell-Desktop-Beta-${version}-${arch}-Portable.${ext}",
       "icon": "build/app-icon.png",
       "asar": false
     },
@@ -417,7 +417,7 @@
       "differentialPackage": false,
       "shortcutName": "Shell Desktop Beta",
       "useZip": false,
-      "artifactName": "DSH-Desktop-Beta-${version}-${arch}-Setup.${ext}"
+      "artifactName": "AI-Shell-Desktop-Beta-${version}-${arch}-Setup.${ext}"
     },
     "linux": {
       "target": [

@@ -20,7 +20,7 @@ function fixture(version = '2.0.0'): { readonly root: string; readonly portable:
   temporaryRoots.push(root)
   const dist = join(root, 'dist')
   mkdirSync(dist, { recursive: true })
-  const portable = join(dist, `DSH-Desktop-${version}-x64-Portable.zip`)
+  const portable = join(dist, `AI-Shell-Desktop-${version}-x64-Portable.zip`)
   const archive = new AdmZip()
   archive.addFile('Shell Desktop.exe', portableExecutable())
   archive.addFile('resources/app/package.json', Buffer.from('{}'))
@@ -43,7 +43,7 @@ describe('Windows portable artifact verification', () => {
     const value = fixture('1.9.0')
 
     expect(() => verifyWindowsPortable({ desktopRoot: value.root, version: '2.0.0' }))
-      .toThrow('DSH-Desktop-2.0.0-x64-Portable.zip')
+      .toThrow('AI-Shell-Desktop-2.0.0-x64-Portable.zip')
   })
 
   it('rejects an application entry without a Windows PE header', () => {
