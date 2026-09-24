@@ -7,7 +7,7 @@ function definitionOf(): {
   kind: string
   target?: string
   match(event: unknown): unknown
-  start(context: unknown): unknown
+  start(context: unknown, match: unknown): unknown
   update(context: unknown, match: unknown): unknown
   publication(match: unknown): unknown
   buildViewNode(context: unknown): unknown
@@ -53,7 +53,7 @@ describe('proposed commands projection', () => {
   it('collects only valid proposals across the turn', () => {
     const definition = definitionOf()
     const start = turnStart(1, 10)
-    let state = definition.start(contextFor([start]))
+    let state = definition.start(contextFor([start]), start)
 
     state = definition.update(contextFor([start], state), toolCall(PROPOSE_COMMAND_TOOL, { command: 'df -h', description: '检查磁盘' }, 11))
     state = definition.update(contextFor([start], state), toolCall('terminal_run', { command: 'uptime' }, 12))
@@ -80,10 +80,27 @@ describe('proposed commands projection', () => {
         data: { callId: 'call-11', name: PROPOSE_COMMAND_TOOL, turn: '7', step: 1, arguments: '{"command":"free -h","description":"内存"}' },
       },
     }
-    let state = definition.start(contextFor([start]))
+    let state = definition.start(contextFor([start]), start)
     state = definition.update(contextFor([start], state), call)
 
     expect(state).toEqual({ commands: [{ callId: 'call-11', command: 'free -h', description: '内存' }] })
+  })
+
+  it('counts a proposal once when the engine replays the turn', () => {
+    const definition = definitionOf()
+    const start = turnStart(1, 10)
+    const call = toolCall(PROPOSE_COMMAND_TOOL, { command: 'df -h' }, 11)
+    const end = turnEnd(1, 30)
+    const matches = [start, call, end]
+
+    // The engine replays a context by starting it again with the accumulated
+    // matches and then folding every update, so start must read only its own
+    // start match.
+    let state = definition.start(contextFor(matches), start)
+    state = definition.update(contextFor(matches, state), call)
+    state = definition.update(contextFor(matches, state), end)
+
+    expect(state).toEqual({ commands: [{ callId: 'call-11', command: 'df -h', description: '' }] })
   })
 
   it('materializes one node at the turn end carrying the proposals', () => {

@@ -652,9 +652,7 @@ function pickSession(requested: unknown): ShellSession | undefined {
  */
 function planModeActive(ctx: Context, agent: unknown): boolean {
   if (agent === undefined) return false
-  const planMode = (ctx as unknown as { get(name: string): unknown }).get('planMode') as
-    { get(agent: unknown): { active: boolean } } | undefined
-  return planMode?.get(agent).active ?? false
+  return agentPlanModeActive(ctx, agent as Agent)
 }
 
 /**

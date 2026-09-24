@@ -72,7 +72,7 @@ export interface ProposedCommandsDefinition {
   readonly kind: string
   readonly target: string
   match(event: CommandEventView): { readonly id: string; readonly role: 'start' | 'update' } | null
-  start(context: CommandContextView): ProposedCommandsState
+  start(context: CommandContextView, match: CommandMatchView): ProposedCommandsState
   update(context: CommandContextView, match: CommandMatchView): ProposedCommandsState
   publication(match: CommandMatchView): 'none' | 'immediate'
   buildViewNode(context: CommandContextView): ProposedCommandsNode | null
@@ -187,7 +187,11 @@ export const PROPOSED_COMMANDS_DEFINITION: ProposedCommandsDefinition = {
     }
     return null
   },
-  start: context => ({ commands: proposedCommandsOf(context.matches) }),
+  // The engine replays a Context by calling `start` with its start match and
+  // then every later update in ascending seq, so each fold reads only the match
+  // it receives; folding `context.matches` here would collect the replayed
+  // updates a second time and duplicate every card.
+  start: (_context, match) => ({ commands: proposedCommandsOf([match]) }),
   update: (context, match) => {
     const added = proposedCommandsOf([match])
     const previous = context.state?.commands ?? []

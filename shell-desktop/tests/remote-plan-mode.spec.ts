@@ -20,6 +20,7 @@ interface FakeContext {
 function makeContext(
   planMode?: { get(agent: unknown): { active: boolean } },
   config?: { aishell: boolean },
+  scopedPlanMode?: { get(agent: unknown): { active: boolean } },
 ) {
   const tools = new Map<string, ToolDefinition>()
   const routes = new Map<string, (req: unknown, res: unknown) => void>()
@@ -34,7 +35,15 @@ function makeContext(
     tools: {
       register: definition => { tools.set(definition.name, definition); return () => {} },
     },
-    get: name => (name === 'planMode' ? planMode : undefined),
+    get: name => {
+      if (name === 'planMode') return planMode
+      // The agent-preset roster owns the realm-scoped plan service; the gate
+      // must read that instance first.
+      if (name === 'agentPresets') {
+        return scopedPlanMode === undefined ? undefined : { serviceFor: () => scopedPlanMode }
+      }
+      return undefined
+    },
     on: (name, listener) => { listeners.set(name, listener); return () => {} },
   }
   apply(ctx as never, config as never)
@@ -44,12 +53,28 @@ function makeContext(
 const EXEC = { agent: { id: 'agent' }, signal: new AbortController().signal }
 
 describe('plan-mode terminal tools', () => {
-  it('refuses terminal_run while plan mode is active', async () => {
+  it('refuses terminal_run while the preset plan service reads active', async () => {
+    const { tools } = makeContext(undefined, undefined, { get: () => ({ active: true }) })
+    const terminalRun = tools.get('terminal_run')
+
+    await expect(terminalRun?.execute({ command: 'rm -rf /' }, EXEC))
+      .rejects.toThrow('plan 模式下不执行命令')
+  })
+
+  it('refuses terminal_run when only the host-plane plan service reads active', async () => {
     const { tools } = makeContext({ get: () => ({ active: true }) })
     const terminalRun = tools.get('terminal_run')
 
     await expect(terminalRun?.execute({ command: 'rm -rf /' }, EXEC))
       .rejects.toThrow('plan 模式下不执行命令')
+  })
+
+  it('lets the preset plan state win over an inactive host-plane service', async () => {
+    const { tools } = makeContext({ get: () => ({ active: true }) }, undefined, { get: () => ({ active: false }) })
+    const terminalRun = tools.get('terminal_run')
+
+    await expect(terminalRun?.execute({ command: 'ls' }, EXEC))
+      .rejects.toThrow('没有可用的终端会话')
   })
 
   it('lets terminal_run reach the session check outside plan mode', async () => {
