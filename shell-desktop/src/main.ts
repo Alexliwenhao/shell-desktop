@@ -1091,7 +1091,15 @@ async function start(): Promise<void> {
         }
       },
     }
-    await healDesktopProfileModuleFallback(homeDir)
+    try {
+      await healDesktopProfileModuleFallback(homeDir)
+    } catch (cause) {
+      // A host filesystem that refuses a shared fallback link (for example
+      // Windows EPERM on a reparse point) must not abort Desktop startup: the
+      // Desktop resolver owns the desktop rows, and out-of-tree plugin peers
+      // keep the previous generation's link until a later launch heals it.
+      electronLogger.error(`${BIN_NAME}: shared profile module fallback could not be healed: ${cause instanceof Error ? cause.message : String(cause)}`)
+    }
     let prepared = prepareDesktopProfile(
       process.env.DSH_TELEMETRY_DISABLED,
       homeDir,
@@ -1294,7 +1302,13 @@ async function start(): Promise<void> {
       clearEnvironmentPath: pnpmRuntime.clearEnvironmentPath,
       dshBootstrapPath,
     }
-    await healDesktopProfileModuleFallback(homeDir, prepared.profile)
+    try {
+      await healDesktopProfileModuleFallback(homeDir, prepared.profile)
+    } catch (cause) {
+      // See the first heal call: a refused link is a degraded plugin fallback,
+      // never a reason to abandon the Desktop startup path.
+      electronLogger.error(`${BIN_NAME}: shared profile module fallback could not be healed: ${cause instanceof Error ? cause.message : String(cause)}`)
+    }
     if (profilePreferences === undefined) {
       throw new Error(`${BIN_NAME}: active Profile preferences were not initialized`)
     }

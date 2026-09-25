@@ -39,6 +39,7 @@
 | 30 | 计划模式截图缺失（含「最后手动点击执行」的镜头） | 已完成 | 新增 `11-plan-mode-entry` / `12-plan-mode-active` / `13-plan-command-card` / `14-plan-command-executed`，README 更新为 24 张；采集器新增窗口还原与 PrintWindow 兜底（`scripts/capture-window.ps1`） |
 | 31 | 裁剪第一步：删除原项目内容（社区文档、历史记录、废弃补丁、旧图片） | 已完成 | 删除 `dsh-community-fabric/`、`_deprecated/`、`docs/evidence/`、`.agents/`、根 `assets/`；同步清理 workspace/门禁/文档引用，lockfile 重装 |
 | 32 | 裁剪第二步（B1a）：只保留 AI Shell —— 去掉窗口模式切换与回退 | 已完成（B1b 待续） | 托盘删除「窗口模式」子菜单与 `canToggleShellMode`；启动时把存储的旧模式一律解析为 `aishell`；托盘模式文案删除。兼容/扩展/增强外壳代码删除（B1b）未做 |
+| 33 | 打包版启动成「原来的 desktop」/进 Recovery（profile 组合的模块回退链接失败） | 已修复 | `main.ts` 两处 `healDesktopProfileModuleFallback` 改为非致命：Windows 上创建 `~\.dsh\profiles\node_modules\shell-desktop` 链接 EPERM 时只告警、继续启动；两版同步 |
 
 ## 细节
 
@@ -192,6 +193,11 @@
 - 证据：两版 `check:desktop-variants` 198 文件对齐；两版 typecheck 0；`profile.spec` 51/51 通过；`electron-runtime.spec` 仅剩既有 Windows 平台失败（preload 路径分隔符，属基线）。
 - 未做（B1b）：删除兼容/扩展/增强的 Host/Client 外壳实现（`compatibility-shell.ts`、`AdvancedFrame`、`ExtendedFrame`、`compatibility-chrome` 等）与相应 spec/文档。
 
+### 33 打包版启动故障：profile 模块回退链接 EPERM
+- 现象（用户）：安装/解包后的应用启动成「原来的 desktop」（上游界面）或弹恢复窗口；同一份代码用 `yarn dev` 源码启动正常。
+- 根因：打包启动时 `healDesktopProfileModuleFallback` 调用上游 `healProfilesModuleFallback`，为安装闭包在 `~/.dsh/profiles/node_modules/` 建链接；本机对 `shell-desktop` 这一条执行 `symlinkSync(target, link, 'junction')` 返回 `EPERM`（Windows 重解析点受限），异常直接冒泡 → profile 组合失败 → 进 Recovery / 回退上游界面。
+- 修复：`src/main.ts` 两处调用（启动早期、prepared profile 之后）包 try/catch，失败仅 `electronLogger.error` 记录后继续启动；桌面行仍由 Desktop 解析器（`module-resolution.ts`）负责，共享回退只服务外部插件。
+- 证据：同一份解包目录（`%TEMP%\opencode\portable-verify2`，替换新 `lib` 前必进 Recovery）现在正常启动：窗口标题 `AI Shell Desktop`、URL `shell-desktop-mode=aishell`、三栏 UI 正常；日志仅出现 `shared profile module fallback could not be healed: EPERM ...` 告警。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
