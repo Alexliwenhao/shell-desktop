@@ -38,7 +38,7 @@ export function Chrome() {
     document.documentElement.lang = state?.locale === 'zh' ? 'zh-CN' : 'en'
   }, [state?.locale])
   const copy = state?.locale === 'zh' ? zh : en
-  if (!state) return <header className="dshDesktopFrameTitlebar">Shell Desktop {failed && <span role="alert">{copy.operationFailed}</span>}</header>
+  if (!state) return <header className="dshDesktopFrameTitlebar">AI Shell Desktop {failed && <span role="alert">{copy.operationFailed}</span>}</header>
   return <DesktopFrameTitlebarView
     key={generation}
     api={api}

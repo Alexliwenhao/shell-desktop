@@ -11,23 +11,23 @@ describe('Desktop installer quit request', () => {
   it('accepts only the dedicated flag on Windows', () => {
     expect(DESKTOP_INSTALLER_QUIT_FLAG).toBe('--dsh-installer-quit')
     expect(isDesktopInstallerQuitRequest(
-      ['Shell Desktop.exe', DESKTOP_INSTALLER_QUIT_FLAG],
+      ['AI Shell Desktop.exe', DESKTOP_INSTALLER_QUIT_FLAG],
       'win32',
     )).toBe(true)
-    expect(isDesktopInstallerQuitRequest(['Shell Desktop.exe', '--quit'], 'win32')).toBe(false)
+    expect(isDesktopInstallerQuitRequest(['AI Shell Desktop.exe', '--quit'], 'win32')).toBe(false)
     expect(isDesktopInstallerQuitRequest(
-      ['Shell Desktop', DESKTOP_INSTALLER_QUIT_FLAG],
+      ['AI Shell Desktop', DESKTOP_INSTALLER_QUIT_FLAG],
       'darwin',
     )).toBe(false)
   })
 
   it('distinguishes background Node re-entry from an explicit application launch', () => {
-    expect(isDesktopBackgroundNodeRequest(['Shell Desktop.exe'])).toBe(false)
-    expect(isDesktopBackgroundNodeRequest(['Shell Desktop.exe', '--profile', 'desktop'])).toBe(false)
-    expect(isDesktopBackgroundNodeRequest(['Shell Desktop.exe', 'C:\\app\\pnpm\\bin\\pnpm.mjs', 'install'])).toBe(true)
-    expect(isDesktopBackgroundNodeRequest(['Shell Desktop.exe', '--require', 'C:\\runtime\\clear-env.cjs'])).toBe(true)
-    expect(isDesktopBackgroundNodeRequest(['Shell Desktop.exe', '--import=file:///runtime/clear-env.mjs'])).toBe(true)
-    expect(isDesktopBackgroundNodeRequest(['Shell Desktop.exe', '--expose-internals', 'desktop-cli.js'])).toBe(true)
+    expect(isDesktopBackgroundNodeRequest(['AI Shell Desktop.exe'])).toBe(false)
+    expect(isDesktopBackgroundNodeRequest(['AI Shell Desktop.exe', '--profile', 'desktop'])).toBe(false)
+    expect(isDesktopBackgroundNodeRequest(['AI Shell Desktop.exe', 'C:\\app\\pnpm\\bin\\pnpm.mjs', 'install'])).toBe(true)
+    expect(isDesktopBackgroundNodeRequest(['AI Shell Desktop.exe', '--require', 'C:\\runtime\\clear-env.cjs'])).toBe(true)
+    expect(isDesktopBackgroundNodeRequest(['AI Shell Desktop.exe', '--import=file:///runtime/clear-env.mjs'])).toBe(true)
+    expect(isDesktopBackgroundNodeRequest(['AI Shell Desktop.exe', '--expose-internals', 'desktop-cli.js'])).toBe(true)
   })
 
   it('handles first- and second-instance requests without showing a window', () => {

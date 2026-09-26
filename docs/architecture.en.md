@@ -1,8 +1,8 @@
-# Shell Desktop Architecture
+# AI Shell Desktop Architecture
 
 ## Overview
 
-Shell Desktop is a thin Electron host. It starts the official DSH Host in Electron's main process; the Host exposes the ordinary Web UI over an HTTP/WebSocket Web carrier. The carrier listens on loopback by default and can be exposed to the LAN only after the user explicitly acknowledges the risk. Desktop does not create a second renderer IPC plugin system and does not expose raw Electron APIs to the page.
+AI Shell Desktop is a thin Electron host. It starts the official DSH Host in Electron's main process; the Host exposes the ordinary Web UI over an HTTP/WebSocket Web carrier. The carrier listens on loopback by default and can be exposed to the LAN only after the user explicitly acknowledges the risk. Desktop does not create a second renderer IPC plugin system and does not expose raw Electron APIs to the page.
 
 ```mermaid
 flowchart LR
@@ -63,7 +63,7 @@ The outer workspace uses Yarn. The pinned `deepseek-harness/` submodule keeps it
 
 ## Release-channel protocol
 
-Stable and Beta are separate physical npm packages and system applications; Git branches do not define the channels. Stable uses `shell-desktop`, `Shell Desktop`, and `com.shelldesktop.app`; Beta uses `shell-desktop-beta`, `Shell Desktop Beta`, and `com.shelldesktop.app.beta`. `upstream.json` records both channels' upstream versions, commits, and vendored-runtime manifests. Exact root resolutions ensure that each workspace resolves only its own DSH runtime.
+Stable and Beta are separate physical npm packages and system applications; Git branches do not define the channels. Stable uses `shell-desktop`, `AI Shell Desktop`, and `com.shelldesktop.app`; Beta uses `shell-desktop-beta`, `AI Shell Desktop Beta`, and `com.shelldesktop.app.beta`. `upstream.json` records both channels' upstream versions, commits, and vendored-runtime manifests. Exact root resolutions ensure that each workspace resolves only its own DSH runtime.
 
 Version checks and installer downloads send `X-DSH-Desktop-Channel: stable|beta`. A check also sends the current version, while a download sends `X-DSH-Desktop-Target-Version`; the service must echo the requested channel and version. Legacy clients without the channel header are treated as stable. A Beta client requires an explicit `channel: "beta"` response. Stable accepts only release SemVer, while Beta accepts only `-beta.N`. Automatic Beta updates query only Beta. **Install Stable Edition** is a separate explicit operation that may select a lower version and installs Stable alongside Beta.
 

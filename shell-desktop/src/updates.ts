@@ -1,4 +1,4 @@
-/** Cordis Host plugin for scheduled and interactive Shell Desktop updates. */
+/** Cordis Host plugin for scheduled and interactive AI Shell Desktop updates. */
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'

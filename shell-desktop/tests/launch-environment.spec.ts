@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { withDesktopDshHome } from '../src/launch-environment.ts'
 
 describe('Desktop DSH home launch environment', () => {
-  const homeDir = 'C:\\Users\\Desktop User\\AppData\\Roaming\\Shell Desktop\\safe-mode\\dsh-home'
+  const homeDir = 'C:\\Users\\Desktop User\\AppData\\Roaming\\AI Shell Desktop\\safe-mode\\dsh-home'
 
   it.each(['DSH_HOME', 'dsh_home', 'Dsh_Home'])('overrides %s for Windows Host child launches', name => {
     const environment = createLaunchEnvironmentSnapshot([{

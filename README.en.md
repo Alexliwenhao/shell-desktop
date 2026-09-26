@@ -1,4 +1,4 @@
-# Shell Desktop
+# AI Shell Desktop
 
 An open-source Windows / macOS desktop client for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): it pins an upstream release and runs it unmodified, while the desktop shell itself composes as an ordinary DSH plugin.
 

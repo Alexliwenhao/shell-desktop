@@ -28,7 +28,7 @@ public class Win32Capture {
 Add-Type -AssemblyName System.Drawing
 
 $handle = [IntPtr]::Zero
-$processes = @(Get-Process -Name electron, 'Shell Desktop' -ErrorAction SilentlyContinue)
+$processes = @(Get-Process -Name electron, 'AI Shell Desktop' -ErrorAction SilentlyContinue)
 foreach ($process in $processes) {
   if ($process.MainWindowHandle -eq [IntPtr]::Zero) { continue }
   $builder = New-Object System.Text.StringBuilder 512

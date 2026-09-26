@@ -1,10 +1,10 @@
-# Shell Desktop 插件开发
+# AI Shell Desktop 插件开发
 
 > **接口状态：** 本文介绍的 DSH/Cordis 与 Desktop service 都是当前可用接口，可以直接作为依赖和发布目标。
 
 ## 先理解两层插件
 
-一个普通 DSH 插件可以提供 Host service、命令、路由、bundle 或 Web Client。它应该尽量只依赖官方 DSH contract，因此可以在命令行、普通 Web profile 和 Shell Desktop 中复用。
+一个普通 DSH 插件可以提供 Host service、命令、路由、bundle 或 Web Client。它应该尽量只依赖官方 DSH contract，因此可以在命令行、普通 Web profile 和 AI Shell Desktop 中复用。
 
 Desktop 另外提供两个公开的 Host service：
 
@@ -203,7 +203,7 @@ desktopPnpm.runPlugin(['install', '--no-frozen-lockfile'], invokingDir, signal)
 
 DSH 的插件生态正在快速增长。插件越多，它们能否协同工作就越重要——如果每个插件都假设或覆盖其他插件的内部实现，装几个插件就会开始冲突，生态会逐渐碎片化。
 
-我们倡导像浏览器插件一样的开发方式：大家在同一个平台上、按同一套约定扩展，而不是各自维护一份改过的运行时。Shell Desktop 是这套方式的第一个实践者——桌面壳本身就是一个普通插件，与官方、第三方插件走同一条组合路径，没有任何特权。
+我们倡导像浏览器插件一样的开发方式：大家在同一个平台上、按同一套约定扩展，而不是各自维护一份改过的运行时。AI Shell Desktop 是这套方式的第一个实践者——桌面壳本身就是一个普通插件，与官方、第三方插件走同一条组合路径，没有任何特权。
 
 为此我们发起一项开发规范倡议，希望它通过社区的采纳成为事实标准：
 

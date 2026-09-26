@@ -735,7 +735,7 @@ describe('published package surface', () => {
   it('fixes the installed application identity', () => {
     expect(workspaceManifest.version).toBeUndefined()
     expect(manifest.version).toBe('2.0.10')
-    expect(manifest.build?.productName).toBe('Shell Desktop')
+    expect(manifest.build?.productName).toBe('AI Shell Desktop')
     expect(manifest.build?.appId).toBe('com.shelldesktop.app')
     expect(manifest.build?.asar).toBe(false)
     expect(manifest.build).not.toHaveProperty('asarUnpack')
@@ -790,7 +790,7 @@ describe('published package surface', () => {
       createDesktopShortcut: true,
       createStartMenuShortcut: true,
       differentialPackage: false,
-      shortcutName: 'Shell Desktop',
+      shortcutName: 'AI Shell Desktop',
       uninstallerIcon: 'build/app-icon.ico',
       useZip: false,
       artifactName: 'AI-Shell-Desktop-${version}-${arch}-Setup.${ext}',

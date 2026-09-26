@@ -98,7 +98,7 @@ describe('published package surface', () => {
   it('sets a distinct Beta process identity before taking the single-instance lock', () => {
     expect(productIdentity).toContain("packageName: 'shell-desktop-beta'")
     expect(productIdentity).toContain("packageName: 'shell-desktop'")
-    expect(productIdentity).toContain("productName: 'Shell Desktop Beta'")
+    expect(productIdentity).toContain("productName: 'AI Shell Desktop Beta'")
     expect(productIdentity).toContain("appId: 'com.shelldesktop.app.beta'")
     expect(productIdentity).toContain('DESKTOP_PRODUCT_IDENTITY = DESKTOP_RELEASE_IDENTITIES.beta')
     expect(productIdentity).toContain('OTHER_DESKTOP_PRODUCT_IDENTITY = DESKTOP_RELEASE_IDENTITIES.stable')
@@ -814,7 +814,7 @@ describe('published package surface', () => {
     expect(manifest.version).toBe('2.0.10-beta.1')
     expect(manifest.name).toBe('shell-desktop-beta')
     expect(manifest.bin).toBe('lib/bin.js')
-    expect(manifest.build?.productName).toBe('Shell Desktop Beta')
+    expect(manifest.build?.productName).toBe('AI Shell Desktop Beta')
     expect(manifest.build?.appId).toBe('com.shelldesktop.app.beta')
     expect(manifest.build?.asar).toBe(false)
     expect(manifest.build).not.toHaveProperty('asarUnpack')
@@ -868,7 +868,7 @@ describe('published package surface', () => {
       createDesktopShortcut: true,
       createStartMenuShortcut: true,
       differentialPackage: false,
-      shortcutName: 'Shell Desktop Beta',
+      shortcutName: 'AI Shell Desktop Beta',
       useZip: false,
       artifactName: 'AI-Shell-Desktop-Beta-${version}-${arch}-Setup.${ext}',
     })

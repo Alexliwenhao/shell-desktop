@@ -44,7 +44,7 @@ function defaultOptions(): MacReleaseVerificationOptions {
     distDir: process.argv[2] === undefined
       ? join(packageRoot, 'dist', 'mac-release')
       : resolve(process.argv[2]),
-    productName: 'Shell Desktop',
+    productName: 'AI Shell Desktop',
     listDmgs,
     makeMountPoint: () => mkdtempSync(join(tmpdir(), 'shell-desktop-dmg-')),
     run,

@@ -449,7 +449,7 @@ describe('Desktop startup recovery confirmations', () => {
       type: 'question',
       title: '恢复默认数据目录？',
       message: '切换到系统默认数据目录并重启？',
-      detail: 'Shell Desktop 将改为使用当前系统的默认数据目录。当前数据目录不会被删除。',
+      detail: 'AI Shell Desktop 将改为使用当前系统的默认数据目录。当前数据目录不会被删除。',
       buttons: ['恢复默认并重启', '取消'],
       defaultId: 1,
       cancelId: 1,
@@ -498,7 +498,7 @@ describe('Desktop startup recovery confirmations', () => {
       type: 'question',
       title: '新建默认数据目录？',
       message: '默认数据目录不存在，是否新建？',
-      detail: 'Shell Desktop 将在默认路径创建一个全新的环境并重启。当前数据目录不会被删除。',
+      detail: 'AI Shell Desktop 将在默认路径创建一个全新的环境并重启。当前数据目录不会被删除。',
       buttons: ['新建并重启', '取消'],
       defaultId: 1,
       cancelId: 1,
@@ -537,7 +537,7 @@ describe('Desktop startup recovery confirmations', () => {
 
     expect(desktopDialog.show).toHaveBeenCalledWith(expect.objectContaining({
       type: 'warning',
-      title: 'Factory reset Shell Desktop?',
+      title: 'Factory reset AI Shell Desktop?',
       detail: expect.stringContaining('C:\\Users\\Example\\.dsh'),
       buttons: ['Reset data and restart', 'Cancel'],
       defaultId: 1,

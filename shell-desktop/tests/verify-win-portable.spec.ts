@@ -22,7 +22,7 @@ function fixture(version = '2.0.0'): { readonly root: string; readonly portable:
   mkdirSync(dist, { recursive: true })
   const portable = join(dist, `AI-Shell-Desktop-${version}-x64-Portable.zip`)
   const archive = new AdmZip()
-  archive.addFile('Shell Desktop.exe', portableExecutable())
+  archive.addFile('AI Shell Desktop.exe', portableExecutable())
   archive.addFile('resources/app/package.json', Buffer.from('{}'))
   archive.writeZip(portable)
   return { root, portable }
@@ -51,7 +51,7 @@ describe('Windows portable artifact verification', () => {
     const invalid = portableExecutable()
     invalid.write('NO', 0, 'ascii')
     const archive = new AdmZip()
-    archive.addFile('Shell Desktop.exe', invalid)
+    archive.addFile('AI Shell Desktop.exe', invalid)
     archive.addFile('resources/app/package.json', Buffer.from('{}'))
     archive.writeZip(value.portable)
 

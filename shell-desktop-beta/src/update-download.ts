@@ -1,4 +1,4 @@
-/** Headless, confirmation-gated downloads for Shell Desktop installers. */
+/** Headless, confirmation-gated downloads for AI Shell Desktop installers. */
 
 import { randomUUID } from 'node:crypto'
 import { chmod, lstat, mkdir, open, readFile, rename, unlink } from 'node:fs/promises'

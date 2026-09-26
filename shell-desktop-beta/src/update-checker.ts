@@ -1,4 +1,4 @@
-/** Headless version checks against the public Shell Desktop release service. */
+/** Headless version checks against the public AI Shell Desktop release service. */
 
 import {
   assertDesktopInstallationId,
@@ -6,7 +6,7 @@ import {
   type DesktopInstallationId,
 } from './desktop-installation-id.ts'
 
-/** Public endpoint returning the latest Shell Desktop version for a requested channel. */
+/** Public endpoint returning the latest AI Shell Desktop version for a requested channel. */
 export const DESKTOP_VERSION_ENDPOINT = 'https://www.dshdesktop.cn/api/desktop/version'
 
 /** Header carrying the installed Desktop version to the fixed version endpoint. */
@@ -108,7 +108,7 @@ export function compareSemVerVersions(left: string, right: string): number | nul
 }
 
 /**
- * Check the fixed Shell Desktop version endpoint for a release in one channel.
+ * Check the fixed AI Shell Desktop version endpoint for a release in one channel.
  * @param options - installed version, caller-owned signal, and optional request adapter.
  * @returns a successful comparison, or null when any request or validation step fails.
  */

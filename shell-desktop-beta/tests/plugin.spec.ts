@@ -347,7 +347,7 @@ describe('desktop Host plugin', () => {
       mode: 'compatibility',
       url: 'http://127.0.0.1:43120/?shell-desktop-mode=compatibility&shell-desktop-platform=darwin&shell-desktop-version=2.0.0&shell-desktop-material=transparent&shell-desktop-titlebar-inset=36',
       authenticationUrl: 'http://127.0.0.1:43120/?token=test-token',
-      productName: 'Shell Desktop Beta',
+      productName: 'AI Shell Desktop Beta',
       windowTitle: 'AI Shell Desktop',
       rendererAccessHeader: {
         name: 'x-shell-desktop-renderer',

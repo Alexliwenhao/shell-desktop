@@ -258,7 +258,7 @@ const electron = vi.hoisted(() => {
     Menu: {
       buildFromTemplate: vi.fn((template: unknown[]) => {
         const first = template[0] as { label?: unknown, submenu?: unknown } | undefined
-        if (first?.label === 'Shell Desktop' && Array.isArray(first.submenu)) {
+        if (first?.label === 'AI Shell Desktop' && Array.isArray(first.submenu)) {
           applicationMenuTemplates.push(template)
         } else {
           menuTemplates.push(template)
@@ -336,7 +336,7 @@ const spec: DesktopShellSpec = {
     name: 'x-shell-desktop-renderer',
     value: Buffer.alloc(32, 9).toString('base64url'),
   },
-  productName: 'Shell Desktop',
+  productName: 'AI Shell Desktop',
   windowTitle: 'AI Shell Desktop',
   iconPath: '/tmp/app-icon.png',
   trayIcons: {
@@ -443,7 +443,7 @@ describe('Electron desktop runtime', () => {
     expect(electron.browserWindows[0]?.removeMenu).not.toHaveBeenCalled()
     expect(electron.app.dock.setIcon).toHaveBeenCalledWith(electron.appIcon)
     expect(electron.applicationMenuTemplates[0]?.map(item => (item as { label?: string }).label)).toEqual([
-      'Shell Desktop', '文件', '编辑', '显示', '窗口',
+      'AI Shell Desktop', '文件', '编辑', '显示', '窗口',
     ])
     expect(electron.Menu.setApplicationMenu).toHaveBeenCalledWith({
       template: electron.applicationMenuTemplates[0],
@@ -1234,7 +1234,7 @@ describe('Electron desktop runtime', () => {
     expect(runtime.locale).toBe('zh')
     expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label))
       .toEqual(expect.arrayContaining([
-        '打开 Shell Desktop',
+        '打开 AI Shell Desktop',
         '退出',
       ]))
 
@@ -1242,7 +1242,7 @@ describe('Electron desktop runtime', () => {
     expect(runtime.locale).toBe('en')
     expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label))
       .toEqual(expect.arrayContaining([
-        'Open Shell Desktop',
+        'Open AI Shell Desktop',
         'Quit',
       ]))
 
@@ -1251,7 +1251,7 @@ describe('Electron desktop runtime', () => {
     expect(runtime.locale).toBe('zh')
     expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label))
       .toEqual(expect.arrayContaining([
-        '打开 Shell Desktop',
+        '打开 AI Shell Desktop',
         '退出',
       ]))
 
@@ -1776,7 +1776,7 @@ describe('Electron desktop runtime', () => {
 
     const labels = (electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label)
     expect(labels).toEqual([
-      'Open Shell Desktop', undefined,
+      'Open AI Shell Desktop', undefined,
       'Earlier Tool', 'Later Tool', undefined,
       'Check for Updates…', undefined,
       'Quit',
@@ -1836,7 +1836,7 @@ describe('Electron desktop runtime', () => {
     const application = (electron.applicationMenuTemplates.at(-1) as Array<{
       label?: string
       submenu?: Array<{ label?: string, submenu?: unknown }>
-    }>).find(item => item.label === 'Shell Desktop')
+    }>).find(item => item.label === 'AI Shell Desktop')
     expect(application?.submenu).toEqual(expect.arrayContaining([
       expect.objectContaining({ label: 'Profile: desktop' }),
     ]))
@@ -2036,7 +2036,7 @@ describe('Electron desktop runtime', () => {
       title: 'Plugin Load Failed',
       message: 'Some plugins could not be loaded.',
       detail: expect.stringContaining('dsh-vision-router'),
-      buttons: ['Open DSH Terminal', 'Restart Shell Desktop', 'Dismiss'],
+      buttons: ['Open DSH Terminal', 'Restart AI Shell Desktop', 'Dismiss'],
     }))
     const recoveryCalls = electron.dialog.showMessageBox.mock.calls as unknown as Array<[{ detail?: string }]>
     expect(recoveryCalls[0]?.[0].detail).toContain('vision_crop')
@@ -2132,7 +2132,7 @@ describe('Electron desktop runtime', () => {
 
     expect(restart).not.toHaveBeenCalled()
     expect(electron.dialog.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({
-      type: 'question', title: 'Restart Shell Desktop', buttons: ['Restart', 'Cancel'], defaultId: 1, cancelId: 1,
+      type: 'question', title: 'Restart AI Shell Desktop', buttons: ['Restart', 'Cancel'], defaultId: 1, cancelId: 1,
     }))
 
     electron.dialog.showMessageBox.mockResolvedValueOnce({ response: 0, checkboxChecked: false })
@@ -2306,7 +2306,7 @@ describe('Electron desktop runtime', () => {
     expect(electron.dialog.showMessageBox).toHaveBeenLastCalledWith(
       activeWindow,
       expect.objectContaining({
-        title: 'Shell Desktop Is Up to Date',
+        title: 'AI Shell Desktop Is Up to Date',
         detail: 'Installed version: 2.0.0',
         buttons: ['OK'],
       }),
@@ -2356,7 +2356,7 @@ describe('Electron desktop runtime', () => {
     expect(electron.dialog.showMessageBox).toHaveBeenLastCalledWith(
       activeWindow,
       expect.objectContaining({
-        title: 'Shell Desktop Update Downloaded',
+        title: 'AI Shell Desktop Update Downloaded',
         buttons: ['OK'],
       }),
     )

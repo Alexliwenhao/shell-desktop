@@ -21,13 +21,13 @@ interface AppFixture {
 function fixture(): AppFixture {
   const root = mkdtempSync(join(tmpdir(), 'dsh-mac-smoke-'))
   temporaryRoots.push(root)
-  const contents = join(root, 'Shell Desktop Beta.app', 'Contents')
+  const contents = join(root, 'AI Shell Desktop Beta.app', 'Contents')
   const macos = join(contents, 'MacOS')
   const resources = join(contents, 'Resources')
   mkdirSync(macos, { recursive: true })
   mkdirSync(resources, { recursive: true })
   const infoPlist = join(contents, 'Info.plist')
-  const executable = join(macos, 'Shell Desktop Beta')
+  const executable = join(macos, 'AI Shell Desktop Beta')
   const appAsar = join(resources, 'app', 'package.json')
   const modeOverrides = new Map<string, number>()
   writeFileSync(infoPlist, '<?xml version="1.0" encoding="UTF-8"?>')
@@ -57,7 +57,7 @@ function options(
   const removeMountPoint = vi.fn()
   const value: MacSmokeVerificationOptions = {
     distDir: '/release/dist',
-    productName: 'Shell Desktop Beta',
+    productName: 'AI Shell Desktop Beta',
     listDmgs: () => ['/release/dist/AI-Shell-Desktop-Beta-2.0.1.dmg'],
     makeMountPoint: () => '/private/tmp/shell-desktop-dmg-smoke-test',
     run: (command, args) => { calls.push({ command, args: [...args] }) },
@@ -100,7 +100,7 @@ describe('macOS DMG smoke artifact verification', () => {
   it('mounts one DMG and accepts a well-formed unsigned application bundle', () => {
     const value = fixture()
     const harness = options({ makeMountPoint: () => value.root }, value.modeOverrides)
-    const appPath = join(value.root, 'Shell Desktop Beta.app')
+    const appPath = join(value.root, 'AI Shell Desktop Beta.app')
 
     expect(verifyMacSmoke(harness.value)).toEqual({
       appPath,

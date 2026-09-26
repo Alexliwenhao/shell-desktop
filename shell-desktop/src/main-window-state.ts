@@ -1,4 +1,4 @@
-/** Durable bounds for the one Shell Desktop main window. */
+/** Durable bounds for the one AI Shell Desktop main window. */
 
 import { randomUUID } from 'node:crypto'
 import {

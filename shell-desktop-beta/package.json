@@ -1,7 +1,7 @@
 {
   "name": "shell-desktop-beta",
   "version": "2.0.10-beta.1",
-  "description": "Shell Desktop Beta: an Electron shell composed as a DeepSeek Harness Cordis plugin",
+  "description": "AI Shell Desktop Beta: an Electron shell composed as a DeepSeek Harness Cordis plugin",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -338,7 +338,7 @@
   },
   "build": {
     "appId": "com.shelldesktop.app.beta",
-    "productName": "Shell Desktop Beta",
+    "productName": "AI Shell Desktop Beta",
     "asar": false,
     "npmRebuild": false,
     "afterPack": "./scripts/verify-packaged-runtime.ts",
@@ -415,7 +415,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "differentialPackage": false,
-      "shortcutName": "Shell Desktop Beta",
+      "shortcutName": "AI Shell Desktop Beta",
       "useZip": false,
       "artifactName": "AI-Shell-Desktop-Beta-${version}-${arch}-Setup.${ext}"
     },

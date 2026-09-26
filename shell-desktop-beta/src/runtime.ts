@@ -10,7 +10,7 @@ import type {
   PersistedWindowsWindowMaterial,
 } from './window-material.ts'
 
-/** Electron platforms supported by the Shell Desktop native adapter. */
+/** Electron platforms supported by the AI Shell Desktop native adapter. */
 export type DesktopPlatform = 'darwin' | 'win32' | 'linux'
 
 /** Native presentation modes selected by the desktop-shell Cordis row. */
@@ -257,7 +257,7 @@ export interface DesktopRuntime {
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
-    /** Electron adapter provided by the Shell Desktop launcher. */
+    /** Electron adapter provided by the AI Shell Desktop launcher. */
     desktopRuntime: DesktopRuntime
   }
 }

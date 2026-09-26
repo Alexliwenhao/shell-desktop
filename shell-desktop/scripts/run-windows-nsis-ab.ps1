@@ -45,7 +45,7 @@ $taskInspector = Join-Path $taskScriptRoot 'inspect-windows-installed-app.ts'
 $taskRuntimeProbe = Join-Path $taskScriptRoot 'probe-windows-packaged-runtime.ts'
 $taskNode = (Get-Command node.exe -ErrorAction Stop).Source
 $taskTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
-$taskUninstallerRelativePath = 'Uninstall Shell Desktop.exe'
+$taskUninstallerRelativePath = 'Uninstall AI Shell Desktop.exe'
 $taskUninstallRoots = @(
   'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
   'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
@@ -54,7 +54,7 @@ $taskUninstallRoots = @(
 
 function Get-TaskInstallEntries {
   return @(Get-ItemProperty $taskUninstallRoots -ErrorAction SilentlyContinue | Where-Object {
-    $_.DisplayName -match '^Shell Desktop(?:$|\s)'
+    $_.DisplayName -match '^AI Shell Desktop(?:$|\s)'
   })
 }
 
@@ -66,7 +66,7 @@ function Get-TaskShortcuts {
     [Environment]::GetFolderPath('CommonStartMenu')
   ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
   return @($taskRoots | ForEach-Object {
-    Get-ChildItem -LiteralPath $_ -Filter 'Shell Desktop*.lnk' -Recurse -File -ErrorAction SilentlyContinue
+    Get-ChildItem -LiteralPath $_ -Filter 'AI Shell Desktop*.lnk' -Recurse -File -ErrorAction SilentlyContinue
   })
 }
 
@@ -114,11 +114,11 @@ function Get-TaskInstallEntriesForInstallation([string]$taskInstallRoot) {
 }
 
 function Assert-TaskMachineIsClean {
-  $taskProcesses = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -ieq 'Shell Desktop.exe' })
+  $taskProcesses = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -ieq 'AI Shell Desktop.exe' })
   $taskEntries = @(Get-TaskInstallEntries)
   $taskShortcuts = @(Get-TaskShortcuts)
   if ($taskProcesses.Count -gt 0 -or $taskEntries.Count -gt 0 -or $taskShortcuts.Count -gt 0) {
-    throw 'Refusing to run outside a clean VM: an existing Shell Desktop process, install entry, or shortcut is present.'
+    throw 'Refusing to run outside a clean VM: an existing AI Shell Desktop process, install entry, or shortcut is present.'
   }
 }
 
@@ -401,7 +401,7 @@ function Remove-TaskInstallation([string]$taskRoot, [string]$taskInstallRoot) {
 
   $taskUninstallExitCode = $null
   $taskUninstallError = $null
-  $taskUninstaller = Join-Path $taskInstallRoot 'Uninstall Shell Desktop.exe'
+  $taskUninstaller = Join-Path $taskInstallRoot 'Uninstall AI Shell Desktop.exe'
   if (Test-Path -LiteralPath $taskUninstaller -PathType Leaf) {
     try {
       $taskUninstall = Start-Process -FilePath $taskUninstaller -ArgumentList '/S' -PassThru -WindowStyle Hidden
@@ -441,7 +441,7 @@ function Remove-TaskInstallation([string]$taskRoot, [string]$taskInstallRoot) {
     installEntriesRemaining = @(Get-TaskInstallEntriesForInstallation $taskInstallRoot).Count
     shortcutsRemaining = @(Get-TaskShortcutsForInstallation $taskInstallRoot).Count
     globalDshProcessesRemaining = @(Get-CimInstance Win32_Process | Where-Object {
-      $_.Name -ieq 'Shell Desktop.exe'
+      $_.Name -ieq 'AI Shell Desktop.exe'
     }).Count
     globalInstallEntriesRemaining = @(Get-TaskInstallEntries).Count
     globalShortcutsRemaining = @(Get-TaskShortcuts).Count
@@ -593,13 +593,13 @@ function Read-TaskColdSnapshotPreparation($taskBaseVariants, $taskCandidateVaria
       -not (Test-TaskPathIsBelow $taskInstallRoot $taskCaseRoot) -or
       -not (Test-TaskPathIsBelow $taskSentinelPath $taskInstallRoot) -or
       (Test-TaskPathIsBelow $taskStatePath $taskCaseRoot) -or
-      -not (Test-Path -LiteralPath (Join-Path $taskInstallRoot 'Shell Desktop.exe') -PathType Leaf) -or
+      -not (Test-Path -LiteralPath (Join-Path $taskInstallRoot 'AI Shell Desktop.exe') -PathType Leaf) -or
       -not (Test-Path -LiteralPath (Join-Path $taskInstallRoot 'resources\app.asar') -PathType Leaf) -or
       -not (Test-Path -LiteralPath $taskSentinelPath -PathType Leaf)
     ) {
       throw 'Restored canonical base installation does not match its cold snapshot preparation evidence.'
     }
-    $taskProcesses = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -ieq 'Shell Desktop.exe' })
+    $taskProcesses = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -ieq 'AI Shell Desktop.exe' })
     $taskExpectedEntryPaths = @(Get-TaskInstallEntriesForInstallation $taskInstallRoot | `
       ForEach-Object { [string]$_.PSPath })
     $taskForeignEntries = @(Get-TaskInstallEntries | Where-Object {
@@ -1094,7 +1094,7 @@ function Invoke-TaskFaultCase([string]$taskKind, $taskBase, $taskCandidate) {
     $taskResult.installedUnpackedFileCount = $taskInspection.report.unpacked.fileCount
     $taskResult.unpackedTreeMatchesCandidate = $taskResult.installedUnpackedTreeSha256 -eq `
       $taskCandidate.ExpectedUnpackedTreeSha256
-    if (Test-Path -LiteralPath (Join-Path $taskInstallRoot 'Shell Desktop.exe')) {
+    if (Test-Path -LiteralPath (Join-Path $taskInstallRoot 'AI Shell Desktop.exe')) {
       $taskStartup = Invoke-TaskStartupProbe $taskInstallRoot
       $taskResult.startupSucceeded = $taskStartup.exitCode -eq 0 -and [bool]$taskStartup.report.success
     }

@@ -11,7 +11,7 @@ function options(overrides: Partial<MacReleaseVerificationOptions> = {}) {
   const removeMountPoint = vi.fn()
   const value: MacReleaseVerificationOptions = {
     distDir: '/release/dist',
-    productName: 'Shell Desktop Beta',
+    productName: 'AI Shell Desktop Beta',
     listDmgs: () => ['/release/dist/AI-Shell-Desktop-Beta-2.0.0-universal.dmg'],
     makeMountPoint: () => '/private/tmp/shell-desktop-dmg-test',
     run: (command, args) => { calls.push({ command, args: [...args] }) },
@@ -24,7 +24,7 @@ function options(overrides: Partial<MacReleaseVerificationOptions> = {}) {
 describe('macOS release artifact verification', () => {
   it('mounts one DMG and verifies signature, Gatekeeper, and the stapled ticket', () => {
     const harness = options()
-    const appPath = join('/private/tmp/shell-desktop-dmg-test', 'Shell Desktop Beta.app')
+    const appPath = join('/private/tmp/shell-desktop-dmg-test', 'AI Shell Desktop Beta.app')
 
     expect(verifyMacRelease(harness.value)).toEqual({
       appPath,
@@ -41,11 +41,11 @@ describe('macOS release artifact verification', () => {
       },
       {
         command: 'lipo',
-        args: [join(appPath, 'Contents', 'MacOS', 'Shell Desktop Beta'), '-verify_arch', 'x86_64'],
+        args: [join(appPath, 'Contents', 'MacOS', 'AI Shell Desktop Beta'), '-verify_arch', 'x86_64'],
       },
       {
         command: 'lipo',
-        args: [join(appPath, 'Contents', 'MacOS', 'Shell Desktop Beta'), '-verify_arch', 'arm64'],
+        args: [join(appPath, 'Contents', 'MacOS', 'AI Shell Desktop Beta'), '-verify_arch', 'arm64'],
       },
       ...MACOS_UNIVERSAL_NATIVE_ENTRIES.map(entry => ({
         command: 'lipo',

@@ -31,7 +31,7 @@ Var pid
     ${endIf}
 
   dsh_installer_scoped_fallback:
-    ; The patched builder macros match Shell Desktop Beta.exe, not every executable
+    ; The patched builder macros match AI Shell Desktop Beta.exe, not every executable
     ; below $INSTDIR. They handle pre-handoff releases and stubborn processes.
     MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(appRunning)" /SD IDOK IDOK dsh_installer_stop_app
     Quit

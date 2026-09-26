@@ -11,7 +11,7 @@ import {
 
 describe('Desktop relaunch arguments', () => {
   const argv = [
-    '/Applications/Shell Desktop.app/Contents/MacOS/Shell Desktop',
+    '/Applications/AI Shell Desktop.app/Contents/MacOS/AI Shell Desktop',
     'desktop-main.cjs',
     '--profile=work',
     DESKTOP_RECOVERY_MODE_ARGUMENT,

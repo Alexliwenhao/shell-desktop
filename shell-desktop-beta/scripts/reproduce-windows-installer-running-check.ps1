@@ -21,7 +21,7 @@ try {
     $_.Path -and $_.Path.StartsWith($taskRoot, [System.StringComparison]::CurrentCultureIgnoreCase)
   })
   $taskFixedMatches = @($taskProcesses | Where-Object {
-    $_.Path -and [System.IO.Path]::GetFileName($_.Path) -ieq 'Shell Desktop Beta.exe'
+    $_.Path -and [System.IO.Path]::GetFileName($_.Path) -ieq 'AI Shell Desktop Beta.exe'
   })
 
   [ordered]@{

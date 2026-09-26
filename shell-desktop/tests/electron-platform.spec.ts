@@ -45,7 +45,7 @@ describe('electronPlatformStrategy', () => {
     expect(strategy.updateDownloadPlatform).toBe('win32')
     expect(strategy.canPickDirectory).toBe(true)
 
-    strategy.configureApplication(icon, 'Shell Desktop')
+    strategy.configureApplication(icon, 'AI Shell Desktop')
     strategy.configureWindow(window as never)
     strategy.refreshThemeMaterial(window as never, 'mica')
 
@@ -66,7 +66,7 @@ describe('electronPlatformStrategy', () => {
     expect(strategy.updateDownloadPlatform).toBe('darwin')
     expect(strategy.canPickDirectory).toBe(false)
 
-    strategy.configureApplication(icon, 'Shell Desktop')
+    strategy.configureApplication(icon, 'AI Shell Desktop')
     strategy.configureWindow(window as never)
     strategy.refreshThemeMaterial(window as never, 'transparent')
 
@@ -85,7 +85,7 @@ describe('electronPlatformStrategy', () => {
     expect(strategy.updateDownloadPlatform).toBeUndefined()
     expect(strategy.canPickDirectory).toBe(false)
 
-    strategy.configureApplication({} as never, 'Shell Desktop')
+    strategy.configureApplication({} as never, 'AI Shell Desktop')
     strategy.configureWindow(window as never)
     strategy.refreshThemeMaterial(window as never, 'off')
 

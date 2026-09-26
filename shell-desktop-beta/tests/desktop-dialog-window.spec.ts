@@ -79,7 +79,7 @@ describe('DesktopDialogWindow', () => {
     const parent = new electron.BrowserWindow({})
     const dialog = new DesktopDialogWindow({
       type: 'question',
-      title: 'Restart Shell Desktop',
+      title: 'Restart AI Shell Desktop',
       message: 'Restart now?',
       detail: 'Running operations may be interrupted.',
       buttons: ['Restart', 'Cancel'],
@@ -179,7 +179,7 @@ describe('DesktopDialogWindow', () => {
     const result = new DesktopDialogWindow({
       type: 'warning',
       title: 'Profile compatibility warning',
-      message: 'Current Profile “work” was used by Shell Desktop Beta.',
+      message: 'Current Profile “work” was used by AI Shell Desktop Beta.',
       detail: 'Previous DSH: 0.1.2-alpha.5\nCurrent DSH: 0.1.1-rc.2',
       advisory: 'Warning: DSH version differences may make plugins unavailable.',
       presentation: 'profile-compatibility',

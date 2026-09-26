@@ -31,7 +31,7 @@ function fakeChild(): FakeChild {
 
 function options(spawn: ProfileMaterializerSpawn): ProfileMaterializerOptions {
   return {
-    appExecutable: '/Applications/Shell Desktop.app/Contents/MacOS/Shell Desktop',
+    appExecutable: '/Applications/AI Shell Desktop.app/Contents/MacOS/AI Shell Desktop',
     clearEnvironmentPath: '/private/clear-env.mjs',
     pnpmBinPath: '/private/pnpm/bin/pnpm.mjs',
     nodeBinDir: '/private/node-bin',
@@ -62,7 +62,7 @@ describe('profile materializer', () => {
     child.emit('close', 0, null)
     const result = await resultPromise
 
-    expect(command).toBe('/Applications/Shell Desktop.app/Contents/MacOS/Shell Desktop')
+    expect(command).toBe('/Applications/AI Shell Desktop.app/Contents/MacOS/AI Shell Desktop')
     expect(args).toEqual([
       '--import',
       pathToFileURL('/private/clear-env.mjs').href,

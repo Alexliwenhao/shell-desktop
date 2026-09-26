@@ -1,10 +1,10 @@
-# Shell Desktop Plugin Development
+# AI Shell Desktop Plugin Development
 
 > **API status:** the DSH/Cordis and Desktop services in this guide are current, usable interfaces. They can be used as dependencies and release targets today.
 
 ## Understand the two plugin layers
 
-A normal DSH plugin can provide Host services, commands, routes, bundles, or a Web Client. It should depend on upstream DSH contracts whenever possible so the same package can work in the CLI, an ordinary Web profile, and Shell Desktop.
+A normal DSH plugin can provide Host services, commands, routes, bundles, or a Web Client. It should depend on upstream DSH contracts whenever possible so the same package can work in the CLI, an ordinary Web profile, and AI Shell Desktop.
 
 Desktop adds two public Host services:
 
@@ -203,7 +203,7 @@ Read the [architecture](architecture.en.md) next, then use the package-level [se
 
 The DSH plugin ecosystem is growing quickly. The more plugins there are, the more their ability to work together matters — if every plugin assumes or overrides another plugin's internals, installing a few plugins starts to conflict and the ecosystem fragments.
 
-We advocate a browser-plugin style of development: everyone extends the same platform against the same conventions, instead of each maintaining a modified runtime of their own. Shell Desktop is the first practitioner of this approach — the desktop shell itself is an ordinary plugin on the same composition path as official and third-party plugins, with no special privileges.
+We advocate a browser-plugin style of development: everyone extends the same platform against the same conventions, instead of each maintaining a modified runtime of their own. AI Shell Desktop is the first practitioner of this approach — the desktop shell itself is an ordinary plugin on the same composition path as official and third-party plugins, with no special privileges.
 
 To that end we are starting a development-conventions initiative and hope it becomes a de facto standard through community adoption:
 

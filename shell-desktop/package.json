@@ -1,7 +1,7 @@
 {
   "name": "shell-desktop",
   "version": "2.0.10",
-  "description": "Shell Desktop: an Electron shell composed as a DeepSeek Harness Cordis plugin",
+  "description": "AI Shell Desktop: an Electron shell composed as a DeepSeek Harness Cordis plugin",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -338,7 +338,7 @@
   },
   "build": {
     "appId": "com.shelldesktop.app",
-    "productName": "Shell Desktop",
+    "productName": "AI Shell Desktop",
     "asar": false,
     "afterPack": "./scripts/verify-packaged-runtime.ts",
     "afterAllArtifactBuild": "./scripts/verify-electron-fuses.ts",
@@ -415,7 +415,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "differentialPackage": false,
-      "shortcutName": "Shell Desktop",
+      "shortcutName": "AI Shell Desktop",
       "uninstallerIcon": "build/app-icon.ico",
       "useZip": false,
       "artifactName": "AI-Shell-Desktop-${version}-${arch}-Setup.${ext}"

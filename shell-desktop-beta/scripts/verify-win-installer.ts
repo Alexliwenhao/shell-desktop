@@ -92,7 +92,7 @@ export function verifyWindowsInstaller(
     distDir,
     `AI-Shell-Desktop-Beta-${options.version}-x64-Setup.exe`,
   )
-  const applicationPath = join(distDir, 'win-unpacked', 'Shell Desktop Beta.exe')
+  const applicationPath = join(distDir, 'win-unpacked', 'AI Shell Desktop Beta.exe')
 
   assertPortableExecutable(installerPath, 'Windows NSIS installer')
   assertPortableExecutable(applicationPath, 'unpacked Windows application')

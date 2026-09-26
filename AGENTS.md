@@ -1,4 +1,4 @@
-# Shell Desktop repository rules
+# AI Shell Desktop repository rules
 
 This repository owns the desktop product around an unmodified DeepSeek Harness checkout.
 

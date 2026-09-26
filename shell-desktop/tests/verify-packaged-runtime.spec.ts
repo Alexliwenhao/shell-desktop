@@ -61,7 +61,7 @@ function context(
     ...(arch === undefined ? {} : { arch }),
     packager: {
       ...(executableName === undefined ? {} : { executableName }),
-      appInfo: { productFilename: 'Shell Desktop' },
+      appInfo: { productFilename: 'AI Shell Desktop' },
     },
   }
 }
@@ -294,13 +294,13 @@ describe('packaged desktop runtime verification', () => {
   it.each([
     [
       'darwin',
-      join('/build', 'Shell Desktop.app', 'Contents', 'Resources', 'app.asar'),
-      join('/build', 'Shell Desktop.app', 'Contents', 'MacOS', 'Shell Desktop'),
+      join('/build', 'AI Shell Desktop.app', 'Contents', 'Resources', 'app.asar'),
+      join('/build', 'AI Shell Desktop.app', 'Contents', 'MacOS', 'AI Shell Desktop'),
     ],
     [
       'win32',
       join('/build', 'resources', 'app.asar'),
-      join('/build', 'Shell Desktop.exe'),
+      join('/build', 'AI Shell Desktop.exe'),
     ],
   ])('inspects the %s selective ASAR layout', (platform, expectedPath, expectedExecutable) => {
     const runtimeContext = context('/build', platform)

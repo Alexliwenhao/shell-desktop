@@ -30,7 +30,7 @@ const spec: DesktopShellSpec = {
     name: 'x-shell-desktop-renderer',
     value: Buffer.alloc(32, 8).toString('base64url'),
   },
-  productName: 'Shell Desktop',
+  productName: 'AI Shell Desktop',
   windowTitle: 'AI Shell Desktop',
   iconPath: '/tmp/app-icon.png',
   trayIcons: {

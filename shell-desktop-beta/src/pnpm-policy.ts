@@ -1,7 +1,7 @@
 /** Desktop-wide pnpm policy applied to every package-manager operation. */
 
 /**
- * Shell Desktop accepts explicitly requested package versions immediately.
+ * AI Shell Desktop accepts explicitly requested package versions immediately.
  * Keep this process-local: never rewrite a user's pnpm configuration file.
  */
 export const PNPM_IGNORE_MINIMUM_RELEASE_AGE = '--config.minimumReleaseAge=0'

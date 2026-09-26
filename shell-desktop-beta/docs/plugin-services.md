@@ -1,8 +1,8 @@
-# Shell Desktop plugin services
+# AI Shell Desktop plugin services
 
 English | [中文](plugin-services.zh.md)
 
-This document is the supported integration contract for plugin authors. It covers the public Host services `desktopProfiles` and `desktopPnpm`, plus the Client service `desktopWindow`, exported by Shell Desktop 2.x in compatibility, extended, and advanced presentation modes. It does not grant third-party access to raw Electron APIs or launcher bootstrap state.
+This document is the supported integration contract for plugin authors. It covers the public Host services `desktopProfiles` and `desktopPnpm`, plus the Client service `desktopWindow`, exported by AI Shell Desktop 2.x in compatibility, extended, and advanced presentation modes. It does not grant third-party access to raw Electron APIs or launcher bootstrap state.
 
 ## Layers and data flow
 
@@ -42,7 +42,7 @@ flowchart LR
 
 The launcher resolves one profile before the Loader tree mounts. `desktopProfiles.current` remains fixed until that whole Cordis generation is disposed. The `desktop-pnpm` Host row builds `desktopPnpm` from launcher-private facts and the upstream subprocess service. A profile or mode switch disposes the current generation and starts a new one; service references must not cross that boundary.
 
-The renderer receives ordinary Web Client modules over the existing loopback carrier. It cannot read the Host services directly, and Shell Desktop adds no preload or Electron IPC bridge for them. Instead, the Desktop Client provides immutable native-layout facts through `desktopWindow` for its own Cordis-fiber lifetime. A plugin with browser UI continues to use normal DSH Host routes, RPC, client metadata, services, and slots.
+The renderer receives ordinary Web Client modules over the existing loopback carrier. It cannot read the Host services directly, and AI Shell Desktop adds no preload or Electron IPC bridge for them. Instead, the Desktop Client provides immutable native-layout facts through `desktopWindow` for its own Cordis-fiber lifetime. A plugin with browser UI continues to use normal DSH Host routes, RPC, client metadata, services, and slots.
 
 ## Public Client Cordis service
 
@@ -196,7 +196,7 @@ The fact that a private type is present in emitted declarations does not make it
 
 ### Desktop-only plugin: required injection
 
-A plugin that only makes sense inside Shell Desktop can declare both services as required dependencies. Cordis keeps the plugin pending until both providers are available and unloads its effects if a required service disappears.
+A plugin that only makes sense inside AI Shell Desktop can declare both services as required dependencies. Cordis keeps the plugin pending until both providers are available and unloads its effects if a required service disappears.
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'

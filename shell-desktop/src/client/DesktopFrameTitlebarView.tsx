@@ -177,7 +177,7 @@ export function DesktopFrameTitlebarView({ api, environment, t, remoteControl }:
       data-material={environment.material}
     >
       <div className="dshDesktopFrameIdentity">
-        <span className="dshDesktopFrameProduct">Shell Desktop</span>
+        <span className="dshDesktopFrameProduct">AI Shell Desktop</span>
         <DesktopVersionControl version={environment.version} checkForUpdates={api.checkForUpdates} t={t} />
       </div>
       <div className="dshDesktopFrameActions">

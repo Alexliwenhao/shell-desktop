@@ -24,12 +24,12 @@
 | 15 | 终端已有 AI 会话时，点“新建会话”无效（复用了旧会话） | 已修复（待人工确认） | `newSession` 强制新建并重绑终端 |
 | 16 | 历史会话要支持删除 | 已修复（待人工确认） | 历史行删除按钮：点一次变 ✓（红），再点一次才真正删除；失败会在面板提示 |
 | 17 | 文件的默认路径是 `/` | 已修复（待人工确认） | `FilePanel` 初始加载远端根目录 `/`（不再用 `.`） |
-| 18 | 产品改名：Shell Desktop → Shell Desktop，窗口标题 AI Shell Desktop | 已修复 | 全包（`src`/`tests`/`scripts`/`build`/文档）改文案；保留机器键（`X-DSH-Desktop-*` 头、`shell-desktop` 包名；产物名后在 #27 一并改名） |
+| 18 | 产品改名：AI Shell Desktop → AI Shell Desktop，窗口标题 AI Shell Desktop | 已修复 | 全包（`src`/`tests`/`scripts`/`build`/文档）改文案；保留机器键（`X-DSH-Desktop-*` 头、`shell-desktop` 包名；产物名后在 #27 一并改名） |
 | 19 | logo 全部换成 `JLY.png` | 已修复 | 矢量化四面体标 → `build/app-icon.png` / `tray-icon.svg` → 生成 ICO/托盘/应用图标；应用内占用 `conversation.hero.brand.mark` 槽位 |
 | 20 | 首次启动的初始化向导要全部去掉（市场/手机连接/浏览器页删除） | 已修复 | 删除 Setup Wizard（窗口/契约/文案/状态/native-ui/vite 入口/测试）；启动直接进主界面，模式默认 AI Shell |
 | 21 | 内测声明改为 Host 自动确认（不再弹给用户） | 已修复 | `src/desktop-onboarding.ts`：Host 启动即写入 `ui-onboarding.welcomeNoticeVersion` |
 | 22 | 深色模式下终端内容看不见 | 已修复（待人工确认） | 终端改为跟随主题的独立调色板（深色=深底白字），由 `terminal-theme.ts` 提供 |
-| 23 | 项目独立：整体改名 Shell Desktop，剥离 dsh-desktop | 已修复 | 新仓库 `Alexliwenhao/shell-desktop`；包名 `shell-desktop(-beta)`、appId `com.shelldesktop.app(.beta)`、目录与全部内部标识 `shell-desktop-*` |
+| 23 | 项目独立：整体改名 AI Shell Desktop，剥离 dsh-desktop | 已修复 | 新仓库 `Alexliwenhao/shell-desktop`；包名 `shell-desktop(-beta)`、appId `com.shelldesktop.app(.beta)`、目录与全部内部标识 `shell-desktop-*` |
 | 24 | 文件面板的删除按钮无二次确认，容易误操作 | 已修复 | `FilePanel` 行内移除删除按钮（不暴露文件删除入口） |
 | 25 | 主机删除按钮无二次确认，容易误操作 | 已修复 | `HostPanel` 补二次确认：首次点击变红 ✓（`data-confirm`），再次点击才删除；点击主机行取消 |
 | 26 | 需要一套功能截图 + 功能说明，作为产品视频素材 | 已完成 | `docs/screenshots/`（20 张，按使用顺序编号，CDP 自动采集）+ `docs/screenshots/README.md`（清单 / 讲解要点 / 分镜 / 待补拍）；采集器 `scripts/capture-feature-screenshots.cjs` |
@@ -106,17 +106,17 @@
 
 - 启动（无需 corepack 时）：用 corepack 缓存的 Yarn 4.18.0 直接跑 `yarn workspace shell-desktop start`；后台进程需用 WMI 创建（`Invoke-CimMethod Win32_Process Create`），否则会随命令行子进程结束而被终止。
 - 渲染器控制台：启动前设置 `ELECTRON_ENABLE_LOGGING=1`，日志进入启动输出文件。
-- 宿主日志：`%APPDATA%\Shell Desktop\logs\host\dsh-YYYY-MM-DD.log`（`ctx.logger.*` 在这里，进程 stdout 看不到）。
+- 宿主日志：`%APPDATA%\AI Shell Desktop\logs\host\dsh-YYYY-MM-DD.log`（`ctx.logger.*` 在这里，进程 stdout 看不到）。
 - 会话日志：`~/.dsh/sessions/**/session.v3.jsonl.zstd`（多帧 zstd，逐帧解压）。
 - 窗口截图/点击：`PrintWindow(hwnd, hdc, 2)`（`CopyFromScreen` 会截到覆盖窗口）；点击用 `SetCursorPos` + `mouse_event`。
 - 打包（本机无 corepack 时）：`DSH_PACKAGE_CHECK_ALREADY_RAN=1`（先手动跑过 `check:win-package`）+ `yarn workspace shell-desktop dist:win` / `dist:win-portable`；AA 物料固定用 `DSH_AA_SOURCE_REF=pinned` 走本地 `vendor/agents-anywhere` 校验，避免联网重建。
-- 产物：`shell-desktop/dist/AI-Shell-Desktop-<version>-x64-Setup.exe`（NSIS，未签名）与 `...-Portable.zip`；解包目录 `dist/win-unpacked/Shell Desktop.exe`。
+- 产物：`shell-desktop/dist/AI-Shell-Desktop-<version>-x64-Setup.exe`（NSIS，未签名）与 `...-Portable.zip`；解包目录 `dist/win-unpacked/AI Shell Desktop.exe`。
 
-### 18 产品改名（Shell Desktop）
-- 范围：`src/**`、`tests/**`、`scripts/**`、`build/installer.nsh`、`build/assistedMessages.yml`、包内 README/THIRD_PARTY_NOTICES/plugin-services 文档；`DeepSeek Harness Desktop → AI Shell Desktop`、`Shell Desktop(Beta) → Shell Desktop(Beta)`。
+### 18 产品改名（AI Shell Desktop）
+- 范围：`src/**`、`tests/**`、`scripts/**`、`build/installer.nsh`、`build/assistedMessages.yml`、包内 README/THIRD_PARTY_NOTICES/plugin-services 文档；`DeepSeek Harness Desktop → AI Shell Desktop`、`AI Shell Desktop(Beta) → AI Shell Desktop(Beta)`。
 - 刻意不改（机器键）：更新请求头 `X-DSH-Desktop-*`、npm 包名/bin 别名 `shell-desktop`(`-beta`)、`appId`。（产物名原为 `DSH-Desktop-*`，后在 #27 改为 `AI-Shell-Desktop-*`。）
-- 连带影响：应用数据目录从 `%APPDATA%\Shell Desktop` 变为 `%APPDATA%\Shell Desktop`；旧目录数据不会自动迁移（首启会进安装向导）。本机已手工把旧目录中的 profile-setup/profile-selection/preferences/identity 等拷入新目录。
-- 变体校验：`scripts/verify-desktop-variants.mjs` 的 `normalizeIdentity` 已由 `Shell Desktop Beta` 改为 `Shell Desktop Beta`；`check:desktop-variants` 通过（203 个共享源文件对齐）。
+- 连带影响：应用数据目录从 `%APPDATA%\AI Shell Desktop` 变为 `%APPDATA%\AI Shell Desktop`；旧目录数据不会自动迁移（首启会进安装向导）。本机已手工把旧目录中的 profile-setup/profile-selection/preferences/identity 等拷入新目录。
+- 变体校验：`scripts/verify-desktop-variants.mjs` 的 `normalizeIdentity` 已由 `AI Shell Desktop Beta` 改为 `AI Shell Desktop Beta`；`check:desktop-variants` 通过（203 个共享源文件对齐）。
 
 ### 19 logo 更换（JLY.png）
 - 来源：仓库根 `JLY.png`（441×442，透明底、蓝系多面标记）。处理：按 5 色（`#0062a4/#9dd3ed/#009ad7/#1eaadd/#55bbe5`）分类 → 逐面描边成 SVG → `build/app-icon.png`（1024² RGBA16 + sRGB ICC）与 `build/tray-icon.svg`（单色 `#4D6BFE` 剪影，50×50）。
@@ -129,7 +129,7 @@
 - 实现：删除 `setup-wizard-window/contract/copy/state`、`native-ui/setup-wizard/**`、`vite.native-ui.config.ts` 入口、5 个 wizard spec；`main.ts` 不再有向导门禁与运行块；`profile-channel-admission` 只以 checkpoint 作为使用证据（去掉 wizard 标记回退）。
 - 默认值：`DesktopSettingsSchema.mode` 与 `Config.mode` 默认改为 `aishell`（与 `profile.ts` 的 `DEFAULT_DESKTOP_SHELL_MODE` 一致），否则组合层与设置层不一致会导致重启循环；`desktop-setup-settings.ts`（原 setup-wizard-settings）保留设置文档读写与迁移。
 - 保留入口：模式/材质/市场/AA/通知/浏览器访问仍可在 设置→桌面设置 修改。
-- 证据：清空 `%APPDATA%\Shell Desktop` 冷启动只出现 `AI Shell Desktop` 主窗口（无 `Set up Shell Desktop`），hero 显示新 logo；`check:win-package` 通过；两个包 typecheck 通过。
+- 证据：清空 `%APPDATA%\AI Shell Desktop` 冷启动只出现 `AI Shell Desktop` 主窗口（无 `Set up AI Shell Desktop`），hero 显示新 logo；`check:win-package` 通过；两个包 typecheck 通过。
 
 ### 21 内测声明
 - 现象：首次进入弹出上游「内测声明」模态（`settings.onboarding` 的 `welcome-notice` 步骤，order −100），由 `ui-onboarding.welcomeNoticeVersion` 精确比对控制。
@@ -141,7 +141,7 @@
 - 修复：新增 `src/client/terminal-theme.ts`（从 `document.documentElement` 读 token，缺失时回退浅色）；`aishell-shell` 通过 root 注入 `subscribeTheme`（`ctx.on('theme/change')`）→ `AishellFrame` → `TerminalWorkspace`，主题变化时为每个活动终端重设 `term.options.theme`。
 - 证据：`tests/client-terminal-theme.spec.ts` 5 例通过（两版一致）；typecheck/变体门禁通过；打包产物 client bundle 含 `documentTerminalTheme`。视觉确认需在有交互桌面的机器上进行（本会话无前台窗口，无法注入点击/键盘）。
 
-### 23 项目独立改名（Shell Desktop）
+### 23 项目独立改名（AI Shell Desktop）
 - 目标（用户）：整套独立为开源项目，剥离 dsh-desktop；新仓库 `https://github.com/Alexliwenhao/shell-desktop`；包名与 appId 全部替换；保留 `deepseek-harness` 技术归属。
 - 范围：文本层 352 个文件 / 约 2200 处 + 仓库 slug 18 个文件 / 58 处（旧 slug 是 `deepseek-harness-desktop`，不是 `dsh-desktop`）；目录 `dsh-plugin-desktop/` → `shell-desktop/`、`dsh-plugin-desktop-beta/` → `shell-desktop-beta/`；`yarn install` 刷新 lockfile 与 patch。
 - 改名清单：包名/bin（`shell-desktop`、`shell-desktop-beta`）、appId（`com.shelldesktop.app` / `.beta`）、本地窗口 session partition（`shell-desktop-*` + `local-window-policy` 正则）、渲染器访问头（`x-shell-desktop-renderer`）、设置命名空间（`shell-desktop` / `shell-desktop-notifications`）、profile patch row 名、CI/脚本/文档/README/PRIVACY/issue 模板/upstream.json。
@@ -204,7 +204,7 @@
 - 「选择目录…」在 AI Shell 下走的是 Desktop 原生选择器（Host 校验路径）；原生弹窗是否按预期出现尚未截图确认。
 - #22 深色终端修复需人工确认：打开终端 → 设置→外观 切浅色/深色，终端文字应始终可读。
 - #28/#29 需要人工确认：至少跑一次「/plan → 提问 → 点执行」，应只出现一张卡片、且模型不再直接执行命令。
-- 「打包后仍启动老界面」：本轮已用修复后代码重建并逐项验证——`dist/win-unpacked`、`Setup.exe` 安装副本、`Portable.zip` 解包副本三者的窗口标题均为 `AI Shell Desktop`、页面 URL 均带 `shell-desktop-mode=aishell`（截图：`%TEMP%\opencode\installed-verify.png`、`portable-verify.png`）。若仍看到 DeepSeek Harness 老界面，请记录启动的确切文件（或快捷方式目标）；另外：开始菜单存在一个**失效旧快捷方式** `Shell Desktop.lnk` → 已删除的 `dsh-plugin-desktop\dist\win-unpacked\Shell Desktop.exe`，建议一并清理。
+- 「打包后仍启动老界面」：本轮已用修复后代码重建并逐项验证——`dist/win-unpacked`、`Setup.exe` 安装副本、`Portable.zip` 解包副本三者的窗口标题均为 `AI Shell Desktop`、页面 URL 均带 `shell-desktop-mode=aishell`（截图：`%TEMP%\opencode\installed-verify.png`、`portable-verify.png`）。若仍看到 DeepSeek Harness 老界面，请记录启动的确切文件（或快捷方式目标）；另外：开始菜单存在一个**失效旧快捷方式** `AI Shell Desktop.lnk` → 已删除的 `dsh-plugin-desktop\dist\win-unpacked\AI Shell Desktop.exe`，建议一并清理。
 - 改名后的待办：① 桌面设置页（模式/材质/市场通知/浏览器访问）在早前 AI Shell 改动中已被移除，目前只有托盘能切窗口模式——浏览器访问、通知、材质暂无 UI 入口，需要产品决策是否恢复该页；② `dshdesktop.cn` 更新服务仍是旧官方地址，独立项目需自建或关闭（代码里的请求地址保留原值以保持功能可用，D3 裁剪会直接移除更新检查）；③ `.agents/notes/**`、`docs/evidence/**`、`_deprecated/**` 已随 #31 裁剪删除；④ 本机开发工作目录仍叫 `dsh-desktop`，重命名目录/推送新仓库由你完成。
 - 打包产物为未签名安装包：新机器首启可能出现 SmartScreen「未知发布者」。
 - 本机 `~/.dsh/settings.yaml` 的 `ui-theme.preference` 目前为 `dark`（排查问题时所改），可自行切回 `system`。

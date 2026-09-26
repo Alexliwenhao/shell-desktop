@@ -3,13 +3,13 @@ export const DESKTOP_RELEASE_IDENTITIES = Object.freeze({
   stable: Object.freeze({
     releaseChannel: 'stable' as const,
     packageName: 'shell-desktop',
-    productName: 'Shell Desktop',
+    productName: 'AI Shell Desktop',
     appId: 'com.shelldesktop.app',
   }),
   beta: Object.freeze({
     releaseChannel: 'beta' as const,
     packageName: 'shell-desktop-beta',
-    productName: 'Shell Desktop Beta',
+    productName: 'AI Shell Desktop Beta',
     appId: 'com.shelldesktop.app.beta',
   }),
 })

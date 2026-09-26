@@ -43,9 +43,9 @@ export function verifyWindowsPortable(
   }
   const archive = new AdmZip(portablePath)
   const entries = archive.getEntries().filter(entry => !entry.isDirectory)
-  const executable = entries.find(entry => entry.entryName.replaceAll('\\', '/') === 'Shell Desktop.exe')
+  const executable = entries.find(entry => entry.entryName.replaceAll('\\', '/') === 'AI Shell Desktop.exe')
   if (executable === undefined) {
-    throw new Error(`Windows portable archive is missing Shell Desktop.exe: ${portablePath}`)
+    throw new Error(`Windows portable archive is missing AI Shell Desktop.exe: ${portablePath}`)
   }
   if (!entries.some(entry => entry.entryName.replaceAll('\\', '/') === 'resources/app/package.json')) {
     throw new Error(`Windows portable archive is missing resources/app/package.json: ${portablePath}`)
@@ -53,7 +53,7 @@ export function verifyWindowsPortable(
   assertPortableExecutableBuffer(
     executable.getData(),
     'Windows portable application',
-    `${portablePath}:Shell Desktop.exe`,
+    `${portablePath}:AI Shell Desktop.exe`,
   )
   return portablePath
 }

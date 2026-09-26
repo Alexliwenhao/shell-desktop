@@ -1,4 +1,4 @@
-/** Headless-safe npm launcher for the Shell Desktop Electron executable. */
+/** Headless-safe npm launcher for the AI Shell Desktop Electron executable. */
 
 import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -17,7 +17,7 @@ export type DesktopCliAction = 'export-diagnostics' | 'help' | 'version' | 'laun
 /** Human-readable launcher help. */
 export const DESKTOP_CLI_HELP = `Usage: shell-desktop [options]
 
-Launch Shell Desktop with the selected Web-capable profile.
+Launch AI Shell Desktop with the selected Web-capable profile.
 
 Options:
   --export-diagnostics  export logs and crash evidence without launching the app
@@ -55,7 +55,7 @@ export function defaultDesktopUserDataDirectory(
   if (platform === 'win32') {
     const appData = environment.APPDATA
     if (appData === undefined || appData.length === 0) {
-      throw new Error('APPDATA is unavailable; cannot locate Shell Desktop diagnostics')
+      throw new Error('APPDATA is unavailable; cannot locate AI Shell Desktop diagnostics')
     }
     return path.join(appData, DESKTOP_PRODUCT_NAME)
   }
@@ -86,7 +86,7 @@ async function launchElectron(): Promise<number> {
       + `  npm install -g ${DESKTOP_PACKAGE_NAME}\n`
       + 'Or add electron to the profile before launching:\n'
       + '  dsh plugin --profile <name> add electron\n'
-      + 'Or use the packaged Shell Desktop application.\n',
+      + 'Or use the packaged AI Shell Desktop application.\n',
     )
     return 1
   }

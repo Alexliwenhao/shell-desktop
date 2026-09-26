@@ -1,4 +1,4 @@
-/** Private installation identity used only by Shell Desktop update checks. */
+/** Private installation identity used only by AI Shell Desktop update checks. */
 
 import { randomUUID } from 'node:crypto'
 import { chmod, lstat, mkdir, open } from 'node:fs/promises'

@@ -1,4 +1,4 @@
-# Shell Desktop
+# AI Shell Desktop
 
 基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的 Windows / macOS 开源桌面客户端：固定上游版本并原样运行，桌面外壳本身也作为 DSH 插件组合。
 

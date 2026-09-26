@@ -355,8 +355,8 @@ function parseState(text: string): ParsedUpdateState {
 
 function updateAvailableNotification(locale: DesktopLocale, version: string): DesktopNotification {
   return locale === 'zh'
-    ? { title: 'Shell Desktop 有可用更新', body: `版本 ${version} 已可下载。打开 Shell Desktop 即可继续。` }
-    : { title: 'Shell Desktop Update Available', body: `Version ${version} is ready to download. Open Shell Desktop to continue.` }
+    ? { title: 'AI Shell Desktop 有可用更新', body: `版本 ${version} 已可下载。打开 AI Shell Desktop 即可继续。` }
+    : { title: 'AI Shell Desktop Update Available', body: `Version ${version} is ready to download. Open AI Shell Desktop to continue.` }
 }
 
 async function readState(filename: string): Promise<string> {

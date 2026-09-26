@@ -36,7 +36,7 @@ function bootstrap(root: string, profileDir: string): DesktopPnpmBootstrap {
     activeProfileName: 'web',
     activeProfileDir: profileDir,
     homeDir: join(root, 'home'),
-    appExecutable: join(root, 'Shell Desktop'),
+    appExecutable: join(root, 'AI Shell Desktop'),
     pnpmBinPath: join(root, 'runtime', 'pnpm.mjs'),
     electronVersion: '43.4.0',
     nodeBinDir: join(root, 'runtime', 'node-bin'),

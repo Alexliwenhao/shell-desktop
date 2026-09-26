@@ -7,7 +7,7 @@ const betaRoot = join(root, 'shell-desktop-beta', 'src')
 // Both editions share behavior. Only release identity and launcher wording differ.
 const betaOnlyPaths = new Set([])
 const allowedDifferences = new Set(['product-identity.ts'])
-const normalizeIdentity = source => source.toString().replaceAll('shell-desktop-beta', 'shell-desktop').replaceAll('Shell Desktop Beta', 'Shell Desktop')
+const normalizeIdentity = source => source.toString().replaceAll('shell-desktop-beta', 'shell-desktop').replaceAll('AI Shell Desktop Beta', 'AI Shell Desktop')
 
 function files(directory, base = directory) {
   const result = []

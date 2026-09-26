@@ -1,8 +1,8 @@
-# Shell Desktop 插件 service
+# AI Shell Desktop 插件 service
 
 [English](plugin-services.md) | 中文
 
-本文档是面向插件作者、受支持的集成 contract，覆盖 Shell Desktop 2.x 在兼容、扩展窗口与增强三种呈现模式下导出的 Host 公开 service `desktopProfiles`、`desktopPnpm`，以及 Client 公开 service `desktopWindow`。它不会授予第三方访问原始 Electron API 或 launcher bootstrap 状态的能力。
+本文档是面向插件作者、受支持的集成 contract，覆盖 AI Shell Desktop 2.x 在兼容、扩展窗口与增强三种呈现模式下导出的 Host 公开 service `desktopProfiles`、`desktopPnpm`，以及 Client 公开 service `desktopWindow`。它不会授予第三方访问原始 Electron API 或 launcher bootstrap 状态的能力。
 
 ## 分层与数据流
 
@@ -42,7 +42,7 @@ flowchart LR
 
 Launcher 会在 Loader tree 挂载前解析一个 profile。`desktopProfiles.current` 在整个 Cordis generation dispose 前保持不变。`desktop-pnpm` Host row 会根据 launcher 私有 fact 与上游 subprocess service 构造 `desktopPnpm`。切换 profile 或模式会 dispose 当前 generation 并启动新 generation；service reference 不能跨越该边界。
 
-Renderer 通过现有 loopback carrier 接收普通 Web Client module，无法直接读取这些 Host service；Shell Desktop 也不会为它们增加 preload 或 Electron IPC bridge。Desktop Client 会改为在自己的 Cordis fiber 生命周期内，通过 `desktopWindow` 提供不可变的原生布局信息。包含浏览器 UI 的插件继续使用普通 DSH Host route、RPC、client metadata、service 与 slot。
+Renderer 通过现有 loopback carrier 接收普通 Web Client module，无法直接读取这些 Host service；AI Shell Desktop 也不会为它们增加 preload 或 Electron IPC bridge。Desktop Client 会改为在自己的 Cordis fiber 生命周期内，通过 `desktopWindow` 提供不可变的原生布局信息。包含浏览器 UI 的插件继续使用普通 DSH Host route、RPC、client metadata、service 与 slot。
 
 ## 公开 Client Cordis service
 
@@ -196,7 +196,7 @@ Service 在每个 generation 同时最多启动一个 package operation；已有
 
 ### 仅支持 Desktop 的插件：required injection
 
-只在 Shell Desktop 中有意义的插件可以把两个 service 都声明为 required dependency。Cordis 会让插件保持 pending，直到两个 provider 都可用；任一 required service 消失时，插件 effect 会被 unload。
+只在 AI Shell Desktop 中有意义的插件可以把两个 service 都声明为 required dependency。Cordis 会让插件保持 pending，直到两个 provider 都可用；任一 required service 消失时，插件 effect 会被 unload。
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'

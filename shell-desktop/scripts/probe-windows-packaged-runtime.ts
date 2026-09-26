@@ -31,7 +31,7 @@ export function probeInstalledWindowsRuntime(
   platform: NodeJS.Platform = process.platform,
 ): InstalledWindowsRuntimeProbe {
   const root = resolve(installRoot)
-  const executable = join(root, 'Shell Desktop.exe')
+  const executable = join(root, 'AI Shell Desktop.exe')
   try {
     if (platform !== 'win32') {
       throw new Error('installed Windows runtime probe requires a native Windows host')
@@ -42,8 +42,8 @@ export function probeInstalledWindowsRuntime(
       electronPlatformName: 'win32',
       arch: 1,
       packager: {
-        executableName: 'Shell Desktop',
-        appInfo: { productFilename: 'Shell Desktop' },
+        executableName: 'AI Shell Desktop',
+        appInfo: { productFilename: 'AI Shell Desktop' },
       },
     })
     return { installRoot: root, executable, success: true, error: null }
