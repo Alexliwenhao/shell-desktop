@@ -37,7 +37,7 @@ export interface RemoteBridgeApi {
   /** Record the terminal a session owns, so parallel terminals stay separate. */
   setSessionTerminal(sessionId: string, terminalId: string): Promise<void>
   /** Type one command into the currently active terminal (no output wait). */
-  runInActiveShell(command: string): Promise<void>
+  runInActiveShell(command: string, sessionId?: string): Promise<void>
   /** List one remote directory. */
   sftpList(hostId: string, path: string): Promise<{ path: string; items: readonly RemoteFileItem[] }>
   /** Create a remote directory. */
@@ -107,8 +107,8 @@ export const remoteBridge: RemoteBridgeApi = {
   async setSessionTerminal(sessionId: string, terminalId: string): Promise<void> {
     await post('session-terminal-set', { sessionId, terminalId })
   },
-  async runInActiveShell(command: string): Promise<void> {
-    await post('shell-exec', { command })
+  async runInActiveShell(command: string, sessionId?: string): Promise<void> {
+    await post('shell-exec', { command, ...(sessionId === undefined ? {} : { sessionId }) })
   },
   async sftpList(hostId: string, path: string): Promise<{ path: string; items: readonly RemoteFileItem[] }> {
     const response = await post<{ result: { path: string; items: RemoteFileItem[] } }>('sftp', { hostId, op: 'list', path })

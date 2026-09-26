@@ -250,15 +250,15 @@ describe('shell-exec route', () => {
     expect(JSON.parse(res.body)).toEqual({ error: 'command is required' })
   })
 
-  it('reports when no terminal session is available', async () => {
+  it('refuses an execute call that carries no session identity', async () => {
     const { routes } = makeContext()
     const handler = routes.get(DESKTOP_REMOTE_PATHS.shellExec)
     const res = fakeResponse()
 
     handler?.(jsonRequest({ command: 'df -h' }), res)
 
-    await vi.waitFor(() => { expect(res.statusCode).toBe(404) })
-    expect(JSON.parse(res.body)).toEqual({ error: 'no terminal session is available' })
+    await vi.waitFor(() => { expect(res.statusCode).toBe(400) })
+    expect(JSON.parse(res.body)).toEqual({ error: 'sessionId is required: a session may only execute in its own terminal' })
   })
 
   it('scopes the execute route to the calling session when it sends a session id', async () => {

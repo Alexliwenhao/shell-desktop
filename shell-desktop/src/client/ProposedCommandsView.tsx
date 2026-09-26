@@ -17,16 +17,18 @@ export interface ProposedCommandsViewProps {
   readonly node: ProposedCommandsNode
   /** Desktop settings dictionary bound to the current locale. */
   readonly t: (key: DesktopSettingsLocaleKey) => string
+  /** Session that owns this conversation; its terminal is the only target. */
+  readonly sessionId?: string | undefined
 }
 
 type RunState = 'idle' | 'sending' | 'sent' | 'failed'
 
 /** One proposed command with its manual execute button. */
-function CommandCard({ entry, t }: { readonly entry: ProposedCommandEntry, readonly t: ProposedCommandsViewProps['t'] }) {
+function CommandCard({ entry, t, sessionId }: { readonly entry: ProposedCommandEntry, readonly t: ProposedCommandsViewProps['t'], readonly sessionId?: string | undefined }) {
   const [state, setState] = useState<RunState>('idle')
   const run = (): void => {
     setState('sending')
-    void remoteBridge.runInActiveShell(entry.command).then(
+    void remoteBridge.runInActiveShell(entry.command, sessionId).then(
       () => { setState('sent') },
       () => { setState('failed') },
     )
@@ -54,12 +56,12 @@ function CommandCard({ entry, t }: { readonly entry: ProposedCommandEntry, reado
 }
 
 /** The turn's command proposals, rendered after the final answer. */
-export function ProposedCommandsView({ node, t }: ProposedCommandsViewProps) {
+export function ProposedCommandsView({ node, t, sessionId }: ProposedCommandsViewProps) {
   const { commands } = node.data
   if (commands.length === 0) return null
   return (
     <div className="dshAishellProposedCommands">
-      {commands.map(entry => <CommandCard key={entry.callId} entry={entry} t={t} />)}
+      {commands.map(entry => <CommandCard key={entry.callId} entry={entry} t={t} sessionId={sessionId} />)}
     </div>
   )
 }

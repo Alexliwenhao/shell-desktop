@@ -42,6 +42,7 @@
 | 33 | 打包版启动成「原来的 desktop」/进 Recovery（profile 组合的模块回退链接失败） | 已修复 | `main.ts` 两处 `healDesktopProfileModuleFallback` 改为非致命：Windows 上创建 `~\.dsh\profiles\node_modules\shell-desktop` 链接 EPERM 时只告警、继续启动；两版同步 |
 | 34 | 品牌改名为 AI Shell Desktop（A1-A2）：exe / 安装器 / 快捷方式 / 数据目录 | 已完成 | 全仓一次性改名 `Shell Desktop → AI Shell Desktop`、`Shell Desktop Beta → AI Shell Desktop Beta`（188 文件 / 769 处，含 `build/assistedMessages.yml`、`build/installer.nsh`）；`verify-desktop-variants` 归一同步 |
 | 35 | 会话与终端必须成对绑定：AI 不得操作其他会话的终端（并行多终端） | 已修复 | `remote.ts` 新增 `agentSessionId`/`pickBoundSession`：按 `session-hosts.json` 解析会话自己的宿主终端，显式 `sessionId` 只在该终端属于本会话时才被采纳；`terminal_run`/`terminal_read` 与 `shell-exec` 路由均按会话解析 |
+| 36 | 终端与会话严格隔离（红线）：当前会话只能操作当前终端，不得出现其他终端任何信息 | 已修复 | 未识别调用方一律拒绝（无 active 兜底）；`terminal_sessions` 只返回本会话终端；`shell-exec` 缺 `sessionId` 直接 400；计划卡片携带自身 `sessionId` |
 
 ## 细节
 
@@ -217,6 +218,11 @@
 - 证据：`tests/remote-plan-mode.spec.ts` 新增"带 sessionId 时按会话解析"用例，两版 18/18 通过；`check:desktop-variants` 198 对齐；两版 typecheck 0。
 - 终端级绑定（并发）：客户端现在把**终端 id**一并上报（`TerminalWorkspace` → `AishellFrame` → `openBoundSession({ terminalId })`），宿主新增 `session-terminals.json` 存储与 `session-terminal-set` 路由；`pickBoundSession` 优先按终端 id 精确解析，其次才回退到宿主级。因此同一宿主下的多个终端各自绑定各自的会话，切换激活终端不再抢走别的会话的执行，可并行操作。
 - 仍待接：计划卡片「执行」（`PlanCommandCard.tsx` / `ProposedCommandsView.tsx` → `remoteBridge.runInActiveShell`）尚未把所在会话 id 传给 `shell-exec`；宿主路由已支持可选 `sessionId`。
+### 36 严格隔离：终端 ↔ 会话一一对应，禁止任何交叉（红线）
+- 需求（用户）：终端与会话绑定后，**会话之间必须严格隔离**——当前会话只能操作它绑定的那个终端，不允许出现其他终端的任何信息。
+- 实现：① `pickBoundSession` 在调用方没有会话身份时直接返回 undefined（删除 `pickSession` 的 active/首个存活兜底，函数已删除）；`terminal_run`/`terminal_read` 因此只能落在本会话绑定的终端；② `terminal_sessions` 改为只返回本会话绑定的那一个终端（描述同步改为「只返回本会话自己的终端；其他终端属于其他会话，严格隔离」）；③ `shell-exec` 路由缺少 `sessionId` 时返回 400（`sessionId is required: a session may only execute in its own terminal`），无法解析绑定时返回 404（`the session has no bound terminal`）；④ 计划卡片（`PlanCommandCard`/`ProposedCommandsView`）携带自身 `sessionId` 调用 `remoteBridge.runInActiveShell(command, sessionId)`，`remote-api` 同步扩展签名；工具参数描述去掉「省略时使用用户当前激活的终端」。
+- 效果：切换激活终端不再影响任何会话；跨会话读取（`terminal_read`/`terminal_sessions`）与跨会话执行（`terminal_run`/卡片执行）都被拒绝，fail closed。
+- 证据：`remote-plan-mode.spec.ts` 等 3 个 spec 共 28 例通过；两版 typecheck 0；`check:desktop-variants` 199 文件对齐。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。

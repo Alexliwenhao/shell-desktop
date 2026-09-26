@@ -16,7 +16,12 @@ type PlanCommandCardProps = ToolCallViewProps & PropsLocale<'desktop.settings'>
 type RunState = 'idle' | 'sending' | 'sent' | 'failed'
 
 /** One proposed command with its manual execute button. */
-export function PlanCommandCard({ block, t }: PlanCommandCardProps) {
+export function PlanCommandCard(props: PlanCommandCardProps) {
+  const { block, t } = props
+  // The execute call may only reach the terminal bound to this conversation;
+  // a missing id fails closed on the Host side instead of leaking sideways.
+  const injected = props as unknown as { readonly sessionId?: unknown }
+  const sessionId = typeof injected.sessionId === 'string' ? injected.sessionId : undefined
   const proposed = proposedCommandOf(block)
   const [state, setState] = useState<RunState>('idle')
 
@@ -30,7 +35,7 @@ export function PlanCommandCard({ block, t }: PlanCommandCardProps) {
 
   const run = (): void => {
     setState('sending')
-    void remoteBridge.runInActiveShell(proposed.command).then(
+    void remoteBridge.runInActiveShell(proposed.command, sessionId).then(
       () => { setState('sent') },
       () => { setState('failed') },
     )

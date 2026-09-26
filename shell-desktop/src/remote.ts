@@ -568,9 +568,13 @@ function registerRoutes(ctx: Context): void {
       return
     }
     const aiSessionId = asString(body.sessionId)
-    const session = aiSessionId === '' ? pickSession(undefined) : pickBoundSession(aiSessionId, undefined)
+    if (aiSessionId === '') {
+      finishJson(res, 400, { error: 'sessionId is required: a session may only execute in its own terminal' })
+      return
+    }
+    const session = pickBoundSession(aiSessionId, undefined)
     if (session === undefined) {
-      finishJson(res, 404, { error: aiSessionId === '' ? 'no terminal session is available' : 'the session has no bound terminal' })
+      finishJson(res, 404, { error: 'the session has no bound terminal' })
       return
     }
     session.write(`${command}\r`)
@@ -664,7 +668,9 @@ function agentSessionId(agent: unknown): string | undefined {
  * @returns the session's own terminal, or undefined when it is not attached.
  */
 function pickBoundSession(aiSessionId: string | undefined, requested: unknown): ShellSession | undefined {
-  if (aiSessionId === undefined) return pickSession(requested)
+  // Strict isolation: without a session identity the call may not touch any
+  // terminal, not even the active one.
+  if (aiSessionId === undefined) return undefined
   const terminalId = readSessionTerminals(sessionTerminalsFile(homeDirectory()))[aiSessionId]
   const boundKey = readSessionHosts(sessionHostsFile(homeDirectory()))[aiSessionId] ?? 'local'
   const id = asString(requested)
@@ -684,17 +690,6 @@ function pickBoundSession(aiSessionId: string | undefined, requested: unknown): 
   if (candidates.length === 0) return undefined
   const active = candidates.find(([sessionId]) => sessionId === activeSessionId)
   return active?.[1] ?? candidates.find(([, shell]) => shell.alive)?.[1] ?? candidates[0]?.[1]
-}
-
-function pickSession(requested: unknown): ShellSession | undefined {
-  const id = asString(requested)
-  if (id !== '') return shells.get(id)
-  if (activeSessionId !== undefined) {
-    const active = shells.get(activeSessionId)
-    if (active !== undefined) return active
-  }
-  for (const session of shells.values()) if (session.alive) return session
-  return undefined
 }
 
 /**
@@ -854,7 +849,7 @@ function registerTerminalTools(ctx: Context): void {
     parameters: {
       command: { type: 'string', required: true, description: '要执行的 shell 命令（单行；需要多步时逐条执行）。' },
       timeoutSeconds: { type: 'integer', description: '等待输出稳定的最长秒数，默认 30，最大 120。' },
-      sessionId: { type: 'string', description: '目标终端会话 id；省略时使用用户当前激活的终端。' },
+      sessionId: { type: 'string', description: '目标终端会话 id；本会话只能操作自己绑定的终端，留空即使用该终端。' },
     },
     output: {
       schema: {
@@ -924,7 +919,7 @@ function registerTerminalTools(ctx: Context): void {
     name: 'terminal_read',
     description: '读取终端会话最近的输出（不执行任何命令）。用于查看用户终端当前屏幕内容或之前命令的结果。',
     parameters: {
-      sessionId: { type: 'string', description: '目标终端会话 id；省略时使用用户当前激活的终端。' },
+      sessionId: { type: 'string', description: '目标终端会话 id；本会话只能操作自己绑定的终端，留空即使用该终端。' },
       maxChars: { type: 'integer', description: '最多返回的字符数，默认 8000。' },
     },
     output: {
@@ -961,7 +956,7 @@ function registerTerminalTools(ctx: Context): void {
 
   ctx.effect(() => ctx.tools.register(defineTool({
     name: 'terminal_sessions',
-    description: '列出用户当前打开的终端会话（本地或 SSH），并标记用户正在查看的那个。',
+    description: '列出本会话绑定的终端（只返回本会话自己的终端；其他终端属于其他会话，严格隔离）。',
     parameters: {},
     output: {
       schema: {
@@ -991,14 +986,22 @@ function registerTerminalTools(ctx: Context): void {
           : value.sessions.map(session => `${session.active ? '* ' : '  '}${session.label} [${session.sessionId}] ${session.alive ? '' : '(已结束)'}`).join('\n'),
       }],
     },
-    async execute() {
+    async execute(_args, exec) {
+      const agentSession = agentSessionId(exec.agent)
+      const session = pickBoundSession(agentSession, undefined)
+      if (session === undefined) {
+        throw new Error(agentSession === undefined
+          ? '没有可用的终端会话：请先在 AI Shell 中打开本地终端或连接一台主机'
+          : '该会话绑定的终端不可用：一个会话只能操作它绑定终端（其他终端属于其他会话）')
+      }
+      const sessionId = [...shells.entries()].find(([, value]) => value === session)?.[0] ?? ''
       return {
-        sessions: [...shells.entries()].map(([sessionId, session]) => ({
+        sessions: [{
           sessionId,
           label: session.label,
           alive: session.alive,
           active: sessionId === activeSessionId,
-        })),
+        }],
       }
     },
   })), 'shell-desktop/remote: terminal_sessions tool')
