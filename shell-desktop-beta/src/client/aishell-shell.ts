@@ -133,9 +133,11 @@ export function applyAishellShell(
    * Most recent session the Host still records for one terminal key, used when
    * this renderer has no in-memory binding yet (a reload or a fresh window).
    * @param bindKey - saved host id the sessions were recorded under.
+   * @param claimed - session ids another open terminal already shows; skipped so
+   *   two terminals never display the same conversation.
    * @returns the newest recorded session id, or undefined when none exists.
    */
-  const latestBoundSession = async (bindKey: string): Promise<unknown> => {
+  const latestBoundSession = async (bindKey: string, claimed: ReadonlySet<string> = new Set()): Promise<unknown> => {
     const sessions = rawContext.get('sessions') as {
       list?: {
         getSnapshot?(): {
@@ -155,6 +157,7 @@ export function applyAishellShell(
     for (const id of ids) {
       const key = String(id)
       if (recorded[key] !== bindKey) continue
+      if (claimed.has(key)) continue
       const updatedAt = byId[key]?.updatedAt ?? 0
       if (newest === undefined || updatedAt > newest.updatedAt) newest = { id, updatedAt }
     }
@@ -166,7 +169,8 @@ export function applyAishellShell(
    * already bound to that terminal and only creates one when none is bound;
    * `fresh` starts a new conversation regardless and rebinds the terminal to it.
    * @param bindKey - terminal key (a saved host id, or `local`), when the session belongs to a terminal.
-   * @param options - `fresh` forces a new session for an explicit new-session action.
+   * @param options - `fresh` forces a new session for an explicit new-session action;
+   *   `terminalId` is the concrete terminal tab the session becomes bound to.
    */
   const openBoundSession = (bindKey?: string, options: { readonly fresh?: boolean; readonly terminalId?: string } = {}): void => {
     const fresh = options.fresh === true
@@ -189,13 +193,19 @@ export function applyAishellShell(
             navigation.openSession(existing)
             return
           }
-          // No binding in this renderer yet: return to the terminal's newest
-          // recorded session instead of starting a second conversation for a
-          // host the user already worked with.
-          if (options.terminalId === undefined && bindKey !== undefined && bindKey !== 'local') {
-            const recorded = await latestBoundSession(bindKey)
+          // No binding in this renderer yet: return to the host's newest
+          // recorded conversation no other open terminal already shows, and
+          // hand it this terminal so its commands keep targeting this terminal
+          // instead of starting a second conversation for a host the user
+          // already worked with.
+          if (bindKey !== undefined && bindKey !== 'local') {
+            const claimed = new Set([...terminalSessions.values()].map(value => String(value)))
+            const recorded = await latestBoundSession(bindKey, claimed)
             if (recorded !== undefined) {
-              terminalSessions.set(bindKey, recorded)
+              terminalSessions.set(bindTarget, recorded)
+              if (options.terminalId !== undefined) {
+                void remoteBridge.setSessionTerminal(String(recorded), options.terminalId).catch(() => {})
+              }
               navigation.openSession(recorded)
               return
             }
@@ -322,7 +332,7 @@ export function applyAishellShell(
   }, 'desktop: AI-Shell theme presenter')
 
   const t = ctx.locale.bind(DESKTOP_SETTINGS_LOCALE_NAMESPACE)
-  const newSession = (bindKey?: string): void => { openBoundSession(bindKey, { fresh: true }) }
+  const newSession = (bindKey?: string, terminalId?: string): void => { openBoundSession(bindKey, { fresh: true, ...(terminalId === undefined ? {} : { terminalId }) }) }
   const openTerminalSession = (key: string, terminalId?: string): void => { openBoundSession(key, { ...(terminalId === undefined ? {} : { terminalId }) }) }
   const openSession = (sessionId: string): void => { openExistingSession(sessionId) }
 

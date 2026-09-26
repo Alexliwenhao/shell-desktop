@@ -60,7 +60,7 @@ export interface AishellFrameInjected {
    * terminal (its saved host, or `local`) so switching back to the terminal
    * reopens it; without one it is a standalone session.
    */
-  newSession(bindKey?: string): void
+  newSession(bindKey?: string, terminalId?: string): void
   /** Open the AI session bound to one terminal key (a host id, or `local`). */
   openTerminalSession(key: string, terminalId?: string): void
   /** Open an existing AI session, e.g. from a history row. */
@@ -326,7 +326,7 @@ export function AishellFrame(props: AishellFrameProps) {
                 collapsed={collapsedGroups}
                 {...(currentSessionId === undefined ? {} : { currentSessionId })}
                 onToggle={toggleGroup}
-                onNewSession={() => { newSession(activeTerminalKey) }}
+                onNewSession={() => { newSession(activeTerminalKey, activeTerminal?.id) }}
                 onOpenSession={openSession}
                 onDeleteSession={deleteSession}
                 onFocusTerminal={id => { terminalRef.current?.focus(id) }}

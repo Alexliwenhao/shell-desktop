@@ -47,14 +47,18 @@ export function readSessionTerminals(file: string): Record<string, string> {
 }
 
 /**
- * Record one session's bound terminal, restricting the document to its owner
- * where POSIX modes apply.
+ * Record one session's bound terminal, taking the terminal from any other
+ * session that still pointed at it so the pairing stays one-to-one, and
+ * restricting the document to its owner where POSIX modes apply.
  * @param file - mapping document path.
  * @param sessionId - AI session id.
  * @param terminalId - terminal id the session owns.
  */
 export function writeSessionTerminal(file: string, sessionId: string, terminalId: string): void {
   const sessions = readSessionTerminals(file)
+  for (const [owner, bound] of Object.entries(sessions)) {
+    if (owner !== sessionId && bound === terminalId) delete sessions[owner]
+  }
   sessions[sessionId] = terminalId
   mkdirSync(dirname(file), { recursive: true })
   const payload: SessionTerminalDocument = { version: 1, sessions }
