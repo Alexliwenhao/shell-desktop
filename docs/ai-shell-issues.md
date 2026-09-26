@@ -40,6 +40,7 @@
 | 31 | 裁剪第一步：删除原项目内容（社区文档、历史记录、废弃补丁、旧图片） | 已完成 | 删除 `dsh-community-fabric/`、`_deprecated/`、`docs/evidence/`、`.agents/`、根 `assets/`；同步清理 workspace/门禁/文档引用，lockfile 重装 |
 | 32 | 裁剪第二步（B1a）：只保留 AI Shell —— 去掉窗口模式切换与回退 | 已完成（B1b 待续） | 托盘删除「窗口模式」子菜单与 `canToggleShellMode`；启动时把存储的旧模式一律解析为 `aishell`；托盘模式文案删除。兼容/扩展/增强外壳代码删除（B1b）未做 |
 | 33 | 打包版启动成「原来的 desktop」/进 Recovery（profile 组合的模块回退链接失败） | 已修复 | `main.ts` 两处 `healDesktopProfileModuleFallback` 改为非致命：Windows 上创建 `~\.dsh\profiles\node_modules\shell-desktop` 链接 EPERM 时只告警、继续启动；两版同步 |
+| 34 | 品牌改名为 AI Shell Desktop（A1-A2）：exe / 安装器 / 快捷方式 / 数据目录 | 已完成 | 全仓一次性改名 `Shell Desktop → AI Shell Desktop`、`Shell Desktop Beta → AI Shell Desktop Beta`（188 文件 / 769 处，含 `build/assistedMessages.yml`、`build/installer.nsh`）；`verify-desktop-variants` 归一同步 |
 
 ## 细节
 
@@ -198,6 +199,14 @@
 - 根因：打包启动时 `healDesktopProfileModuleFallback` 调用上游 `healProfilesModuleFallback`，为安装闭包在 `~/.dsh/profiles/node_modules/` 建链接；本机对 `shell-desktop` 这一条执行 `symlinkSync(target, link, 'junction')` 返回 `EPERM`（Windows 重解析点受限），异常直接冒泡 → profile 组合失败 → 进 Recovery / 回退上游界面。
 - 修复：`src/main.ts` 两处调用（启动早期、prepared profile 之后）包 try/catch，失败仅 `electronLogger.error` 记录后继续启动；桌面行仍由 Desktop 解析器（`module-resolution.ts`）负责，共享回退只服务外部插件。
 - 证据：同一份解包目录（`%TEMP%\opencode\portable-verify2`，替换新 `lib` 前必进 Recovery）现在正常启动：窗口标题 `AI Shell Desktop`、URL `shell-desktop-mode=aishell`、三栏 UI 正常；日志仅出现 `shared profile module fallback could not be healed: EPERM ...` 告警。
+### 34 A1-A2 品牌改名（AI Shell Desktop）
+- 范围：`shell-desktop/**`、`shell-desktop-beta/**`（src/tests/scripts/build/docs）、`scripts/**`、`docs/**`、`.github/**`、根 markdown；跳过 `node_modules|dist|lib|.git|deepseek-harness|vendor|artifacts|.workbuddy`。
+- 替换顺序（必须）：先 `Shell Desktop Beta → AI Shell Desktop Beta`，再用 `(?<!AI )Shell Desktop → AI Shell Desktop` 负向前瞻，避免二次前缀。
+- 关键遗漏与修复：第一遍漏掉 `build/` 目录，导致 `installer-messages`（`assistedMessages.yml` 文案）与 NSIS 脚本仍是旧品牌；补跑后通过。
+- 连带效果：可执行文件成为 `AI Shell Desktop.exe`、安装器/快捷方式名同步、Electron 数据目录成为 `%APPDATA%\AI Shell Desktop`（旧 `%APPDATA%\Shell Desktop` 的设置/会话归组不会自动继承，迁移与否待产品决策）；产物名仍是 `AI-Shell-Desktop-*`。
+- 验证：`check:desktop-variants` 198 对齐；两版 typecheck 0；改名敏感用例（`installer-messages`、`package`、`host-process-integration`、`lifecycle-events`、`profile-checkpoint`、`dsh-settings-legacy-compat`）单独与小批量通过；全量计数受负载影响会波动（vitest forks worker 超时），剩余 `desktop-runtime-environment` 2 例为已知 Windows 平台基线失败。
+- 提交：`e94e568b0e feat(brand): name the product AI Shell Desktop everywhere`（已推送）。
+- 待办：改名后需重出 Setup/Portable（exe 名变化使 `--prepackaged` 复用旧载荷不可行，需要 electron-builder 完成 electron 解包——本机该步骤间歇性 EPERM，需在机器空闲时重试）。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
