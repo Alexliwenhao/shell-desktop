@@ -25,6 +25,7 @@ import z from '@deepseek-ai/schemastery'
 import { Client as SshClient } from 'ssh2'
 import { AI_SHELL_PERSONA_PREFIX, AI_SHELL_PLAN_POLICY } from './ai-shell-persona.ts'
 import { readSessionHosts, sessionHostsFile, writeSessionHosts } from './session-host-store.ts'
+import { readSessionTerminals, sessionTerminalsFile, writeSessionTerminal } from './session-terminal-store.ts'
 
 /** Private route prefix reserved for the AI-Shell remote bridge. */
 export const DESKTOP_REMOTE_ROUTE_PREFIX = '/_dsh/desktop/remote'
@@ -43,6 +44,7 @@ export const DESKTOP_REMOTE_PATHS = Object.freeze({
   home: `${DESKTOP_REMOTE_ROUTE_PREFIX}/home`,
   hostWorkspace: `${DESKTOP_REMOTE_ROUTE_PREFIX}/host-workspace`,
   sessionHostsList: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-hosts-list`,
+  sessionTerminalSet: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-terminal-set`,
   sessionHostSet: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-host-set`,
   shellExec: `${DESKTOP_REMOTE_ROUTE_PREFIX}/shell-exec`,
 })
@@ -593,6 +595,19 @@ function registerRoutes(ctx: Context): void {
   // Explicit AI session → host mapping recorded when the AI shell creates a
   // host-bound session. It survives reloads so the session tree can group a
   // host's history under its name without relying on workspace naming.
+  // The terminal a session owns, recorded when the user works in that terminal
+  // so parallel terminals keep parallel sessions.
+  route(DESKTOP_REMOTE_PATHS.sessionTerminalSet, async (body, res) => {
+    const sessionId = asString(body.sessionId)
+    const terminalId = asString(body.terminalId)
+    if (sessionId === '' || terminalId === '') {
+      finishJson(res, 400, { error: 'sessionId and terminalId are required' })
+      return
+    }
+    writeSessionTerminal(sessionTerminalsFile(homeDirectory()), sessionId, terminalId)
+    finishJson(res, 200, { terminalId })
+  })
+
   route(DESKTOP_REMOTE_PATHS.sessionHostsList, async (_body, res) => {
     finishJson(res, 200, { sessions: readSessionHosts(sessionHostsFile(homeDirectory())) })
   })
@@ -650,11 +665,20 @@ function agentSessionId(agent: unknown): string | undefined {
  */
 function pickBoundSession(aiSessionId: string | undefined, requested: unknown): ShellSession | undefined {
   if (aiSessionId === undefined) return pickSession(requested)
+  const terminalId = readSessionTerminals(sessionTerminalsFile(homeDirectory()))[aiSessionId]
   const boundKey = readSessionHosts(sessionHostsFile(homeDirectory()))[aiSessionId] ?? 'local'
   const id = asString(requested)
+  // A recorded terminal id is the session's own terminal; without one the
+  // session owns the terminals of its recorded host.
   if (id !== '') {
     const requestedShell = shells.get(id)
-    return requestedShell !== undefined && (requestedShell.hostId ?? 'local') === boundKey ? requestedShell : undefined
+    if (requestedShell === undefined) return undefined
+    if (terminalId !== undefined) return id === terminalId ? requestedShell : undefined
+    return (requestedShell.hostId ?? 'local') === boundKey ? requestedShell : undefined
+  }
+  if (terminalId !== undefined) {
+    const own = shells.get(terminalId)
+    if (own !== undefined) return own
   }
   const candidates = [...shells.entries()].filter(([, shell]) => (shell.hostId ?? 'local') === boundKey)
   if (candidates.length === 0) return undefined

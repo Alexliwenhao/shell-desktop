@@ -62,7 +62,7 @@ export interface AishellFrameInjected {
    */
   newSession(bindKey?: string): void
   /** Open the AI session bound to one terminal key (a host id, or `local`). */
-  openTerminalSession(key: string): void
+  openTerminalSession(key: string, terminalId?: string): void
   /** Open an existing AI session, e.g. from a history row. */
   openSession(sessionId: string): void
   /** Remove one conversation from the session history; rejects when the Host refuses. */
@@ -356,7 +356,7 @@ export function AishellFrame(props: AishellFrameProps) {
             ref={terminalRef}
             onSessions={setSessionTabs}
             onQuote={quoteTerminalSelection}
-            onActivate={openTerminalSession}
+            onActivate={(key, terminalId) => { openTerminalSession(key, terminalId) }}
             subscribeTheme={subscribeTheme}
             quoteLabel={t('aishellQuoteSelection')}
           />

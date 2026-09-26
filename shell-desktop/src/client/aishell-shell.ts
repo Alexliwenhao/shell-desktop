@@ -168,8 +168,9 @@ export function applyAishellShell(
    * @param bindKey - terminal key (a saved host id, or `local`), when the session belongs to a terminal.
    * @param options - `fresh` forces a new session for an explicit new-session action.
    */
-  const openBoundSession = (bindKey?: string, options: { readonly fresh?: boolean } = {}): void => {
+  const openBoundSession = (bindKey?: string, options: { readonly fresh?: boolean; readonly terminalId?: string } = {}): void => {
     const fresh = options.fresh === true
+    const bindTarget = options.terminalId ?? bindKey
     void (async () => {
       try {
         const sessions = rawContext.get('sessions') as
@@ -182,8 +183,8 @@ export function applyAishellShell(
         // Terminal activation reuses the conversation already bound to that
         // terminal; an explicit "new session" always starts one, even when the
         // terminal has a conversation, and rebinds the terminal to it.
-        if (bindKey !== undefined && fresh !== true) {
-          const existing = terminalSessions.get(bindKey)
+        if (bindTarget !== undefined && fresh !== true) {
+          const existing = terminalSessions.get(bindTarget)
           if (existing !== undefined) {
             navigation.openSession(existing)
             return
@@ -191,7 +192,7 @@ export function applyAishellShell(
           // No binding in this renderer yet: return to the terminal's newest
           // recorded session instead of starting a second conversation for a
           // host the user already worked with.
-          if (bindKey !== 'local') {
+          if (options.terminalId === undefined && bindKey !== undefined && bindKey !== 'local') {
             const recorded = await latestBoundSession(bindKey)
             if (recorded !== undefined) {
               terminalSessions.set(bindKey, recorded)
@@ -206,11 +207,14 @@ export function applyAishellShell(
           return
         }
         const sessionId = await sessions.create({ workspaceId })
-        if (bindKey !== undefined) {
-          terminalSessions.set(bindKey, sessionId)
+        if (bindTarget !== undefined) {
+          terminalSessions.set(bindTarget, sessionId)
+          if (options.terminalId !== undefined) {
+            void remoteBridge.setSessionTerminal(sessionId, options.terminalId).catch(() => {})
+          }
           // Record the explicit host association so the session tree can group
           // this session under its host after a reload.
-          if (bindKey !== 'local') {
+          if (bindKey !== undefined && bindKey !== 'local') {
             void remoteBridge.setSessionHost(sessionId, bindKey).catch(() => {})
           }
         }
@@ -319,7 +323,7 @@ export function applyAishellShell(
 
   const t = ctx.locale.bind(DESKTOP_SETTINGS_LOCALE_NAMESPACE)
   const newSession = (bindKey?: string): void => { openBoundSession(bindKey, { fresh: true }) }
-  const openTerminalSession = (key: string): void => { openBoundSession(key) }
+  const openTerminalSession = (key: string, terminalId?: string): void => { openBoundSession(key, { ...(terminalId === undefined ? {} : { terminalId }) }) }
   const openSession = (sessionId: string): void => { openExistingSession(sessionId) }
 
   /**

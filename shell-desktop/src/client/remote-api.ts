@@ -34,6 +34,8 @@ export interface RemoteBridgeApi {
   closeShell(sessionId: string): Promise<void>
   /** Tell the Host bridge which terminal the user is currently viewing. */
   activateShell(sessionId: string): Promise<void>
+  /** Record the terminal a session owns, so parallel terminals stay separate. */
+  setSessionTerminal(sessionId: string, terminalId: string): Promise<void>
   /** Type one command into the currently active terminal (no output wait). */
   runInActiveShell(command: string): Promise<void>
   /** List one remote directory. */
@@ -101,6 +103,9 @@ export const remoteBridge: RemoteBridgeApi = {
   },
   async activateShell(sessionId: string): Promise<void> {
     await post('shell-activate', { sessionId })
+  },
+  async setSessionTerminal(sessionId: string, terminalId: string): Promise<void> {
+    await post('session-terminal-set', { sessionId, terminalId })
   },
   async runInActiveShell(command: string): Promise<void> {
     await post('shell-exec', { command })

@@ -85,7 +85,7 @@ export const TerminalWorkspace = forwardRef<TerminalWorkspaceHandle, {
    * (or `local`). Fires on repeats too, so the conversation can return to the
    * session bound to the terminal the user just clicked.
    */
-  readonly onActivate?: (key: string) => void
+  readonly onActivate?: (key: string, terminalId?: string) => void
   /**
    * Observe product-theme changes. xterm keeps the palette it was constructed
    * with, so every live terminal is repainted when the theme switches; the
@@ -111,7 +111,7 @@ export const TerminalWorkspace = forwardRef<TerminalWorkspaceHandle, {
   const activate = useCallback((tab: TerminalTabState | undefined): void => {
     if (tab === undefined) return
     setActiveId(tab.id)
-    onActivate?.(tab.hostId ?? 'local')
+    onActivate?.(tab.hostId ?? 'local', tab.id)
   }, [onActivate])
 
   useEffect(() => { installXtermStyles() }, [])
@@ -254,7 +254,7 @@ export const TerminalWorkspace = forwardRef<TerminalWorkspaceHandle, {
       setActiveId(id)
       void api.activateShell(sessionId)
       setStatus(host === undefined ? '本地终端已就绪' : `已连接到 ${subtitle}`)
-      onActivate?.(host?.id ?? 'local')
+      onActivate?.(host?.id ?? 'local', id)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
     }
