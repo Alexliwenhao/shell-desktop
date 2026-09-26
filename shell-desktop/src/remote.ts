@@ -565,9 +565,10 @@ function registerRoutes(ctx: Context): void {
       finishJson(res, 400, { error: 'command is required' })
       return
     }
-    const session = pickSession(undefined)
+    const aiSessionId = asString(body.sessionId)
+    const session = aiSessionId === '' ? pickSession(undefined) : pickBoundSession(aiSessionId, undefined)
     if (session === undefined) {
-      finishJson(res, 404, { error: 'no terminal session is available' })
+      finishJson(res, 404, { error: aiSessionId === '' ? 'no terminal session is available' : 'the session has no bound terminal' })
       return
     }
     session.write(`${command}\r`)
@@ -631,6 +632,35 @@ const SETTLE_MS = 700
 const DEFAULT_TIMEOUT_MS = 30_000
 const MAX_TIMEOUT_MS = 120_000
 const READ_TOOL_DEFAULT_CHARS = 8_000
+
+/** AI-session id carried by one agent, when the runtime exposes it. */
+function agentSessionId(agent: unknown): string | undefined {
+  const session = (agent as { session?: { id?: unknown } } | undefined)?.session
+  return typeof session?.id === 'string' && session.id !== '' ? session.id : undefined
+}
+
+/**
+ * Resolve the terminal one AI session may operate. A session is bound to the
+ * terminal of its own host (recorded in session-hosts.json, absent means the
+ * local terminal); terminals of other hosts belong to their own sessions, so
+ * parallel bindings never steal each other's commands.
+ * @param aiSessionId - the calling AI session, when known.
+ * @param requested - an explicit terminal id from the tool call, when given.
+ * @returns the session's own terminal, or undefined when it is not attached.
+ */
+function pickBoundSession(aiSessionId: string | undefined, requested: unknown): ShellSession | undefined {
+  if (aiSessionId === undefined) return pickSession(requested)
+  const boundKey = readSessionHosts(sessionHostsFile(homeDirectory()))[aiSessionId] ?? 'local'
+  const id = asString(requested)
+  if (id !== '') {
+    const requestedShell = shells.get(id)
+    return requestedShell !== undefined && (requestedShell.hostId ?? 'local') === boundKey ? requestedShell : undefined
+  }
+  const candidates = [...shells.entries()].filter(([, shell]) => (shell.hostId ?? 'local') === boundKey)
+  if (candidates.length === 0) return undefined
+  const active = candidates.find(([sessionId]) => sessionId === activeSessionId)
+  return active?.[1] ?? candidates.find(([, shell]) => shell.alive)?.[1] ?? candidates[0]?.[1]
+}
 
 function pickSession(requested: unknown): ShellSession | undefined {
   const id = asString(requested)
@@ -820,9 +850,12 @@ function registerTerminalTools(ctx: Context): void {
       if (planModeActive(ctx, exec.agent)) {
         throw new Error('plan 模式下不执行命令：请改用 propose_command，把命令作为待执行卡片提交给用户，由用户点击卡片上的“执行”按钮。')
       }
-      const session = pickSession(args.sessionId)
+      const agentSession = agentSessionId(exec.agent)
+      const session = pickBoundSession(agentSession, args.sessionId)
       if (session === undefined) {
-        throw new Error('没有可用的终端会话：请先在 AI Shell 中打开本地终端或连接一台主机')
+        throw new Error(agentSession === undefined
+          ? '没有可用的终端会话：请先在 AI Shell 中打开本地终端或连接一台主机'
+          : '该会话绑定的终端不可用：一个会话只能操作它绑定终端（其他终端属于其他会话）；请先在对应终端里打开本地终端或连接主机')
       }
       const requested = typeof args.timeoutSeconds === 'number' ? args.timeoutSeconds * 1000 : DEFAULT_TIMEOUT_MS
       const timeoutMs = Math.min(Math.max(requested, 1_000), MAX_TIMEOUT_MS)
@@ -883,10 +916,13 @@ function registerTerminalTools(ctx: Context): void {
       },
       render: (_args, value) => [{ type: 'text', text: value.output.trim() === '' ? '(终端暂无输出)' : value.output }],
     },
-    async execute(args) {
-      const session = pickSession(args.sessionId)
+    async execute(args, exec) {
+      const agentSession = agentSessionId(exec.agent)
+      const session = pickBoundSession(agentSession, args.sessionId)
       if (session === undefined) {
-        throw new Error('没有可用的终端会话：请先在 AI Shell 中打开本地终端或连接一台主机')
+        throw new Error(agentSession === undefined
+          ? '没有可用的终端会话：请先在 AI Shell 中打开本地终端或连接一台主机'
+          : '该会话绑定的终端不可用：一个会话只能操作它绑定终端（其他终端属于其他会话）；请先在对应终端里打开本地终端或连接主机')
       }
       const maxChars = typeof args.maxChars === 'number' ? Math.max(200, args.maxChars) : READ_TOOL_DEFAULT_CHARS
       const sessionId = [...shells.entries()].find(([, value]) => value === session)?.[0] ?? ''

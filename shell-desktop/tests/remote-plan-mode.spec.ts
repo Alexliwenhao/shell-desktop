@@ -260,4 +260,15 @@ describe('shell-exec route', () => {
     await vi.waitFor(() => { expect(res.statusCode).toBe(404) })
     expect(JSON.parse(res.body)).toEqual({ error: 'no terminal session is available' })
   })
+
+  it('scopes the execute route to the calling session when it sends a session id', async () => {
+    const { routes } = makeContext()
+    const handler = routes.get(DESKTOP_REMOTE_PATHS.shellExec)
+    const res = fakeResponse()
+
+    handler?.(jsonRequest({ command: 'df -h', sessionId: 'session-a' }), res)
+
+    await vi.waitFor(() => { expect(res.statusCode).toBe(404) })
+    expect(JSON.parse(res.body)).toEqual({ error: 'the session has no bound terminal' })
+  })
 })

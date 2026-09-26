@@ -41,6 +41,7 @@
 | 32 | 裁剪第二步（B1a）：只保留 AI Shell —— 去掉窗口模式切换与回退 | 已完成（B1b 待续） | 托盘删除「窗口模式」子菜单与 `canToggleShellMode`；启动时把存储的旧模式一律解析为 `aishell`；托盘模式文案删除。兼容/扩展/增强外壳代码删除（B1b）未做 |
 | 33 | 打包版启动成「原来的 desktop」/进 Recovery（profile 组合的模块回退链接失败） | 已修复 | `main.ts` 两处 `healDesktopProfileModuleFallback` 改为非致命：Windows 上创建 `~\.dsh\profiles\node_modules\shell-desktop` 链接 EPERM 时只告警、继续启动；两版同步 |
 | 34 | 品牌改名为 AI Shell Desktop（A1-A2）：exe / 安装器 / 快捷方式 / 数据目录 | 已完成 | 全仓一次性改名 `Shell Desktop → AI Shell Desktop`、`Shell Desktop Beta → AI Shell Desktop Beta`（188 文件 / 769 处，含 `build/assistedMessages.yml`、`build/installer.nsh`）；`verify-desktop-variants` 归一同步 |
+| 35 | 会话与终端必须成对绑定：AI 不得操作其他会话的终端 | 已修复（客户端传参待接） | `remote.ts` 新增 `agentSessionId`/`pickBoundSession`：按 `session-hosts.json` 解析会话自己的宿主终端，显式 `sessionId` 只在该终端属于本会话时才被采纳；`terminal_run`/`terminal_read` 与 `shell-exec` 路由均按会话解析 |
 
 ## 细节
 
@@ -207,6 +208,14 @@
 - 验证：`check:desktop-variants` 198 对齐；两版 typecheck 0；改名敏感用例（`installer-messages`、`package`、`host-process-integration`、`lifecycle-events`、`profile-checkpoint`、`dsh-settings-legacy-compat`）单独与小批量通过；全量计数受负载影响会波动（vitest forks worker 超时），剩余 `desktop-runtime-environment` 2 例为已知 Windows 平台基线失败。
 - 提交：`e94e568b0e feat(brand): name the product AI Shell Desktop everywhere`（已推送）。
 - 待办：改名后需重出 Setup/Portable（exe 名变化使 `--prepackaged` 复用旧载荷不可行，需要 electron-builder 完成 electron 解包——本机该步骤间歇性 EPERM，需在机器空闲时重试）。
+### 35 会话 ↔ 终端绑定（一个会话只能操作它绑定的终端）
+- 现象（用户）：AI 会话在执行中，用户切到别的终端后，AI 的命令会打到"当前激活"的终端；应当只作用于本会话绑定的终端，多个终端/会话并行时互不串台。
+- 根因：`src/remote.ts` 的 `pickSession(requested)` 按 `requested → activeSessionId → 第一个存活会话` 兜底，与"会话绑定"无关；工具与 `shell-exec` 路由都走它。
+- 修复：新增 `agentSessionId(agent)` 读取调用方 AI 会话；新增 `pickBoundSession(aiSessionId, requested)`：从 `session-hosts.json`（`sessionHostStore`，缺省=本地终端）取得本会话绑定的宿主 key，只在"该宿主的终端"里选（优先当前激活且属于该宿主者，否则第一个存活）；显式 `sessionId` 仅在属于本会话绑定宿主时才生效，否则视为不可用。
+- 错误文案按调用方是否有会话身份分支：未识别调用方保留旧文案，已识别则提示"该会话绑定的终端不可用：一个会话只能操作它绑定终端（其他终端属于其他会话）"。
+- `shell-exec` 路由（计划卡片「执行」按钮）接受可选 `sessionId`（AI 会话）并按同一绑定解析；未传时保留旧的 active 行为与旧错误文案。
+- 证据：`tests/remote-plan-mode.spec.ts` 新增"带 sessionId 时按会话解析"用例，两版 18/18 通过；`check:desktop-variants` 198 对齐；两版 typecheck 0。
+- 待接：客户端（`PlanCommandCard.tsx` / `ProposedCommandsView.tsx` → `remoteBridge.runInActiveShell`）尚未把所在会话 id 传给 `shell-exec`，接上后计划卡片的「执行」也会严格落到该会话绑定的终端。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
