@@ -45,6 +45,7 @@
 | 36 | 终端与会话严格隔离（红线）：当前会话只能操作当前终端，不得出现其他终端任何信息 | 已修复 | 未识别调用方一律拒绝（无 active 兜底）；`terminal_sessions` 只返回本会话终端；`shell-exec` 缺 `sessionId` 直接 400；计划卡片携带自身 `sessionId` |
 | 37 | 会话与终端绑定的回归修复：新建会话未绑定终端、点开终端未回到该终端最新会话 | 已修复 | `aishell-shell.ts`：`newSession` 携带 `terminalId`；终端激活无内存绑定时按宿主找回"未被其他终端占用"的最新会话并重绑到该终端；`session-terminal-store.ts` 写入时保证一终端一会话；新增 `tests/session-terminal-store.spec.ts` |
 | 38 | 多终端绑定：任何会话（新会话/历史会话）在终端里操作后就接管该终端；点终端回到当前属主 | 已修复 | 宿主 `resolveBoundTerminal` + 采用即绑定（1:1）；新路由 `session-terminal-list`；客户端属主核对优先于内存缓存，绑定缓存升级 `{sessionId,hostKey,terminalId}`；删除会话重建绑定、关闭标签释放占用、归档会话过滤 |
+| 39 | 已保存的主机不能编辑 | 已修复 | `HostPanel`：每行新增编辑按钮，表单回填（含密码/私钥/口令），按原 id 覆盖保存（`hosts-save` 本就支持）；新增 `tests/client-host-panel.spec.ts` 交互用例 |
 
 ## 细节
 
@@ -238,6 +239,12 @@
 - 关联修复（同批）：① 删除当前会话后按 `fresh + terminalId + hostKey` 重建并重绑（旧实现会把终端 id 当宿主写进 `session-hosts.json`，导致重建会话无终端可用）；② 关闭终端标签时释放该终端的占用（`syncTerminalTabs`，回调用 `useCallback` 保持稳定身份避免刷新循环），新终端才能再恢复该会话；③ 新建/恢复会话的绑定写入改为 await，点终端不会读到旧属主；④ `latestBoundSession` 与会话属主查询都排除归档会话。
 - 不回归：#9（点终端回到其最新绑定会话）、#15（新建会话必新建并重绑）、#35/#36（一终端一会话、严格隔离、fail closed）保持；采用只把既有解析结果落盘，不放宽权限。
 - 证据：新增 `tests/remote-session-binding.spec.ts`（9 例，覆盖多终端/跨主机/显式指定/活跃与死终端）；`client-remote-api.spec.ts` +2 例；7 个 spec 52 例 × 2 版通过；两版 typecheck 0；`check:desktop-variants` 199 对齐。
+### 39 主机编辑（已保存的主机不能修改）
+- 现象（用户）：主机创建后无法编辑（面板只有新建/连接/删除）。
+- 根因：`HostPanel` 只有创建表单（固定 `id: ''`），行内没有编辑入口；宿主 `hosts-save` 本就支持按 id 覆盖更新，缺的是客户端。
+- 修复：每行新增编辑（铅笔）按钮 → 打开预填表单（`hostFormFrom`：名称/地址/端口/用户/认证方式/密码/私钥路径，另有隐藏保留的 `passphrase`）；保存提交原 id 覆盖（按钮文案「保存修改」+「取消」）；点「新建主机」退出编辑态。
+- 防回归：表单必须回填并回传密钥，否则覆盖保存会丢密码/私钥（宿主对空串/缺省视为无密钥）；编辑私钥主机时保留隐藏口令（表单无口令输入框）。
+- 证据：新增 `tests/client-host-panel.spec.ts`（4 例，jsdom 交互：编辑入口、回填含密码、按原 id 保存且密码保留、取消不保存；另含密钥映射）；两版 typecheck 0；8 个 spec 56 例 × 2 版通过；`check:desktop-variants` 199 对齐。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
