@@ -41,6 +41,7 @@ export const DESKTOP_REMOTE_PATHS = Object.freeze({
   shellClose: `${DESKTOP_REMOTE_ROUTE_PREFIX}/shell-close`,
   shellActivate: `${DESKTOP_REMOTE_ROUTE_PREFIX}/shell-activate`,
   sftp: `${DESKTOP_REMOTE_ROUTE_PREFIX}/sftp`,
+  sftpUpload: `${DESKTOP_REMOTE_ROUTE_PREFIX}/sftp-upload`,
   home: `${DESKTOP_REMOTE_ROUTE_PREFIX}/home`,
   hostWorkspace: `${DESKTOP_REMOTE_ROUTE_PREFIX}/host-workspace`,
   sessionHostsList: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-hosts-list`,
@@ -395,6 +396,42 @@ async function sftpOperation(client: SshClient, op: string, body: Record<string,
   }
 }
 
+/**
+ * Write one HTTP request body to a remote file as it arrives, so an upload
+ * never has to be buffered whole and no local path is involved.
+ * @param sftp - SFTP channel of the target host.
+ * @param path - remote file path to create or overwrite.
+ * @param body - the request body stream.
+ * @returns the number of bytes written.
+ */
+async function streamBodyToSftp(
+  sftp: import('ssh2').SFTPWrapper,
+  path: string,
+  body: AsyncIterable<Buffer | string>,
+): Promise<number> {
+  const handle = await new Promise<Buffer>((resolve, reject) => {
+    sftp.open(path, 'w', (cause, opened) => { cause === undefined ? resolve(opened) : reject(cause) })
+  })
+  let position = 0
+  try {
+    for await (const chunk of body) {
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+      if (buffer.length === 0) continue
+      await new Promise<void>((resolve, reject) => {
+        sftp.write(handle, buffer, 0, buffer.length, position, cause => { cause === undefined ? resolve() : reject(cause) })
+      })
+      position += buffer.length
+    }
+  } catch (cause) {
+    try { sftp.close(handle, () => {}) } catch { /* the channel may already be gone */ }
+    throw cause
+  }
+  await new Promise<void>((resolve, reject) => {
+    sftp.close(handle, cause => { cause === undefined ? resolve() : reject(cause) })
+  })
+  return position
+}
+
 function finishJson(res: ServerResponse, statusCode: number, value: object): void {  res.statusCode = statusCode
   res.setHeader('content-type', 'application/json; charset=utf-8')
   res.setHeader('cache-control', 'no-store')
@@ -451,6 +488,22 @@ function registerRoutes(ctx: Context): void {
         void (async () => {
           try {
             await handler(await readJsonBody(req), res)
+          } catch (cause) {
+            finishJson(res, 500, { error: cause instanceof Error ? cause.message : String(cause) })
+          }
+        })()
+      },
+    }), `shell-desktop/remote: ${path}`)
+  }
+  const streamRoute = (path: string, handler: (req: IncomingMessage, res: ServerResponse) => Promise<void>): void => {
+    ctx.effect(() => ctx.webServer.register({
+      kind: 'exact',
+      path,
+      handler: (req, res) => {
+        if (!guard(req, res)) return
+        void (async () => {
+          try {
+            await handler(req, res)
           } catch (cause) {
             finishJson(res, 500, { error: cause instanceof Error ? cause.message : String(cause) })
           }
@@ -647,6 +700,27 @@ function registerRoutes(ctx: Context): void {
     }
     const client = await connectSsh(host)
     finishJson(res, 200, { result: await sftpOperation(client, asString(body.op), body) })
+  })
+
+  // Upload one file the user picked in the renderer into the browsed remote
+  // directory. The body streams straight to SFTP — no local path is sent — and
+  // the loopback guard keeps this route out of reach for agent tools (the web
+  // fetcher refuses non-public addresses).
+  streamRoute(DESKTOP_REMOTE_PATHS.sftpUpload, async (req, res) => {
+    const query = new URL(req.url ?? '/', 'http://127.0.0.1').searchParams
+    const host = readHosts().find(candidate => candidate.id === (query.get('hostId') ?? ''))
+    if (host === undefined) {
+      finishJson(res, 400, { error: 'unknown host' })
+      return
+    }
+    const path = query.get('path') ?? ''
+    if (path.trim() === '') {
+      finishJson(res, 400, { error: 'path is required' })
+      return
+    }
+    const client = await connectSsh(host)
+    const bytes = await streamBodyToSftp(await getSftp(client), path, req)
+    finishJson(res, 200, { path, bytes })
   })
 
   ctx.logger.info(`shell-desktop/remote: shell bridge on ${DESKTOP_REMOTE_ROUTE_PREFIX}`)

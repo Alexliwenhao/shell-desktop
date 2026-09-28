@@ -50,6 +50,8 @@ export interface RemoteBridgeApi {
   sftpRename(hostId: string, path: string, newPath: string): Promise<void>
   /** Read one remote text file. */
   sftpRead(hostId: string, path: string): Promise<{ content: string; truncated: boolean }>
+  /** Stream one local file the user picked into a remote path. */
+  sftpUpload(hostId: string, remotePath: string, file: Blob): Promise<void>
   /** The Host account's home directory, used to anchor the AI-Shell workspace. */
   hostHome(): Promise<string>
   /** Ensure the local workspace directory that groups one host's sessions. */
@@ -131,6 +133,19 @@ export const remoteBridge: RemoteBridgeApi = {
   async sftpRead(hostId: string, path: string): Promise<{ content: string; truncated: boolean }> {
     const response = await post<{ result: { content: string; truncated: boolean } }>('sftp', { hostId, op: 'read', path })
     return response.result
+  },
+  async sftpUpload(hostId: string, remotePath: string, file: Blob): Promise<void> {
+    const query = new URLSearchParams({ hostId, path: remotePath })
+    const response = await fetch(`${ROUTE_PREFIX}/sftp-upload?${query.toString()}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      credentials: 'same-origin',
+      body: file,
+    })
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
+      throw new Error(`remote bridge sftp-upload failed (${String(response.status)}) ${detail}`.trim())
+    }
   },
   async hostHome(): Promise<string> {
     return (await post<{ home: string }>('home', {})).home

@@ -3,8 +3,8 @@
  * listing of the session host, and a text preview for readable files.
  */
 
-import { useCallback, useEffect, useState } from 'react'
-import { ArrowUp, FileText, Folder, FolderPlus, RefreshCw, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ArrowUp, FileText, Folder, FolderPlus, RefreshCw, Upload, X } from 'lucide-react'
 import type { RemoteBridgeApi, RemoteFileItem } from './remote-api.ts'
 
 /** Remote file browser props. */
@@ -39,6 +39,9 @@ export function FilePanel({ api, hostId }: FilePanelProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
   const [preview, setPreview] = useState<{ name: string; content: string; truncated: boolean }>()
+  /** Name of the file currently uploading, when one is in flight. */
+  const [uploading, setUploading] = useState<string>()
+  const fileInput = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async (path: string): Promise<void> => {
     if (hostId === undefined) return
@@ -91,6 +94,17 @@ export function FilePanel({ api, hostId }: FilePanelProps) {
       .catch(cause => { setError(cause instanceof Error ? cause.message : String(cause)) })
   }
 
+  const upload = (file: File | undefined): void => {
+    if (file === undefined) return
+    const base = cwd === '.' ? '' : cwd.replace(/\/+$/, '')
+    setUploading(file.name)
+    setError(undefined)
+    void api.sftpUpload(hostId, `${base}/${file.name}`, file)
+      .then(() => load(cwd))
+      .catch(cause => { setError(cause instanceof Error ? cause.message : String(cause)) })
+      .finally(() => { setUploading(undefined) })
+  }
+
   return (
     <div className="dshAishellPanelBody dshAishellFilePane">
       <div className="dshAishellPathBar">
@@ -111,6 +125,27 @@ export function FilePanel({ api, hostId }: FilePanelProps) {
         <button type="button" className="dshAishellHostIconButton" aria-label="新建目录" onClick={mkdir}>
           <FolderPlus aria-hidden="true" />
         </button>
+        <button
+          type="button"
+          className="dshAishellHostIconButton"
+          aria-label="上传文件"
+          title="上传本地文件到当前目录"
+          disabled={uploading !== undefined}
+          onClick={() => { fileInput.current?.click() }}
+        >
+          <Upload aria-hidden="true" />
+        </button>
+        <input
+          ref={fileInput}
+          type="file"
+          aria-hidden="true"
+          style={{ display: 'none' }}
+          onChange={event => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            upload(file)
+          }}
+        />
       </div>
 
       <div className="dshAishellFileList">
@@ -137,6 +172,8 @@ export function FilePanel({ api, hostId }: FilePanelProps) {
           <pre>{preview.content}{preview.truncated ? '\n…（已截断）' : ''}</pre>
         </div>
       )}
+
+      {uploading !== undefined && <p className="dshAishellPanelHint">正在上传 {uploading}…</p>}
 
       {error !== undefined && <p className="dshAishellPanelError" role="alert">{error}</p>}
     </div>

@@ -82,3 +82,32 @@ describe('remote bridge active-terminal execution', () => {
     expect(calls[0]!.body).toEqual({ command: 'df -h' })
   })
 })
+
+describe('remote bridge sftp upload', () => {
+  it('streams the picked file to the encoded remote path', async () => {
+    const calls: { url: string; method: string | undefined; body: unknown }[] = []
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init: { method?: string; body?: unknown }) => {
+      calls.push({ url, method: init.method, body: init.body })
+      return { ok: true, status: 200, json: async () => ({ path: '/tmp/a.txt', bytes: 3 }), text: async () => '' }
+    }))
+
+    const file = new Blob(['abc'])
+    await remoteBridge.sftpUpload('h-1', '/tmp/a.txt', file)
+
+    expect(calls[0]!.url).toBe('/_dsh/desktop/remote/sftp-upload?hostId=h-1&path=%2Ftmp%2Fa.txt')
+    expect(calls[0]!.method).toBe('POST')
+    expect(calls[0]!.body).toBe(file)
+  })
+
+  it('surfaces an upload failure with the Host message', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+      text: async () => 'disk full',
+    })))
+
+    await expect(remoteBridge.sftpUpload('h-1', '/tmp/a.txt', new Blob(['abc'])))
+      .rejects.toThrow('sftp-upload failed (500) disk full')
+  })
+})

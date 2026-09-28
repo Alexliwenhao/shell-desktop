@@ -46,6 +46,7 @@
 | 37 | 会话与终端绑定的回归修复：新建会话未绑定终端、点开终端未回到该终端最新会话 | 已修复 | `aishell-shell.ts`：`newSession` 携带 `terminalId`；终端激活无内存绑定时按宿主找回"未被其他终端占用"的最新会话并重绑到该终端；`session-terminal-store.ts` 写入时保证一终端一会话；新增 `tests/session-terminal-store.spec.ts` |
 | 38 | 多终端绑定：任何会话（新会话/历史会话）在终端里操作后就接管该终端；点终端回到当前属主 | 已修复 | 宿主 `resolveBoundTerminal` + 采用即绑定（1:1）；新路由 `session-terminal-list`；客户端属主核对优先于内存缓存，绑定缓存升级 `{sessionId,hostKey,terminalId}`；删除会话重建绑定、关闭标签释放占用、归档会话过滤 |
 | 39 | 已保存的主机不能编辑 | 已修复 | `HostPanel`：每行新增编辑按钮，表单回填（含密码/私钥/口令），按原 id 覆盖保存（`hosts-save` 本就支持）；新增 `tests/client-host-panel.spec.ts` 交互用例 |
+| 40 | 文件模块缺少「上传本地文件到远端」 | 已修复 | 文件面板新增上传按钮（`<input type=file>`）；新路由 `sftp-upload` 流式写 SFTP（`body: File`，不传本地路径、不整包进内存）；回环守卫 + AI web 工具禁非公网地址，模型不可达 |
 
 ## 细节
 
@@ -245,6 +246,12 @@
 - 修复：每行新增编辑（铅笔）按钮 → 打开预填表单（`hostFormFrom`：名称/地址/端口/用户/认证方式/密码/私钥路径，另有隐藏保留的 `passphrase`）；保存提交原 id 覆盖（按钮文案「保存修改」+「取消」）；点「新建主机」退出编辑态。
 - 防回归：表单必须回填并回传密钥，否则覆盖保存会丢密码/私钥（宿主对空串/缺省视为无密钥）；编辑私钥主机时保留隐藏口令（表单无口令输入框）。
 - 证据：新增 `tests/client-host-panel.spec.ts`（4 例，jsdom 交互：编辑入口、回填含密码、按原 id 保存且密码保留、取消不保存；另含密钥映射）；两版 typecheck 0；8 个 spec 56 例 × 2 版通过；`check:desktop-variants` 199 对齐。
+### 40 远端文件上传（文件模块缺少上传入口）
+- 现象（用户）：文件面板只能浏览/预览远端目录，没有上传本地文件的入口。
+- 实现：`FilePanel` 路径栏新增「上传文件」按钮 + 隐藏 `<input type="file">`，选中后上传到当前目录（同名覆盖）；`remote-api.sftpUpload(hostId, remotePath, file)` 以 `URLSearchParams` 传 host/path，`body: File` 流式 POST `/_dsh/desktop/remote/sftp-upload`；宿主新增 `streamRoute`（不解析 JSON body）+ `streamBodyToSftp`：`sftp.open('w')` 后按块 `write(position)`，失败时关闭句柄，成功返回字节数。
+- 安全边界：路由沿用既有守卫（POST + 回环地址 + 渲染器 origin）；**本地路径不上线路**（只传用户选择的文件字节），宿主拿不到任意本机路径；AI 的 `web_fetch` 明确拒绝非公网地址（127.0.0.1 会被 `WEB_BLOCKED_URL` 拦掉），因此模型无法调用该路由。
+- 现状限制（记录备查）：单文件、无进度条、同名直接覆盖、目录上传未做。
+- 证据：`client-remote-api.spec.ts` +2 例（URL/host/path 编码、`body` 为所选 Blob、失败透传宿主错误）；新增 `client-file-panel.spec.ts`（上传入口存在、无主机时不显示）；新增 `remote-sftp-upload.spec.ts`（403 非渲染器 origin / 405 非 POST / 400 未知主机 / 400 空路径；用临时 DSH_HOME 隔离）；两版 typecheck 0；10 个 spec 64 例 × 2 版通过；`check:desktop-variants` 199 对齐。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
