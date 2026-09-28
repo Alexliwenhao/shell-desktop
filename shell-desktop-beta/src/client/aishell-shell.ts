@@ -32,11 +32,24 @@ function fenced(text: string): string {
 /** Workspace service face this shell resolves lazily (Host-owned service). */
 interface ShellWorkspaces {
   list?: {
-    getSnapshot?(): { items?: readonly { workspaceId?: unknown; path?: string; title?: string }[] }
+    getSnapshot?(): {
+      items?: readonly { workspaceId?: unknown; path?: string; title?: string }[]
+      /** Session ids the user archived; they never come back as a binding. */
+      archivedSessionIds?: readonly unknown[]
+    }
     subscribe?(listener: () => void): () => void
   }
   create?(input: { path: string }): Promise<{ workspaceId?: unknown }>
   archiveSession?(sessionId: unknown): Promise<void>
+}
+
+/** One terminal's current AI session, with the ids the binding was made through. */
+interface TerminalBinding {
+  readonly sessionId: unknown
+  /** Saved host id (or `local`) the binding was resolved through, when known. */
+  readonly hostKey?: string
+  /** Concrete terminal tab id when the binding came from a terminal tab. */
+  readonly terminalId?: string
 }
 
 /** Own the AI-Shell root: activity rail, navigation column, terminal workbench, AI conversation. */
@@ -59,10 +72,16 @@ export function applyAishellShell(
   // none exists — anchored at the Host home directory reported by the desktop
   // bridge — and every connected machine gets a session of its own.
   const rawContext = ctx as unknown as { get(name: string): unknown }
-  /** Bound AI session per terminal key (a saved host id, or `local`). */
-  const terminalSessions = new Map<string, unknown>()
+  /** Bound AI session per terminal key (a terminal tab id, or a saved host id). */
+  const terminalSessions = new Map<string, TerminalBinding>()
 
   const workspacesFace = (): ShellWorkspaces | undefined => rawContext.get('workspaces') as ShellWorkspaces | undefined
+
+  /** Session ids the user archived; they never come back as a binding. */
+  const archivedSessionIds = (): ReadonlySet<string> => {
+    const snapshot = workspacesFace()?.list?.getSnapshot?.()
+    return new Set((snapshot?.archivedSessionIds ?? []).map(id => String(id)))
+  }
 
   /** Find or create the workspace standing for one directory. */
   const ensureWorkspaceAt = async (path: string): Promise<unknown> => {
@@ -153,13 +172,51 @@ export function applyAishellShell(
     const recorded: Readonly<Record<string, string>> = await remoteBridge
       .listSessionHosts()
       .catch(() => ({} as Readonly<Record<string, string>>))
+    const archived = archivedSessionIds()
     let newest: { id: unknown; updatedAt: number } | undefined
     for (const id of ids) {
       const key = String(id)
       if (recorded[key] !== bindKey) continue
-      if (claimed.has(key)) continue
+      if (claimed.has(key) || archived.has(key)) continue
       const updatedAt = byId[key]?.updatedAt ?? 0
       if (newest === undefined || updatedAt > newest.updatedAt) newest = { id, updatedAt }
+    }
+    return newest?.id
+  }
+
+  /**
+   * Session the Host currently records as the owner of one terminal. The Host
+   * adopts a terminal for whichever session operates there — an older
+   * conversation included — so the renderer reconciles its own cache against
+   * this record before reopening a terminal.
+   * @param terminalId - concrete terminal tab id.
+   * @returns the owning session id, or undefined when the Host records none.
+   */
+  const recordedTerminalOwner = async (terminalId: string): Promise<string | undefined> => {
+    const recorded = await remoteBridge
+      .listSessionTerminals()
+      .catch(() => ({} as Readonly<Record<string, string>>))
+    const owners = Object.entries(recorded).filter(([, bound]) => bound === terminalId)
+    if (owners.length === 0) return undefined
+    const sessions = rawContext.get('sessions') as {
+      list?: {
+        getSnapshot?(): {
+          ids?: readonly unknown[]
+          byId?: Record<string, { updatedAt?: number } | undefined>
+        }
+      }
+    } | undefined
+    const snapshot = sessions?.list?.getSnapshot?.()
+    const ids = snapshot?.ids
+    const byId = snapshot?.byId
+    if (ids === undefined || byId === undefined) return undefined
+    const live = new Set(ids.map(id => String(id)))
+    const archived = archivedSessionIds()
+    let newest: { id: string; updatedAt: number } | undefined
+    for (const [sessionId] of owners) {
+      if (!live.has(sessionId) || archived.has(sessionId)) continue
+      const updatedAt = byId[sessionId]?.updatedAt ?? 0
+      if (newest === undefined || updatedAt > newest.updatedAt) newest = { id: sessionId, updatedAt }
     }
     return newest?.id
   }
@@ -184,13 +241,33 @@ export function applyAishellShell(
           ctx.logger.warn('shell-desktop: AI-Shell session services are not ready')
           return
         }
+        /** Assemble one terminal's binding from the ids this call carries. */
+        const binding = (sessionId: unknown): TerminalBinding => ({
+          sessionId,
+          ...(bindKey === undefined ? {} : { hostKey: bindKey }),
+          ...(options.terminalId === undefined ? {} : { terminalId: options.terminalId }),
+        })
         // Terminal activation reuses the conversation already bound to that
         // terminal; an explicit "new session" always starts one, even when the
         // terminal has a conversation, and rebinds the terminal to it.
         if (bindTarget !== undefined && fresh !== true) {
           const existing = terminalSessions.get(bindTarget)
+          // The Host records which session owns a terminal and adopts it for
+          // whichever session operates there, so that record wins over this
+          // renderer's cache when the two disagree.
+          if (options.terminalId !== undefined) {
+            const owner = await recordedTerminalOwner(options.terminalId)
+            if (owner !== undefined && String(owner) !== String(existing?.sessionId)) {
+              for (const [key, entry] of terminalSessions) {
+                if (key !== bindTarget && String(entry.sessionId) === String(owner)) terminalSessions.delete(key)
+              }
+              terminalSessions.set(bindTarget, binding(owner))
+              navigation.openSession(owner)
+              return
+            }
+          }
           if (existing !== undefined) {
-            navigation.openSession(existing)
+            navigation.openSession(existing.sessionId)
             return
           }
           // No binding in this renderer yet: return to the host's newest
@@ -199,12 +276,12 @@ export function applyAishellShell(
           // instead of starting a second conversation for a host the user
           // already worked with.
           if (bindKey !== undefined && bindKey !== 'local') {
-            const claimed = new Set([...terminalSessions.values()].map(value => String(value)))
+            const claimed = new Set([...terminalSessions.values()].map(entry => String(entry.sessionId)))
             const recorded = await latestBoundSession(bindKey, claimed)
             if (recorded !== undefined) {
-              terminalSessions.set(bindTarget, recorded)
+              terminalSessions.set(bindTarget, binding(recorded))
               if (options.terminalId !== undefined) {
-                void remoteBridge.setSessionTerminal(String(recorded), options.terminalId).catch(() => {})
+                await remoteBridge.setSessionTerminal(String(recorded), options.terminalId).catch(() => {})
               }
               navigation.openSession(recorded)
               return
@@ -218,9 +295,11 @@ export function applyAishellShell(
         }
         const sessionId = await sessions.create({ workspaceId })
         if (bindTarget !== undefined) {
-          terminalSessions.set(bindTarget, sessionId)
+          terminalSessions.set(bindTarget, binding(sessionId))
           if (options.terminalId !== undefined) {
-            void remoteBridge.setSessionTerminal(sessionId, options.terminalId).catch(() => {})
+            // Await the record so a click on this terminal right after the
+            // session appears still resolves to it on the Host.
+            await remoteBridge.setSessionTerminal(sessionId, options.terminalId).catch(() => {})
           }
           // Record the explicit host association so the session tree can group
           // this session under its host after a reload.
@@ -260,17 +339,37 @@ export function applyAishellShell(
     if (archive === undefined) {
       throw new Error('shell-desktop: AI-Shell found no session removal service')
     }
-    let boundKey: string | undefined
-    for (const [key, bound] of terminalSessions) {
-      if (bound !== sessionId) continue
-      boundKey = key
+    let closed: { key: string; binding: TerminalBinding } | undefined
+    for (const [key, entry] of terminalSessions) {
+      if (String(entry.sessionId) !== sessionId) continue
+      closed = { key, binding: entry }
       terminalSessions.delete(key)
     }
     await archive.call(navigation?.archiveSession !== undefined ? navigation : workspaces, sessionId)
     const sessions = rawContext.get('sessions') as {
       list?: { getSnapshot?(): { current?: unknown } }
     } | undefined
-    if (String(sessions?.list?.getSnapshot?.().current ?? '') === sessionId) openBoundSession(boundKey)
+    if (String(sessions?.list?.getSnapshot?.().current ?? '') !== sessionId) return
+    // Hand the terminal to a fresh conversation bound to the same terminal, so
+    // the replacement keeps operating where the removed conversation did.
+    if (closed?.binding.terminalId !== undefined) {
+      openBoundSession(closed.binding.hostKey, { fresh: true, terminalId: closed.binding.terminalId })
+      return
+    }
+    openBoundSession(closed?.key)
+  }
+
+  /**
+   * Keep the renderer's bindings to the terminal tabs that are actually open: a
+   * closed tab can never be clicked again, so its conversation becomes
+   * available for the next terminal of the same host.
+   * @param openTerminalIds - ids of the terminal tabs the workspace shows.
+   */
+  const syncTerminalTabs = (openTerminalIds: readonly string[]): void => {
+    const open = new Set(openTerminalIds)
+    for (const [key, entry] of terminalSessions) {
+      if (entry.terminalId !== undefined && !open.has(entry.terminalId)) terminalSessions.delete(key)
+    }
   }
 
   // Boot: wait for the client workspace/session services, then open (creating
@@ -537,6 +636,7 @@ export function applyAishellShell(
       openTerminalSession,
       openSession,
       deleteSession,
+      syncTerminalTabs,
       quoteTerminalSelection,
       subscribeTheme: (listener: () => void) => ctx.on('theme/change', () => { listener() }),
     }),

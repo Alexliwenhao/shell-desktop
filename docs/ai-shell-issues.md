@@ -44,6 +44,7 @@
 | 35 | 会话与终端必须成对绑定：AI 不得操作其他会话的终端（并行多终端） | 已修复 | `remote.ts` 新增 `agentSessionId`/`pickBoundSession`：按 `session-hosts.json` 解析会话自己的宿主终端，显式 `sessionId` 只在该终端属于本会话时才被采纳；`terminal_run`/`terminal_read` 与 `shell-exec` 路由均按会话解析 |
 | 36 | 终端与会话严格隔离（红线）：当前会话只能操作当前终端，不得出现其他终端任何信息 | 已修复 | 未识别调用方一律拒绝（无 active 兜底）；`terminal_sessions` 只返回本会话终端；`shell-exec` 缺 `sessionId` 直接 400；计划卡片携带自身 `sessionId` |
 | 37 | 会话与终端绑定的回归修复：新建会话未绑定终端、点开终端未回到该终端最新会话 | 已修复 | `aishell-shell.ts`：`newSession` 携带 `terminalId`；终端激活无内存绑定时按宿主找回"未被其他终端占用"的最新会话并重绑到该终端；`session-terminal-store.ts` 写入时保证一终端一会话；新增 `tests/session-terminal-store.spec.ts` |
+| 38 | 多终端绑定：任何会话（新会话/历史会话）在终端里操作后就接管该终端；点终端回到当前属主 | 已修复 | 宿主 `resolveBoundTerminal` + 采用即绑定（1:1）；新路由 `session-terminal-list`；客户端属主核对优先于内存缓存，绑定缓存升级 `{sessionId,hostKey,terminalId}`；删除会话重建绑定、关闭标签释放占用、归档会话过滤 |
 
 ## 细节
 
@@ -230,6 +231,13 @@
 - 修复：① `AishellFrame` 的「新建会话」把活动终端的 `terminalId` 传给 `newSession`，`aishell-shell` 据此把新会话绑定并写入 `session-terminals.json`；② 终端激活在内存无绑定时，按宿主找回最新**未被其他已开终端占用**的会话，重绑到当前终端并打开（`latestBoundSession(bindKey, claimed)`）；本机终端的托管记录不落 `session-hosts.json`，维持"本地终端每次新建"的既有行为；③ `writeSessionTerminal` 写入时清除仍指向同一终端的旧会话，保证一终端一会话（切换归属而非并存）。
 - 保留的既有约束：#15（新建必为新会话）、#35/#36（会话只能操作自己绑定的终端、fail closed）不变；多终端并行时各自恢复不同历史会话，不再出现两个终端显示同一会话。
 - 证据：新增 `tests/session-terminal-store.spec.ts`（5 例，含"终端换主"与"单会话重绑不影响其他终端"）；两版 typecheck 0；`session-terminal-store`/`remote-plan-mode`/`client-proposed-commands`/`client-plan-command-card`/`client-remote-api`/`client-session-history` 共 41 例 × 2 版通过；`check:desktop-variants` 199 对齐。
+### 38 多终端绑定：操作即接管（新会话与历史会话同等）
+- 需求（用户）：同一主机可开多个终端、各自一个会话；**哪个会话在终端里实际执行过，该终端就绑定哪个会话**（历史会话同样适用）；点终端应回到当前属主会话，不再回到过期绑定。
+- 宿主：`pickBoundSession` 抽出纯函数 `resolveBoundTerminal`（隔离规则不变：无会话身份拒绝；有有效记录者只能用自己那台；跨主机拒绝），解析结果与会话记录不同时写入 `session-terminals.json`（借用既有 1:1 写入，从旧会话手中接管）；新增 `session-terminal-list` 路由供渲染端核对。
+- 客户端：`openBoundSession` 在打开终端前先用宿主记录核对属主（过滤已删除/归档与不存在的会话），记录优先于内存缓存，并把同一会话在其他终端的过期条目清掉；内存绑定升级为 `{sessionId, hostKey, terminalId}`。
+- 关联修复（同批）：① 删除当前会话后按 `fresh + terminalId + hostKey` 重建并重绑（旧实现会把终端 id 当宿主写进 `session-hosts.json`，导致重建会话无终端可用）；② 关闭终端标签时释放该终端的占用（`syncTerminalTabs`，回调用 `useCallback` 保持稳定身份避免刷新循环），新终端才能再恢复该会话；③ 新建/恢复会话的绑定写入改为 await，点终端不会读到旧属主；④ `latestBoundSession` 与会话属主查询都排除归档会话。
+- 不回归：#9（点终端回到其最新绑定会话）、#15（新建会话必新建并重绑）、#35/#36（一终端一会话、严格隔离、fail closed）保持；采用只把既有解析结果落盘，不放宽权限。
+- 证据：新增 `tests/remote-session-binding.spec.ts`（9 例，覆盖多终端/跨主机/显式指定/活跃与死终端）；`client-remote-api.spec.ts` +2 例；7 个 spec 52 例 × 2 版通过；两版 typecheck 0；`check:desktop-variants` 199 对齐。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。

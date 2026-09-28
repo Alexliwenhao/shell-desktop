@@ -45,6 +45,7 @@ export const DESKTOP_REMOTE_PATHS = Object.freeze({
   hostWorkspace: `${DESKTOP_REMOTE_ROUTE_PREFIX}/host-workspace`,
   sessionHostsList: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-hosts-list`,
   sessionTerminalSet: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-terminal-set`,
+  sessionTerminalList: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-terminal-list`,
   sessionHostSet: `${DESKTOP_REMOTE_ROUTE_PREFIX}/session-host-set`,
   shellExec: `${DESKTOP_REMOTE_ROUTE_PREFIX}/shell-exec`,
 })
@@ -612,6 +613,13 @@ function registerRoutes(ctx: Context): void {
     finishJson(res, 200, { terminalId })
   })
 
+  // The terminal each AI session currently owns. A session adopts the terminal
+  // it operated on the Host, so the renderer reconciles its own cache against
+  // this record before reopening a terminal.
+  route(DESKTOP_REMOTE_PATHS.sessionTerminalList, async (_body, res) => {
+    finishJson(res, 200, { sessions: readSessionTerminals(sessionTerminalsFile(homeDirectory())) })
+  })
+
   route(DESKTOP_REMOTE_PATHS.sessionHostsList, async (_body, res) => {
     finishJson(res, 200, { sessions: readSessionHosts(sessionHostsFile(homeDirectory())) })
   })
@@ -658,11 +666,51 @@ function agentSessionId(agent: unknown): string | undefined {
   return typeof session?.id === 'string' && session.id !== '' ? session.id : undefined
 }
 
+/** One open terminal as the AI-session binding rules see it. */
+export interface BoundTerminalFacts {
+  /** Concrete terminal id (the shell session id). */
+  readonly sessionId: string
+  /** Saved host the terminal runs on; `local` for local shells. */
+  readonly hostKey: string
+  readonly alive: boolean
+}
+
 /**
- * Resolve the terminal one AI session may operate. A session is bound to the
- * terminal of its own host (recorded in session-hosts.json, absent means the
- * local terminal); terminals of other hosts belong to their own sessions, so
- * parallel bindings never steal each other's commands.
+ * Decide which terminal one AI session may operate, without touching any I/O.
+ * An exclusive record wins; a session with no usable record may use the
+ * terminals of its own host, so parallel bindings never steal each other's
+ * commands and terminals of other hosts stay untouched.
+ * @param requested - an explicit terminal id from the tool call, or ''.
+ * @param current - the terminal currently recorded for the session, if any.
+ * @param boundKey - the session's host key, `local` when unknown.
+ * @param activeSessionId - the terminal the user is looking at, if any.
+ * @param terminals - every open terminal the Host can choose from.
+ * @returns the id of the terminal the session may operate, or undefined.
+ */
+export function resolveBoundTerminal(
+  requested: string,
+  current: string | undefined,
+  boundKey: string,
+  activeSessionId: string | undefined,
+  terminals: readonly BoundTerminalFacts[],
+): string | undefined {
+  if (requested !== '') {
+    const target = terminals.find(terminal => terminal.sessionId === requested)
+    if (target === undefined) return undefined
+    if (current !== undefined) return requested === current ? requested : undefined
+    return target.hostKey === boundKey ? requested : undefined
+  }
+  if (current !== undefined && terminals.some(terminal => terminal.sessionId === current)) return current
+  const candidates = terminals.filter(terminal => terminal.hostKey === boundKey)
+  if (candidates.length === 0) return undefined
+  const active = candidates.find(terminal => terminal.sessionId === activeSessionId)
+  return (active ?? candidates.find(terminal => terminal.alive) ?? candidates[0])?.sessionId
+}
+
+/**
+ * Resolve the terminal one AI session may operate and record the pairing: a
+ * session adopts whichever terminal it really uses — a new conversation or an
+ * older one alike — so reopening that terminal returns to it again.
  * @param aiSessionId - the calling AI session, when known.
  * @param requested - an explicit terminal id from the tool call, when given.
  * @returns the session's own terminal, or undefined when it is not attached.
@@ -671,25 +719,26 @@ function pickBoundSession(aiSessionId: string | undefined, requested: unknown): 
   // Strict isolation: without a session identity the call may not touch any
   // terminal, not even the active one.
   if (aiSessionId === undefined) return undefined
-  const terminalId = readSessionTerminals(sessionTerminalsFile(homeDirectory()))[aiSessionId]
-  const boundKey = readSessionHosts(sessionHostsFile(homeDirectory()))[aiSessionId] ?? 'local'
-  const id = asString(requested)
-  // A recorded terminal id is the session's own terminal; without one the
-  // session owns the terminals of its recorded host.
-  if (id !== '') {
-    const requestedShell = shells.get(id)
-    if (requestedShell === undefined) return undefined
-    if (terminalId !== undefined) return id === terminalId ? requestedShell : undefined
-    return (requestedShell.hostId ?? 'local') === boundKey ? requestedShell : undefined
+  const home = homeDirectory()
+  const current = readSessionTerminals(sessionTerminalsFile(home))[aiSessionId]
+  const boundKey = readSessionHosts(sessionHostsFile(home))[aiSessionId] ?? 'local'
+  const terminals: BoundTerminalFacts[] = [...shells.entries()].map(([sessionId, shell]) => ({
+    sessionId,
+    hostKey: shell.hostId ?? 'local',
+    alive: shell.alive,
+  }))
+  const resolved = resolveBoundTerminal(asString(requested), current, boundKey, activeSessionId, terminals)
+  if (resolved === undefined) return undefined
+  // Using a terminal binds it: whichever session operated here owns it now, so
+  // the renderer returns to this session when the terminal is clicked again.
+  if (resolved !== current) {
+    try {
+      writeSessionTerminal(sessionTerminalsFile(home), aiSessionId, resolved)
+    } catch {
+      // Best effort: this turn still targets the resolved terminal.
+    }
   }
-  if (terminalId !== undefined) {
-    const own = shells.get(terminalId)
-    if (own !== undefined) return own
-  }
-  const candidates = [...shells.entries()].filter(([, shell]) => (shell.hostId ?? 'local') === boundKey)
-  if (candidates.length === 0) return undefined
-  const active = candidates.find(([sessionId]) => sessionId === activeSessionId)
-  return active?.[1] ?? candidates.find(([, shell]) => shell.alive)?.[1] ?? candidates[0]?.[1]
+  return shells.get(resolved)
 }
 
 /**

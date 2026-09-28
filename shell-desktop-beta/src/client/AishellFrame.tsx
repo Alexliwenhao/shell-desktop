@@ -63,6 +63,8 @@ export interface AishellFrameInjected {
   newSession(bindKey?: string, terminalId?: string): void
   /** Open the AI session bound to one terminal key (a host id, or `local`). */
   openTerminalSession(key: string, terminalId?: string): void
+  /** Keep the renderer's terminal bindings to the tabs that are really open. */
+  syncTerminalTabs(openTerminalIds: readonly string[]): void
   /** Open an existing AI session, e.g. from a history row. */
   openSession(sessionId: string): void
   /** Remove one conversation from the session history; rejects when the Host refuses. */
@@ -152,7 +154,7 @@ function ActivityRail(props: {
 
 /** AI-Shell owner: rail, navigation column, terminal workbench, AI conversation. */
 export function AishellFrame(props: AishellFrameProps) {
-  const { layout, platform, remote, renderSlot, t, usePanelInfo, useSessions, newSession, openTerminalSession, openSession, deleteSession, quoteTerminalSelection, subscribeTheme } = props
+  const { layout, platform, remote, renderSlot, t, usePanelInfo, useSessions, newSession, openTerminalSession, openSession, deleteSession, syncTerminalTabs, quoteTerminalSelection, subscribeTheme } = props
   const frameRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<TerminalWorkspaceHandle>(null)
   const [viewport, setViewport] = useState(() => window.innerWidth)
@@ -237,6 +239,14 @@ export function AishellFrame(props: AishellFrameProps) {
   const activeTerminal = sessionTabs.find(session => session.active)
   const activeHostId = activeTerminal?.hostId
   const activeTerminalKey = activeTerminal === undefined ? undefined : (activeTerminal.hostId ?? 'local')
+
+  // Keep the renderer's terminal bindings in step with the open tabs. The
+  // identity must stay stable: the workspace reports its tabs from an effect
+  // keyed on this callback, so a fresh function each render would loop.
+  const handleTerminalSessions = useCallback((sessions: readonly TerminalSessionEntry[]): void => {
+    setSessionTabs(sessions)
+    syncTerminalTabs(sessions.map(session => session.id))
+  }, [syncTerminalTabs])
 
   const refreshHistory = useCallback(async (): Promise<void> => {
     try {
@@ -354,7 +364,7 @@ export function AishellFrame(props: AishellFrameProps) {
           <TerminalWorkspace
             api={remote}
             ref={terminalRef}
-            onSessions={setSessionTabs}
+            onSessions={handleTerminalSessions}
             onQuote={quoteTerminalSelection}
             onActivate={(key, terminalId) => { openTerminalSession(key, terminalId) }}
             subscribeTheme={subscribeTheme}

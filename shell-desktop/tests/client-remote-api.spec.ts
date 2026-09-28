@@ -51,6 +51,27 @@ describe('remote bridge session host mapping', () => {
   })
 })
 
+describe('remote bridge session terminal ownership', () => {
+  it('reads the recorded session → terminal mapping', async () => {
+    const calls = stubFetch({ sessions: { 's-1': 'local:aaaa' } })
+
+    await expect(remoteBridge.listSessionTerminals()).resolves.toEqual({ 's-1': 'local:aaaa' })
+    expect(calls[0]!.url).toBe('/_dsh/desktop/remote/session-terminal-list')
+    expect(calls[0]!.body).toEqual({})
+  })
+
+  it('surfaces a bridge failure', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+      text: async () => 'boom',
+    })))
+
+    await expect(remoteBridge.listSessionTerminals()).rejects.toThrow('session-terminal-list failed (500)')
+  })
+})
+
 describe('remote bridge active-terminal execution', () => {
   it('types a command into the active terminal', async () => {
     const calls = stubFetch({ sessionId: 's-1' })
