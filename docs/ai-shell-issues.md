@@ -47,6 +47,7 @@
 | 38 | 多终端绑定：任何会话（新会话/历史会话）在终端里操作后就接管该终端；点终端回到当前属主 | 已修复 | 宿主 `resolveBoundTerminal` + 采用即绑定（1:1）；新路由 `session-terminal-list`；客户端属主核对优先于内存缓存，绑定缓存升级 `{sessionId,hostKey,terminalId}`；删除会话重建绑定、关闭标签释放占用、归档会话过滤 |
 | 39 | 已保存的主机不能编辑 | 已修复 | `HostPanel`：每行新增编辑按钮，表单回填（含密码/私钥/口令），按原 id 覆盖保存（`hosts-save` 本就支持）；新增 `tests/client-host-panel.spec.ts` 交互用例 |
 | 40 | 文件模块缺少「上传本地文件到远端」 | 已修复 | 文件面板新增上传按钮（`<input type=file>`）；新路由 `sftp-upload` 流式写 SFTP（`body: File`，不传本地路径、不整包进内存）；回环守卫 + AI web 工具禁非公网地址，模型不可达 |
+| 41 | 会话面板缺少检索（模糊查标题或内容） | 已修复 | `SessionHistory` 新增检索框：本地标题/主机名子串匹配（新→旧）+ 宿主 `session.search` 内容检索（带摘要）合并去重；250ms 防抖 + 取消；归档/空白/子代理不参与；新增 `session-search.ts` 纯函数与用例 |
 
 ## 细节
 
@@ -252,6 +253,12 @@
 - 安全边界：路由沿用既有守卫（POST + 回环地址 + 渲染器 origin）；**本地路径不上线路**（只传用户选择的文件字节），宿主拿不到任意本机路径；AI 的 `web_fetch` 明确拒绝非公网地址（127.0.0.1 会被 `WEB_BLOCKED_URL` 拦掉），因此模型无法调用该路由。
 - 现状限制（记录备查）：单文件、无进度条、同名直接覆盖、目录上传未做。
 - 证据：`client-remote-api.spec.ts` +2 例（URL/host/path 编码、`body` 为所选 Blob、失败透传宿主错误）；新增 `client-file-panel.spec.ts`（上传入口存在、无主机时不显示）；新增 `remote-sftp-upload.spec.ts`（403 非渲染器 origin / 405 非 POST / 400 未知主机 / 400 空路径；用临时 DSH_HOME 隔离）；两版 typecheck 0；10 个 spec 64 例 × 2 版通过；`check:desktop-variants` 199 对齐。
+### 41 会话检索（标题模糊 + 内容检索）
+- 需求（用户）：在会话面板里检索会话，支持模糊查询标题或内容。
+- 实现：新增纯函数模块 `session-search.ts`——`sanitizeSearchQuery`（去 NUL、截断 500 码点且不劈开代理对）与 `deriveSessionSearch`（标题/主机名小写子串匹配按时间新→旧在前；宿主内容命中随后、保留后端排序；去重；命中行附摘要；`hasMore` 由宿主与本地上限共同决定）。`AishellFrame` 持有受控输入与检索页（250ms 防抖 + `AbortController` 取消；结果与查询文本严格对应，输入即出本地命中）；`SessionHistory` 顶部新增检索框（清空按钮、Esc 清空、加载/失败/空/更多状态），有查询时用结果列表替换会话树，点结果打开会话并清空查询；`aishell-shell` 注入 `searchSessions`（复用客户端 `sessions.search` 与线上限 `searchResultLimit`；无服务时回退空页，本地标题匹配仍可用）。
+- 语义对齐上游：归档/空白/子代理会话永不匹配；结果不复用主机分组（与官方侧栏搜索一致）。
+- 不回归：会话树的展开折叠、当前会话高亮、删除二次确认、上传/主机面板等均不受影响（检索只在有查询时替换树视图）。
+- 证据：新增 `tests/session-search.spec.ts`（10 例：清洗与代理对、空白查询、标题/主机名匹配、空白/归档/子代理排除、内容命中顺序与摘要、双重命中去重、上限与 hasMore、无效应答）；`client-session-history.spec.ts` +3 例（无查询显示搜索框与树、有查询替换为结果、四种状态文案）；两版 typecheck 0；11 个 spec 77 例 × 2 版通过；`check:desktop-variants` 200 对齐。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。

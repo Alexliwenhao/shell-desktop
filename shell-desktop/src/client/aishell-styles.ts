@@ -69,6 +69,10 @@ body[data-shell-desktop-mode="aishell"] { margin: 0; background: var(--dsw-alias
 .dshAishellSessionActions { padding: 8px 8px 6px; }
 .dshAishellSessionActions .dshAishellPanelAction { flex: 1; justify-content: center; }
 .dshAishellSessionTree { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 2px; overflow: auto; padding: 2px 6px 8px; }
+.dshAishellSearchBar { display: flex; align-items: center; gap: 6px; padding: 8px 8px 0; }
+.dshAishellSearchBar > svg { width: 14px; height: 14px; flex: none; color: var(--dsw-alias-label-tertiary); }
+.dshAishellSearchInput { box-sizing: border-box; flex: 1; min-width: 0; height: 28px; padding: 0 8px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 12px; }
+.dshAishellSearchInput::-webkit-search-cancel-button { display: none; }
 .dshAishellSessionGroup { display: flex; flex-direction: column; gap: 1px; }
 .dshAishellSessionGroupHeader { display: flex; align-items: center; gap: 5px; width: 100%; padding: 5px 6px; border: 0; border-radius: 8px; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11.5px; font-weight: 600; text-align: left; cursor: pointer; }
 .dshAishellSessionGroupHeader:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }

@@ -19,6 +19,13 @@ import { SessionHistory } from './SessionHistory.tsx'
 import { TerminalWorkspace, type TerminalSessionEntry, type TerminalWorkspaceHandle } from './TerminalWorkspace.tsx'
 import type { RemoteBridgeApi, RemoteHost } from './remote-api.ts'
 import { buildSessionTree } from './session-groups.ts'
+import {
+  SESSION_SEARCH_DEBOUNCE_MS,
+  deriveSessionSearch,
+  sanitizeSearchQuery,
+  type SessionSearchHit,
+  type SessionSearchSession,
+} from './session-search.ts'
 import { AISHELL_RAIL_WIDTH, DesktopLayoutState } from './layout-state.ts'
 
 /** Left navigation views offered by the activity rail. */
@@ -69,6 +76,10 @@ export interface AishellFrameInjected {
   openSession(sessionId: string): void
   /** Remove one conversation from the session history; rejects when the Host refuses. */
   deleteSession(sessionId: string): Promise<void>
+  /** Search the Host's visible message-content index (bounded result page). */
+  searchSessions(query: string, signal?: AbortSignal): Promise<{ items: readonly SessionSearchHit[]; hasMore: boolean }>
+  /** Host-owned maximum number of content-search rows. */
+  searchResultLimit: number
   /** Append selected terminal text to the conversation draft as a reference. */
   quoteTerminalSelection(quote: { readonly label: string; readonly text: string }): void
   /**
@@ -92,6 +103,8 @@ const LEFT_MAX = 460
 const CHAT_DEFAULT = 380
 const CHAT_MIN = 300
 const CHAT_MAX = 640
+/** Stable empty content page so the search memo keeps its identity. */
+const EMPTY_SEARCH_HITS: readonly SessionSearchHit[] = []
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(value)))
@@ -154,7 +167,7 @@ function ActivityRail(props: {
 
 /** AI-Shell owner: rail, navigation column, terminal workbench, AI conversation. */
 export function AishellFrame(props: AishellFrameProps) {
-  const { layout, platform, remote, renderSlot, t, usePanelInfo, useSessions, newSession, openTerminalSession, openSession, deleteSession, syncTerminalTabs, quoteTerminalSelection, subscribeTheme } = props
+  const { layout, platform, remote, renderSlot, t, usePanelInfo, useSessions, newSession, openTerminalSession, openSession, deleteSession, syncTerminalTabs, searchSessions, searchResultLimit, quoteTerminalSelection, subscribeTheme } = props
   const frameRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<TerminalWorkspaceHandle>(null)
   const [viewport, setViewport] = useState(() => window.innerWidth)
@@ -177,6 +190,46 @@ export function AishellFrame(props: AishellFrameProps) {
   const useWorkspaceArchive = (props as { readonly useWorkspaces?: WorkspaceArchiveHook }).useWorkspaces
     ?? useNoWorkspaceArchive
   const archivedSessionIds = useWorkspaceArchive(snapshot => snapshot.archivedSessionIds)
+
+  /** Raw search text as typed; the input stays controlled through it. */
+  const [searchQuery, setSearchQuery] = useState('')
+  /**
+   * Content-search page of the last completed request. `query` records which
+   * text produced it, so results never outlive their query.
+   */
+  const [searchPage, setSearchPage] = useState<{
+    readonly query: string
+    readonly status: 'loading' | 'ready' | 'error'
+    readonly items: readonly SessionSearchHit[]
+    readonly hasMore: boolean
+  }>({ query: '', status: 'ready', items: [], hasMore: false })
+  const normalizedSearch = sanitizeSearchQuery(searchQuery).trim()
+  useEffect(() => {
+    if (normalizedSearch === '') {
+      setSearchPage({ query: '', status: 'ready', items: [], hasMore: false })
+      return
+    }
+    const controller = new AbortController()
+    setSearchPage(current => current.query === normalizedSearch
+      ? current
+      : { query: normalizedSearch, status: 'loading', items: [], hasMore: false })
+    const timer = window.setTimeout(() => {
+      searchSessions(normalizedSearch, controller.signal).then(
+        result => {
+          if (controller.signal.aborted) return
+          setSearchPage({ query: normalizedSearch, status: 'ready', items: result.items, hasMore: result.hasMore })
+        },
+        () => {
+          if (controller.signal.aborted) return
+          setSearchPage({ query: normalizedSearch, status: 'error', items: [], hasMore: false })
+        },
+      )
+    }, SESSION_SEARCH_DEBOUNCE_MS)
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [normalizedSearch, searchSessions])
 
   useEffect(() => {
     const element = frameRef.current
@@ -288,6 +341,40 @@ export function AishellFrame(props: AishellFrameProps) {
     localLabel: t('aishellSessionsLocal'),
   }), [hosts, sessionTabs, sessionList, sessionHosts, currentSessionId, archivedSessionIds, t])
 
+  /** Flat metadata rows the search derives from, labelled like the tree. */
+  const searchableSessions = useMemo<readonly SessionSearchSession[]>(() => {
+    const hostNames = new Map(hosts.map(host => [host.id, host.name]))
+    return sessionList.ids.flatMap(id => {
+      const summary = sessionList.byId[id]
+      if (summary === undefined) return []
+      const hostId = sessionHosts[summary.id]
+      const label = hostId === undefined
+        ? t('aishellSessionsLocal')
+        : hostNames.get(hostId) ?? t('aishellSessionsLocal')
+      return [{
+        id: summary.id,
+        title: summary.displayTitle,
+        label,
+        updatedAt: summary.updatedAt,
+        blank: summary.blank,
+        ...(summary.origin === undefined ? {} : { origin: summary.origin }),
+      }]
+    })
+  }, [sessionList, sessionHosts, hosts, t])
+
+  const searchStatus: 'loading' | 'ready' | 'error' = normalizedSearch === ''
+    ? 'ready'
+    : searchPage.query === normalizedSearch ? searchPage.status : 'loading'
+  const searchHits = searchPage.query === normalizedSearch ? searchPage.items : EMPTY_SEARCH_HITS
+  const searchResults = useMemo(() => deriveSessionSearch({
+    sessions: searchableSessions,
+    query: normalizedSearch,
+    archivedSessionIds,
+    hits: searchHits,
+    hasMore: searchPage.query === normalizedSearch ? searchPage.hasMore : false,
+    limit: searchResultLimit,
+  }), [searchableSessions, normalizedSearch, archivedSessionIds, searchHits, searchPage, searchResultLimit])
+
   const toggleGroup = useCallback((key: string): void => {
     setCollapsedGroups(current => ({ ...current, [key]: current[key] !== true }))
   }, [])
@@ -335,9 +422,11 @@ export function AishellFrame(props: AishellFrameProps) {
                 groups={groups}
                 collapsed={collapsedGroups}
                 {...(currentSessionId === undefined ? {} : { currentSessionId })}
+                search={{ query: searchQuery, status: searchStatus, items: searchResults.items, hasMore: searchResults.hasMore, limit: searchResultLimit }}
+                onSearch={setSearchQuery}
                 onToggle={toggleGroup}
                 onNewSession={() => { newSession(activeTerminalKey, activeTerminal?.id) }}
-                onOpenSession={openSession}
+                onOpenSession={id => { setSearchQuery(''); openSession(id) }}
                 onDeleteSession={deleteSession}
                 onFocusTerminal={id => { terminalRef.current?.focus(id) }}
                 onCloseTerminal={id => { terminalRef.current?.close(id) }}

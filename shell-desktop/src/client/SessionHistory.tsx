@@ -1,9 +1,19 @@
 /** Host-grouped session tree for the Desktop AI-Shell left panel. */
 
 import { useState } from 'react'
-import { Check, ChevronDown, ChevronRight, MessageSquare, Plus, Server, TerminalSquare, Trash2, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, MessageSquare, Plus, Search, Server, TerminalSquare, Trash2, X } from 'lucide-react'
 import type { DesktopSettingsLocaleKey } from './desktop-settings-locales.ts'
 import { formatSessionTimestamp, type SessionTreeGroup } from './session-groups.ts'
+import type { SessionSearchPage } from './session-search.ts'
+
+/** Live search state handed to the session panel. */
+export interface SessionSearchPanel extends SessionSearchPage {
+  /** Controlled input text (raw, before sanitizing). */
+  readonly query: string
+  readonly status: 'loading' | 'ready' | 'error'
+  /** Protocol-owned maximum merged row count. */
+  readonly limit: number
+}
 
 /** Host-grouped session tree props. */
 export interface SessionHistoryProps {
@@ -20,6 +30,10 @@ export interface SessionHistoryProps {
   readonly onDeleteSession: (id: string) => Promise<void>
   readonly onFocusTerminal: (id: string) => void
   readonly onCloseTerminal: (id: string) => void
+  /** Live search over session titles and Host message content, when composed. */
+  readonly search?: SessionSearchPanel
+  /** Update the controlled search text; an empty string closes the search view. */
+  readonly onSearch?: (query: string) => void
   /** Desktop settings dictionary bound to the current locale. */
   readonly t: (key: DesktopSettingsLocaleKey) => string
 }
@@ -30,9 +44,11 @@ export interface SessionHistoryProps {
  */
 export function SessionHistory(props: SessionHistoryProps) {
   const {
-    groups, collapsed, currentSessionId,
+    groups, collapsed, currentSessionId, search, onSearch,
     onToggle, onNewSession, onOpenSession, onDeleteSession, onFocusTerminal, onCloseTerminal, t,
   } = props
+  /** Non-blank query: the panel shows ranked search results instead of the tree. */
+  const searching = search !== undefined && search.query.trim() !== ''
   /** Row armed for removal: the button turns into a check and confirms on the next click. */
   const [confirmingId, setConfirmingId] = useState<string>()
   /** Row whose removal is in flight, so its button can stay disabled. */
@@ -51,6 +67,29 @@ export function SessionHistory(props: SessionHistoryProps) {
   }
   return (
     <div className="dshAishellPanelBody dshAishellSessionPane" data-aishell-session-pane="">
+      <div className="dshAishellSearchBar">
+        <Search aria-hidden="true" />
+        <input
+          className="dshAishellSearchInput"
+          type="search"
+          value={search?.query ?? ''}
+          placeholder={t('aishellSearchPlaceholder')}
+          aria-label={t('aishellSearchLabel')}
+          spellCheck={false}
+          onChange={event => { onSearch?.(event.target.value) }}
+          onKeyDown={event => { if (event.key === 'Escape') onSearch?.('') }}
+        />
+        {searching && (
+          <button
+            type="button"
+            className="dshAishellHostIconButton"
+            aria-label={t('aishellSearchClear')}
+            onClick={() => { onSearch?.('') }}
+          >
+            <X aria-hidden="true" />
+          </button>
+        )}
+      </div>
       <div className="dshAishellPanelActions dshAishellSessionActions">
         <button type="button" className="dshAishellPanelAction dshAishellPrimaryAction" onClick={onNewSession}>
           <Plus aria-hidden="true" />
@@ -58,9 +97,31 @@ export function SessionHistory(props: SessionHistoryProps) {
         </button>
       </div>
       <div className="dshAishellSessionTree" data-aishell-session-tree="">
-        {deleteError && <p className="dshAishellPanelAlert" role="alert">{t('aishellSessionDeleteFailed')}</p>}
-        {groups.length === 0 && <p className="dshAishellPanelHint">{t('aishellSessionsEmpty')}</p>}
-        {groups.map(group => {
+        {searching && search !== undefined && (
+          <>
+            {search.status === 'loading' && <p className="dshAishellPanelHint">{t('aishellSearchLoading')}</p>}
+            {search.status === 'error' && <p className="dshAishellPanelAlert" role="alert">{t('aishellSearchFailed')}</p>}
+            {search.status === 'ready' && search.items.length === 0 && <p className="dshAishellPanelHint">{t('aishellSearchEmpty')}</p>}
+            {search.items.map(item => (
+              <div className="dshAishellHostRow" key={item.id} data-current={item.id === currentSessionId || undefined} data-aishell-search-result={item.id}>
+                <span className="dshAishellHostGlyph" aria-hidden="true"><MessageSquare /></span>
+                <button type="button" className="dshAishellHostOpen" onClick={() => { onOpenSession(item.id) }}>
+                  <strong>{item.title}</strong>
+                  <small>
+                    {item.label}
+                    {item.snippet === undefined ? '' : ` · ${item.snippet}`}
+                  </small>
+                </button>
+              </div>
+            ))}
+            {search.status === 'ready' && search.hasMore && (
+              <p className="dshAishellPanelHint">{t('aishellSearchMore').replace('{count}', String(search.limit))}</p>
+            )}
+          </>
+        )}
+        {!searching && deleteError && <p className="dshAishellPanelAlert" role="alert">{t('aishellSessionDeleteFailed')}</p>}
+        {!searching && groups.length === 0 && <p className="dshAishellPanelHint">{t('aishellSessionsEmpty')}</p>}
+        {!searching && groups.map(group => {
           const isCollapsed = collapsed[group.key] === true
           return (
             <section className="dshAishellSessionGroup" key={group.key} data-aishell-session-group={group.key}>

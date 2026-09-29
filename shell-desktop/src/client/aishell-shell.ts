@@ -29,6 +29,15 @@ function fenced(text: string): string {
   return `${ticks}\n${text}\n${ticks}`
 }
 
+/** Sessions service face the panel search resolves lazily. */
+interface ShellSessionSearch {
+  search?(query: string, signal?: AbortSignal): Promise<
+    | { ok: true; value: { items: readonly { sessionId?: unknown; snippet?: unknown }[]; hasMore?: unknown } }
+    | { ok: false; error?: { message?: unknown } }
+  >
+  searchResultLimit?: number
+}
+
 /** Workspace service face this shell resolves lazily (Host-owned service). */
 interface ShellWorkspaces {
   list?: {
@@ -430,6 +439,32 @@ export function applyAishellShell(
     }
   }, 'desktop: AI-Shell theme presenter')
 
+  const sessionsSearchFace = (): ShellSessionSearch | undefined => rawContext.get('sessions') as ShellSessionSearch | undefined
+
+  /**
+   * Search the Host's visible message-content index. Transport and business
+   * failures reject so the panel can surface them; a composition without the
+   * service answers an empty page, which keeps local title matching working.
+   */
+  const searchSessions = async (query: string, signal?: AbortSignal): Promise<{ items: readonly { sessionId: string; snippet?: string }[]; hasMore: boolean }> => {
+    const face = sessionsSearchFace()
+    if (face?.search === undefined) return { items: [], hasMore: false }
+    const result = await face.search.call(face, query, signal)
+    if (!result.ok) {
+      const message = result.error?.message
+      throw new Error(typeof message === 'string' && message !== '' ? message : 'session search failed')
+    }
+    return {
+      items: result.value.items.flatMap(item => typeof item.sessionId === 'string'
+        ? [{
+            sessionId: item.sessionId,
+            ...(typeof item.snippet === 'string' && item.snippet !== '' ? { snippet: item.snippet } : {}),
+          }]
+        : []),
+      hasMore: result.value.hasMore === true,
+    }
+  }
+
   const t = ctx.locale.bind(DESKTOP_SETTINGS_LOCALE_NAMESPACE)
   const newSession = (bindKey?: string, terminalId?: string): void => { openBoundSession(bindKey, { fresh: true, ...(terminalId === undefined ? {} : { terminalId }) }) }
   const openTerminalSession = (key: string, terminalId?: string): void => { openBoundSession(key, { ...(terminalId === undefined ? {} : { terminalId }) }) }
@@ -637,6 +672,8 @@ export function applyAishellShell(
       openSession,
       deleteSession,
       syncTerminalTabs,
+      searchSessions,
+      searchResultLimit: sessionsSearchFace()?.searchResultLimit ?? 20,
       quoteTerminalSelection,
       subscribeTheme: (listener: () => void) => ctx.on('theme/change', () => { listener() }),
     }),
