@@ -115,6 +115,8 @@ const DEFAULT_DESKTOP_PORT = DESKTOP_DEFAULT_WEB_PORT
 const DESKTOP_WEB_SERVER_ROW_ID = 'desktop-webserver'
 const DESKTOP_WEB_SERVER_PACKAGE = `${DESKTOP_PACKAGE_NAME}/webserver`
 const SETTINGS_FILE_PACKAGE = '@deepseek-ai/dsh-settings-file'
+const SESSION_QUERY_SQLITE_ROW_ID = 'session-query-sqlite'
+const SESSION_QUERY_SQLITE_PACKAGE = '@deepseek-ai/dsh-session-query-sqlite'
 const DESKTOP_SETTINGS_NAMESPACE = 'shell-desktop'
 const MAX_FALLBACK_MANIFEST_BYTES = 1024 * 1024
 const UI_LAYOUT_PACKAGE = '@deepseek-ai/dsh-client-ui-layout'
@@ -997,6 +999,22 @@ export function prepareDesktopProfile(
   const rows = new Map<string, EntryOptions>()
   for (const row of composedRows) {
     if (typeof row.id === 'string') rows.set(row.id, row)
+  }
+  // Full-text session search is opt-in in the base bundle: the query
+  // backend mounts with `openAt: never` and a memory index. The desktop
+  // switches it on for the first query, backed by a durable derived index
+  // beside the other desktop state, so the session panel can search
+  // conversation content while an unused deployment never opens SQLite.
+  const sessionQuerySqlite = rows.get(SESSION_QUERY_SQLITE_ROW_ID)
+  if (sessionQuerySqlite?.name === SESSION_QUERY_SQLITE_PACKAGE) {
+    patches.push({
+      id: SESSION_QUERY_SQLITE_ROW_ID,
+      config: {
+        ...rowConfig(sessionQuerySqlite),
+        path: join(home, 'session-query', 'index.sqlite'),
+        openAt: 'first-search',
+      },
+    })
   }
   const settings = rows.get('settings')
   if (settings?.name !== SETTINGS_FILE_PACKAGE) {

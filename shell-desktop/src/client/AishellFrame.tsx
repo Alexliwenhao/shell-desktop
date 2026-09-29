@@ -202,6 +202,8 @@ export function AishellFrame(props: AishellFrameProps) {
     readonly status: 'loading' | 'ready' | 'error'
     readonly items: readonly SessionSearchHit[]
     readonly hasMore: boolean
+    /** Host failure detail, shown instead of the generic retry copy. */
+    readonly message?: string
   }>({ query: '', status: 'ready', items: [], hasMore: false })
   const normalizedSearch = sanitizeSearchQuery(searchQuery).trim()
   useEffect(() => {
@@ -219,9 +221,15 @@ export function AishellFrame(props: AishellFrameProps) {
           if (controller.signal.aborted) return
           setSearchPage({ query: normalizedSearch, status: 'ready', items: result.items, hasMore: result.hasMore })
         },
-        () => {
+        (cause: unknown) => {
           if (controller.signal.aborted) return
-          setSearchPage({ query: normalizedSearch, status: 'error', items: [], hasMore: false })
+          setSearchPage({
+            query: normalizedSearch,
+            status: 'error',
+            items: [],
+            hasMore: false,
+            message: cause instanceof Error ? cause.message : String(cause),
+          })
         },
       )
     }, SESSION_SEARCH_DEBOUNCE_MS)
@@ -422,7 +430,14 @@ export function AishellFrame(props: AishellFrameProps) {
                 groups={groups}
                 collapsed={collapsedGroups}
                 {...(currentSessionId === undefined ? {} : { currentSessionId })}
-                search={{ query: searchQuery, status: searchStatus, items: searchResults.items, hasMore: searchResults.hasMore, limit: searchResultLimit }}
+                search={{
+                  query: searchQuery,
+                  status: searchStatus,
+                  items: searchResults.items,
+                  hasMore: searchResults.hasMore,
+                  limit: searchResultLimit,
+                  ...(searchStatus === 'error' && searchPage.message !== undefined ? { message: searchPage.message } : {}),
+                }}
                 onSearch={setSearchQuery}
                 onToggle={toggleGroup}
                 onNewSession={() => { newSession(activeTerminalKey, activeTerminal?.id) }}

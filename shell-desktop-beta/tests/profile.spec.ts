@@ -552,6 +552,20 @@ virtualStoreDirMaxLength: 60
     )).toThrow('LAN address "desktop.internal" is not an IPv4 literal')
   })
 
+  it('enables lazy content search on the sqlite session-query backend', () => {
+    const home = temporaryHome()
+    const prepared = prepareDesktopProfile(undefined, home, 'darwin')
+    const rows = composeEntries([prepared.patches])
+
+    expect(rows.find(row => row.id === 'session-query-sqlite')).toEqual(expect.objectContaining({
+      name: '@deepseek-ai/dsh-session-query-sqlite',
+      config: expect.objectContaining({
+        openAt: 'first-search',
+        path: join(home, 'session-query', 'index.sqlite'),
+      }),
+    }))
+  })
+
   it('keeps both Market providers absent until the user explicitly enables one', () => {
     const home = temporaryHome()
     const prepared = prepareDesktopProfile(undefined, home, 'darwin')

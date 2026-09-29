@@ -48,6 +48,7 @@
 | 39 | 已保存的主机不能编辑 | 已修复 | `HostPanel`：每行新增编辑按钮，表单回填（含密码/私钥/口令），按原 id 覆盖保存（`hosts-save` 本就支持）；新增 `tests/client-host-panel.spec.ts` 交互用例 |
 | 40 | 文件模块缺少「上传本地文件到远端」 | 已修复 | 文件面板新增上传按钮（`<input type=file>`）；新路由 `sftp-upload` 流式写 SFTP（`body: File`，不传本地路径、不整包进内存）；回环守卫 + AI web 工具禁非公网地址，模型不可达 |
 | 41 | 会话面板缺少检索（模糊查标题或内容） | 已修复 | `SessionHistory` 新增检索框：本地标题/主机名子串匹配（新→旧）+ 宿主 `session.search` 内容检索（带摘要）合并去重；250ms 防抖 + 取消；归档/空白/子代理不参与；新增 `session-search.ts` 纯函数与用例 |
+| 42 | 会话检索报「检索失败，请重试」 | 已修复 | 根因：`dsh-base` 把 `session-query-sqlite` 挂成 `openAt: never`（内容检索 opt-in），桌面组合未覆盖 → 宿主 `sessionQuery` 搜索被禁用；修复：`profile.ts` 覆盖为 `openAt: first-search` + 持久索引 `~/.dsh/session-query/index.sqlite`；UI 展示真实失败原因；补组合断言 |
 
 ## 细节
 
@@ -259,6 +260,12 @@
 - 语义对齐上游：归档/空白/子代理会话永不匹配；结果不复用主机分组（与官方侧栏搜索一致）。
 - 不回归：会话树的展开折叠、当前会话高亮、删除二次确认、上传/主机面板等均不受影响（检索只在有查询时替换树视图）。
 - 证据：新增 `tests/session-search.spec.ts`（10 例：清洗与代理对、空白查询、标题/主机名匹配、空白/归档/子代理排除、内容命中顺序与摘要、双重命中去重、上限与 hasMore、无效应答）；`client-session-history.spec.ts` +3 例（无查询显示搜索框与树、有查询替换为结果、四种状态文案）；两版 typecheck 0；11 个 spec 77 例 × 2 版通过；`check:desktop-variants` 200 对齐。
+### 42 会话检索失败（「检索失败，请重试」）
+- 现象（用户）：在会话面板输入检索词，面板显示「检索失败，请重试」。
+- 定位过程：CDP 复现（输入即失败、无控制台报错）→ 排除 Electron 运行时（`node:sqlite` 与 FTS5 在 Electron 43 / Node 24.18 实测可用）→ 宿主 `session.search` 要求 `ctx.get('sessionQuery')`，而 `dsh-base` 的 `session-query-sqlite` 行默认 `openAt: never`（注释写明：内容检索 opt-in，搜索调用以 `SESSION_QUERY_SEARCH_DISABLED` 失败，Sidebar 只匹配标题）。
+- 修复：`profile.ts` 在组合后为 `session-query-sqlite` 行补丁 `openAt: 'first-search'` + `path: <home>/session-query/index.sqlite`（首次检索才打开 SQLite；索引持久化、WAL）；同时在 UI 上展示宿主返回的真实失败原因（`search.message ?? 通用文案`），不再是单一笼统提示。
+- 验证：新增 `profile.spec.ts` 断言（组合后该行 `name` / `openAt: 'first-search'` / 持久 `path`）；`client-session-history.spec.ts` 断言失败原因展示；CDP 实测运行中的应用：输入 `a` → 3 条带内容摘要的结果（本机/测试环境），输入 `的` → 1 条，无匹配显示「没有匹配的会话」，清空后恢复会话树；索引按 `first-search` 懒创建（`index.sqlite` + `-shm` + `-wal`）。
+- 证据：两版 typecheck 0；12 个 spec 129 例 × 2 版通过；`check:desktop-variants` 200 对齐。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。

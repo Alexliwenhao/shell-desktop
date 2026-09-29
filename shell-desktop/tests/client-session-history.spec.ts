@@ -120,6 +120,7 @@ describe('SessionHistory', () => {
 
     expect(render({ search: { ...base, status: 'loading' } })).toContain('aishellSearchLoading')
     expect(render({ search: { ...base, status: 'error' } })).toContain('aishellSearchFailed')
+    expect(render({ search: { ...base, status: 'error', message: 'gateway boom' } })).toContain('gateway boom')
     expect(render({ search: { ...base, status: 'ready' } })).toContain('aishellSearchEmpty')
     const more = render({
       search: { ...base, status: 'ready', items: [{ id: 's-1', title: 't', label: 'l' }], hasMore: true },

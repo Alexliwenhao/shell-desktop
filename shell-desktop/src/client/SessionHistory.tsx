@@ -13,6 +13,8 @@ export interface SessionSearchPanel extends SessionSearchPage {
   readonly status: 'loading' | 'ready' | 'error'
   /** Protocol-owned maximum merged row count. */
   readonly limit: number
+  /** Host failure detail shown instead of the generic retry copy. */
+  readonly message?: string
 }
 
 /** Host-grouped session tree props. */
@@ -100,7 +102,7 @@ export function SessionHistory(props: SessionHistoryProps) {
         {searching && search !== undefined && (
           <>
             {search.status === 'loading' && <p className="dshAishellPanelHint">{t('aishellSearchLoading')}</p>}
-            {search.status === 'error' && <p className="dshAishellPanelAlert" role="alert">{t('aishellSearchFailed')}</p>}
+            {search.status === 'error' && <p className="dshAishellPanelAlert" role="alert">{search.message ?? t('aishellSearchFailed')}</p>}
             {search.status === 'ready' && search.items.length === 0 && <p className="dshAishellPanelHint">{t('aishellSearchEmpty')}</p>}
             {search.items.map(item => (
               <div className="dshAishellHostRow" key={item.id} data-current={item.id === currentSessionId || undefined} data-aishell-search-result={item.id}>
