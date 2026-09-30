@@ -4,15 +4,55 @@
 
 > 独立的开源项目，与深度求索不存在隶属、合作、授权或背书关系。
 
-## 界面预览
+## 截图
 
-| 一屏三栏 | 计划模式：命令由你点「执行」 |
+![AI Shell Desktop 总览](docs/screenshots/01-aishell-overview.png)
+
+### 新建会话与接入主机
+
+| 新建会话 | 主机面板 |
 | --- | --- |
-| ![AI Shell 总览](docs/screenshots/01-aishell-overview.png) | ![计划命令卡片](docs/screenshots/13-plan-command-card.png) |
-| 选中终端输出，一键引用进对话 | 深色主题下终端依旧清晰 |
-| ![引用终端内容](docs/screenshots/08-quote-into-conversation.png) | ![深色终端](docs/screenshots/21-theme-dark-terminal.png) |
+| ![新建会话](docs/screenshots/02-new-session.png) | ![主机面板](docs/screenshots/03-hosts-panel.png) |
+| 新建主机（密码 / 私钥） | 远端终端，连上即用 |
+| ![新建主机](docs/screenshots/04-host-form.png) | ![远端终端](docs/screenshots/05-terminal-remote.png) |
 
-全部 24 张功能截图、逐张讲解与视频分镜见 [`docs/screenshots/`](docs/screenshots/README.md)。
+### 终端作业与 AI 协同
+
+| 在终端里执行命令 | 选中现场输出 |
+| --- | --- |
+| ![终端命令](docs/screenshots/06-terminal-command.png) | ![选中输出](docs/screenshots/07-terminal-selection.png) |
+| 一键引用进对话 | AI 对话 |
+| ![引用进对话](docs/screenshots/08-quote-into-conversation.png) | ![AI 对话](docs/screenshots/09-ai-conversation.png) |
+
+### AI 回答与计划模式
+
+| AI 回答完成（思考可展开） | 输入 `/plan` 进入计划模式 |
+| --- | --- |
+| ![AI 回答](docs/screenshots/10-ai-conversation-settled.png) | ![计划模式入口](docs/screenshots/11-plan-mode-entry.png) |
+| 计划模式已开启 | 待执行命令卡片 |
+| ![计划模式](docs/screenshots/12-plan-mode-active.png) | ![待执行命令卡片](docs/screenshots/13-plan-command-card.png) |
+| 点「执行」，命令进入终端回显 | |
+| ![执行命令](docs/screenshots/14-plan-command-executed.png) | |
+
+### 文件、会话与设置
+
+| 文件面板（跟随当前主机） | 会话按主机分组 |
+| --- | --- |
+| ![文件面板](docs/screenshots/15-file-panel.png) | ![会话分组](docs/screenshots/16-sessions-by-host.png) |
+| 通用设置 | 模型设置 |
+| ![通用设置](docs/screenshots/17-settings-general.png) | ![模型设置](docs/screenshots/18-settings-models.png) |
+| 深色主题 · 总览 | 浅色主题 · 总览 |
+| ![深色主题总览](docs/screenshots/20-theme-dark-overview.png) | ![浅色主题总览](docs/screenshots/22-theme-light-overview.png) |
+
+### 主题细节与安全删除
+
+| 深色主题 · 设置 | 深色主题 · 终端 |
+| --- | --- |
+| ![深色主题设置](docs/screenshots/19-theme-dark-settings.png) | ![深色主题终端](docs/screenshots/21-theme-dark-terminal.png) |
+| 删除会话 · 行内二次确认 | 删除主机 · 行内二次确认 |
+| ![删除会话确认](docs/screenshots/23-session-delete-confirm.png) | ![删除主机确认](docs/screenshots/24-host-delete-confirm.png) |
+
+全部 24 张截图、逐张讲解与视频分镜见 [`docs/screenshots/README.md`](docs/screenshots/README.md)。
 
 ## 亮点
 

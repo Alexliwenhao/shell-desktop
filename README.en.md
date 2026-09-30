@@ -6,13 +6,53 @@ An open-source Windows / macOS desktop client for [DeepSeek Harness](https://git
 
 ## Screenshots
 
-| One window, three panes | Plan mode: commands run when you click |
-| --- | --- |
-| ![AI Shell overview](docs/screenshots/01-aishell-overview.png) | ![Plan command card](docs/screenshots/13-plan-command-card.png) |
-| Select terminal output, quote it into the chat | Dark theme keeps the terminal readable |
-| ![Quote terminal output](docs/screenshots/08-quote-into-conversation.png) | ![Dark theme terminal](docs/screenshots/21-theme-dark-terminal.png) |
+![AI Shell Desktop overview](docs/screenshots/01-aishell-overview.png)
 
-All 24 feature screenshots, per-shot narration, and a storyboard live in [`docs/screenshots/`](docs/screenshots/README.md).
+### Start a session, reach a host
+
+| New session | Hosts panel |
+| --- | --- |
+| ![New session](docs/screenshots/02-new-session.png) | ![Hosts panel](docs/screenshots/03-hosts-panel.png) |
+| Add a host (password or key) | A remote terminal, ready on connect |
+| ![Add host](docs/screenshots/04-host-form.png) | ![Remote terminal](docs/screenshots/05-terminal-remote.png) |
+
+### Terminal work and AI collaboration
+
+| Run commands in the terminal | Select live output |
+| --- | --- |
+| ![Terminal command](docs/screenshots/06-terminal-command.png) | ![Selection](docs/screenshots/07-terminal-selection.png) |
+| Quote it into the chat | AI conversation |
+| ![Quote into chat](docs/screenshots/08-quote-into-conversation.png) | ![AI conversation](docs/screenshots/09-ai-conversation.png) |
+
+### AI answers and plan mode
+
+| Answer settled (thinking expandable) | Type `/plan` to enter plan mode |
+| --- | --- |
+| ![AI answer](docs/screenshots/10-ai-conversation-settled.png) | ![Plan mode entry](docs/screenshots/11-plan-mode-entry.png) |
+| Plan mode active | A proposed command card |
+| ![Plan mode](docs/screenshots/12-plan-mode-active.png) | ![Command card](docs/screenshots/13-plan-command-card.png) |
+| Click Run; the command lands in the terminal | |
+| ![Command executed](docs/screenshots/14-plan-command-executed.png) | |
+
+### Files, sessions, and settings
+
+| File panel (follows the connected host) | Sessions grouped by host |
+| --- | --- |
+| ![File panel](docs/screenshots/15-file-panel.png) | ![Sessions by host](docs/screenshots/16-sessions-by-host.png) |
+| General settings | Model settings |
+| ![General settings](docs/screenshots/17-settings-general.png) | ![Model settings](docs/screenshots/18-settings-models.png) |
+| Dark theme · overview | Light theme · overview |
+| ![Dark overview](docs/screenshots/20-theme-dark-overview.png) | ![Light overview](docs/screenshots/22-theme-light-overview.png) |
+
+### Theme details and safe deletion
+
+| Dark theme · settings | Dark theme · terminal |
+| --- | --- |
+| ![Dark settings](docs/screenshots/19-theme-dark-settings.png) | ![Dark terminal](docs/screenshots/21-theme-dark-terminal.png) |
+| Delete a session · inline confirm | Delete a host · inline confirm |
+| ![Session delete confirm](docs/screenshots/23-session-delete-confirm.png) | ![Host delete confirm](docs/screenshots/24-host-delete-confirm.png) |
+
+All 24 screenshots, per-shot narration, and a storyboard live in [`docs/screenshots/README.md`](docs/screenshots/README.md).
 
 ## Highlights
 

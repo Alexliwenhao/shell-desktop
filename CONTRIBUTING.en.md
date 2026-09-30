@@ -6,8 +6,7 @@ Thank you for wanting to contribute to AI Shell Desktop. This is a community pro
 
 - Report problems or odd behavior in an [issue](https://github.com/Alexliwenhao/shell-desktop/issues): include your operating system (macOS / Windows), application version, and reproduction steps.
 - Feature ideas and improvement suggestions are welcome as issues too.
-- Join the [community](README.en.md#community) by reviewing pull requests and answering issues.
-- Write tutorials or experience posts, or help improve and translate the documentation.
+- Review pull requests and answer issues in this repository; tutorials and experience posts are welcome too.
 
 ## Plugin authors: extend the ecosystem
 
@@ -15,9 +14,8 @@ DSH is built around plugins. If you write plugins, start with:
 
 - [Plugin development](docs/plugin-development.en.md): how to write ordinary DSH plugins and Desktop plugins.
 - [DSH plugin ecosystem manifesto](docs/plugin-ecosystem.en.md): our vision of an open, composable, sustainable ecosystem, and the three principles — composition first, declare clearly, compatibility first.
-- [Community Market design](dsh-community-market/docs/market-shell.md): how the future market will discover plugins and why listing is not a security review.
 
-Plugins that follow the manifesto coexist better with other plugins and will be easier to discover and trust in the marketplace when it ships.
+Plugins that follow the manifesto coexist better with other plugins and install and work alongside them more easily.
 
 ## Developers: contribute code
 
@@ -33,7 +31,7 @@ corepack yarn dev     # launch the application when a graphical session is avail
 ### Repository boundaries (please read before starting)
 
 - `deepseek-harness/` is the pinned upstream submodule. **Desktop development never edits files inside it**; upstream updates land through separate pin commits.
-- Desktop code lives in `shell-desktop/`; `dsh-community-market/` owns the market-shell design. The market package is currently documentation-only and not loadable; both owned packages share the outer Yarn workspace.
+- Desktop code lives in `shell-desktop/` and `shell-desktop-beta/`; both share the outer Yarn workspace, and shared behavior is protected by the variant-alignment gate.
 - Builds, typechecks, unit tests, and smoke checks must stay headless-safe.
 
 ### Commits and pull requests
@@ -43,9 +41,6 @@ corepack yarn dev     # launch the application when a graphical session is avail
 - After changing production dependencies, run `yarn workspace shell-desktop verify:notices` to refresh the third-party notices and commit the updated `shell-desktop/THIRD_PARTY_NOTICES.md`.
 - Documentation changes should stay bilingual and update the `README.i18n.yaml` hash record.
 - Describe the change, its motivation, and how it was verified in the PR; merge after CI passes.
-
-## Join the technical team
-
 
 ## Code of conduct
 

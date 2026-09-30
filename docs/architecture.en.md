@@ -2,7 +2,7 @@
 
 ## Overview
 
-AI Shell Desktop is a thin Electron host. It starts the official DSH Host in Electron's main process; the Host exposes the ordinary Web UI over an HTTP/WebSocket Web carrier. The carrier listens on loopback by default and can be exposed to the LAN only after the user explicitly acknowledges the risk. Desktop does not create a second renderer IPC plugin system and does not expose raw Electron APIs to the page.
+AI Shell Desktop is a thin Electron host. It starts the official DSH Host in Electron's main process; the Host exposes the interface over an HTTP/WebSocket Web carrier, which binds to loopback only (`127.0.0.1`) and is available on this machine alone. Desktop does not create a second renderer IPC plugin system and does not expose raw Electron APIs to the page.
 
 ```mermaid
 flowchart LR
@@ -20,12 +20,12 @@ flowchart LR
 
 ## Startup order
 
-1. Electron acquires the single-instance lock and reads Desktop-owned profile/mode state.
+1. Electron acquires the single-instance lock and reads the Desktop-owned profile state (a stored legacy mode is normalized to AI Shell).
 2. The launcher prepares the active profile without modifying profiles merely to list them.
 3. The launcher provides the native runtime, the generation's `desktopProfiles` bootstrap, and the bundled pnpm environment.
 4. The Host Cordis root mounts Loader entries. Desktop services are registered before third-party entries can consume them.
 5. `dsh-base`, `dsh-web-app`, and the selected profile's third-party bundles compose the Web carrier.
-6. The Host binds loopback by default or all network interfaces when the confirmed setting requests it; Electron creates the BrowserWindow and loads the same-origin page through the loopback address.
+6. The Host binds loopback; Electron creates the BrowserWindow and loads the same-origin page through the loopback address.
 7. The tray is created only after the Web surface loads, and the profile is committed as last-known-good.
 
 Every profile or mode switch disposes the current generation before starting the next one. Service references, window objects, and subprocess handles must not be cached across generations.
@@ -33,11 +33,11 @@ Every profile or mode switch disposes the current generation before starting the
 ## Host, Client, and native runtime
 
 - **Upstream Host** owns agent, model, tool, session, settings, webServer, and subprocess capabilities.
-- **Desktop Host** owns the window, tray, profiles, terminal, updates, and the two public Desktop services.
+- **Desktop Host** owns the window, tray, profiles, terminal, and the two public Desktop services.
 - **Web Client** contains the official Web UI and third-party browser contributions. It works over the shared Web carrier and does not call Electron directly.
-- **Native runtime** adapts Electron BrowserWindow, the tray, filesystem/network operations, and installers. `desktopRuntime` is for Desktop-owned rows only.
+- **Native runtime** adapts Electron BrowserWindow, the tray, and filesystem/network operations. `desktopRuntime` is for Desktop-owned rows only.
 
-Compatibility mode validates its environment and adds only an independent 36-pixel Desktop frame through the overlay slot; the official layout, root, sidebar, and conversation remain an unrelated content viewport below it. Extended mode disables the official root layout and installs its own Desktop layout/sidebar registration, which continues to host the official sidebar, conversation, and details occupants inside an inverted-L material frame. Enhanced mode keeps a separate root registration and its original compact internal-caption geometry. macOS and Windows apply capability-gated native materials without changing the ownership of upstream occupant slots.
+The AI Shell client face validates its environment, takes over the root slot, and installs the Desktop-owned AI Shell layout (activity rail, navigation column, terminal workbench, and AI conversation column), while the upstream sidebar and conversation stay composed as official occupants. A stored legacy mode preference is ignored and normalized to AI Shell at startup. macOS and Windows apply capability-gated native materials without changing the ownership of upstream occupant slots.
 
 Desktop-level confirmations, warnings, errors, and results do not enter the Web Client tree. `DesktopDialogWindow` creates a separate sandboxed modal `BrowserWindow`, applies the shared empty utility frame, parents it to the active generation window when possible, and accepts only one bounded local response. Recovery and Profile creation are separate Desktop-owned windows using the same title-free frame. Recovery itself is a shadcn page with reason-first presentation and four workflow tabs; destructive recovery actions delegate their confirmation back to `DesktopDialogWindow`.
 
@@ -45,7 +45,7 @@ Desktop-level confirmations, warnings, errors, and results do not enter the Web 
 
 `ElectronRuntime` coordinates the Host and native desktop environment without directly owning window and tray details. Each start creates one `ElectronShellGeneration` module that completely owns its `BrowserWindow`, `Tray`, related Electron listeners, navigation restrictions, external-link handling, and zoom shortcuts. A generation must be disposed through its idempotent `release()` interface; callers must not cache or destroy those resources separately across generations.
 
-Platform differences live at the `ElectronPlatformStrategy` seam selected once during startup. The Windows, macOS, and Linux adapters declare directory-picking, shell-mode, and update-download capabilities and own their platform-specific menu, Dock icon, and native-material operations. New platform branches belong in the corresponding adapter; the generation and runtime retain only the lifecycle shared across platforms.
+Platform differences live at the `ElectronPlatformStrategy` seam selected once during startup. The Windows, macOS, and Linux adapters declare directory-picking and platform window capabilities and own their platform-specific menu, Dock icon, and native-material operations. New platform branches belong in the corresponding adapter; the generation and runtime retain only the lifecycle shared across platforms.
 
 ## Profile and service boundaries
 
@@ -61,13 +61,9 @@ Release artifacts use Electron Builder and `app.asar`, while dependencies that m
 
 The outer workspace uses Yarn. The pinned `deepseek-harness/` submodule keeps its own pnpm workspace. Stable and Beta Desktop sources live in `shell-desktop/` and `shell-desktop-beta/`, with a variant-alignment gate protecting shared behavior; neither package edits the upstream submodule.
 
-## Release-channel protocol
+## Release channels
 
-Stable and Beta are separate physical npm packages and system applications; Git branches do not define the channels. Stable uses `shell-desktop`, `AI Shell Desktop`, and `com.shelldesktop.app`; Beta uses `shell-desktop-beta`, `AI Shell Desktop Beta`, and `com.shelldesktop.app.beta`. `upstream.json` records both channels' upstream versions, commits, and vendored-runtime manifests. Exact root resolutions ensure that each workspace resolves only its own DSH runtime.
-
-Version checks and installer downloads send `X-DSH-Desktop-Channel: stable|beta`. A check also sends the current version, while a download sends `X-DSH-Desktop-Target-Version`; the service must echo the requested channel and version. Legacy clients without the channel header are treated as stable. A Beta client requires an explicit `channel: "beta"` response. Stable accepts only release SemVer, while Beta accepts only `-beta.N`. Automatic Beta updates query only Beta. **Install Stable Edition** is a separate explicit operation that may select a lower version and installs Stable alongside Beta.
-
-The service must implement these selection and echo rules, with complete platform artifacts for both channels, before a Beta release becomes discoverable. Otherwise the client treats the response as invalid and will not silently cross channels.
+Stable and Beta are separate physical npm packages and system applications; Git branches do not define the channels. Stable uses `shell-desktop`, `AI Shell Desktop`, and `com.shelldesktop.app`; Beta uses `shell-desktop-beta`, `AI Shell Desktop Beta`, and `com.shelldesktop.app.beta`. `upstream.json` records both channels' upstream versions, commits, and vendored-runtime manifests. Exact root resolutions ensure that each workspace resolves only its own DSH runtime. Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases); the app provides no automatic-update entry point.
 
 ## Maintainer reading
 

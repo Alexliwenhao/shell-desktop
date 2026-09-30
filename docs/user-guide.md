@@ -2,36 +2,36 @@
 
 ## 安装与首次启动
 
-从产品下载入口获取 macOS 或 Windows 安装包。安装后的 AI Shell Desktop 自带运行所需的 Electron、Node 和 DSH 依赖，普通用户不需要另行安装 Node.js 或 pnpm。
+从 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 下载 Windows x64 安装包（`AI-Shell-Desktop-<版本>-x64-Setup.exe`）或免安装包（`AI-Shell-Desktop-<版本>-x64-Portable.zip`）。安装包自带运行所需的 Electron、Node 与 DSH 依赖，普通用户不需要另行安装 Node.js 或 pnpm。当前构建未签名，Windows 首次运行可能提示「未知发布者」。
 
-首次启动时，应用会准备默认 profile，并在本机启动官方 DSH Web surface。关闭窗口通常只会隐藏窗口；可以从托盘重新打开，选择 **退出** 才会结束应用和 Host 进程。
+首次启动时，应用会准备默认 profile，并在本机启动 DSH Host 与 AI Shell 界面。关闭窗口通常只会隐藏窗口；可以从托盘重新打开，选择「退出」才会结束应用和 Host 进程。
 
 ## Profile
 
-Profile 是一组 DSH bundle、依赖和 patch 的组合。托盘中的 **Profile** 菜单会列出现有 profile，以及可按需创建的 `desktop` 和 `web` 默认 profile。
+Profile 是一组 DSH bundle、依赖和 patch 的组合。托盘中的 **Profile** 菜单会列出现有 profile，并可按需创建新的 profile。
 
-选择 profile 后应用会有序重启。新 profile 在 Host、窗口和浏览器客户端都成功启动后才会被记录为最近一次可用 profile；启动失败会回到上一次可用选择。官方 profile 默认使用同一个 DSH home，所以 sessions、settings 和 storage 通常不需要迁移。自定义配置（patch）如果主动改写持久化路径，则以该 profile 自己的设置为准。
+选择 profile 后应用会有序重启。新 profile 在 Host 和窗口都成功启动后才会被记录为最近一次可用 profile；启动失败会回到上一次可用选择。官方 profile 默认使用同一个 DSH home，所以 sessions、settings 和 storage 通常不需要迁移。自定义配置（patch）如果主动改写持久化路径，则以该 profile 自己的设置为准。
 
-切换 profile 不会把旧 profile 的插件偷偷复制到新 profile。要管理目标 profile，请在终端中显式写出 profile，或者在切换后使用终端里的默认命令。
+切换 profile 不会把旧 profile 的插件偷偷复制到新 profile。要管理目标 profile，请在终端中显式写出 profile。
 
-## 窗口模式与材质
+## 界面：AI Shell
 
-- **兼容模式**：保持 profile 的官方 layout/sidebar/conversation 组合完整，并把它放在独立的 36 像素 Desktop frame 下方。frame 可以拖动，图标操作仍可点击，官方 dialog 只会占用与 frame 无关的下方内容 viewport。
-- **扩展窗口**：安装 Desktop 自有 layout 与 sidebar surface，并在其中承载官方 sidebar、conversation 和 details occupant。36 像素顶部 frame 与左侧 sidebar surface 组成一个带圆角内拐角的倒 L 材质区域。
-- **增强模式**：保留独立 root registration 与紧凑内部 caption；macOS 使用 20 像素内容 inset 和 32 像素拖动区域，Windows 使用 32 像素 caption row，不复用扩展窗口的独立 frame。
+当前产品只提供 **AI Shell** 一种界面：左侧活动栏（会话 / 主机 / 文件）、中央终端工作台、右侧 AI 对话同屏协同。启动时即使设置文件里留有旧的多模式配置，也会按 AI Shell 运行。
 
-macOS 自定义窗口模式可以打开或关闭透明材质。Windows 可关闭材质；仅 Windows 11 build 22621 及以上在支持时显示 Mica。旧版 Windows 亚克力偏好会安全地按关闭处理，并在设置文件可写时自动迁移。切换模式或材质都会重启应用，不会在正在运行的 renderer 中热替换 root slot 或窗口材质。Linux 只提供兼容模式。
+- **终端 ↔ 会话绑定**：每个终端标签绑定自己的 AI 会话，切换终端即切换对话；AI 只能操作它绑定的终端，跨终端互不可见。
+- **计划模式**：输入 `/plan` 进入，AI 只把命令作为「待执行命令」卡片提交，点「执行」才会进入终端。
+- **会话检索**：会话面板顶部可检索标题与会话内容。
 
-## 本地 Web 端口
+## 本地服务
 
-Desktop 默认让系统随机分配本地 Web 端口（`shell-desktop.port: 0`），可避免与其他服务发生端口冲突。依赖浏览器 `localStorage` 的界面插件按 origin 隔离数据；如果这类插件需要在 Desktop 重启后继续读取设置，请在设置中指定一个固定端口：
+AI Shell Desktop 在本机启动 Host 服务，默认只监听 `127.0.0.1`，端口从 `43120` 开始（被占用时依次递增，最多尝试 32 个）。端口可以在设置文件中固定：
 
 ```yaml
 shell-desktop:
   port: 43189
 ```
 
-端口必须是 `0` 到 `65535` 之间的整数。修改后应用会有序重启。服务默认只监听 `127.0.0.1`；只有在“桌面设置”中确认危险提示并明确允许局域网访问后，才会改为监听所有网络接口。固定端口如果已被其他程序占用，Desktop 将无法启动；此时需要释放该端口，或把设置改回 `0` 或另一个空闲端口。
+端口必须是 `0` 到 `65535` 之间的整数（`0` 表示由系统分配）。修改后应用会有序重启。服务不提供外网或局域网访问入口。
 
 ## 插件管理
 
@@ -57,21 +57,17 @@ dsh plugin update
 
 ## 打开终端
 
-可以从托盘、Desktop 设置或 Desktop frame 选择 **Open DSH Terminal**；设置中的旁边提供重启下拉菜单，可以普通重启或 **重启到恢复模式**，两种操作都必须确认。macOS 会打开 Terminal，Windows 会优先使用 Windows Terminal，找不到时回退到 PowerShell 或命令提示符。
+可以从托盘的「打开 DSH 终端」打开带完整 DSH 环境的终端。macOS 会打开 Terminal，Windows 会优先使用 Windows Terminal，找不到时回退到 PowerShell 或命令提示符。
 
 欢迎信息会显示：应用版本、当前 profile、profile 目录和 DSH home。Desktop 会在自己的 user-data 目录生成 `dsh`、`pnpm` 和 `node` 私有 shim，只对这个终端进程设置 PATH，不会修改系统 PATH 或用户 shell 配置。
 
 ## 更新
 
-打包后的 macOS/Windows 应用会在后台检查 `https://www.dshdesktop.cn/api/desktop/version`（旧版发行版遗留服务，本项目不运营该端点）。后台检查不阻塞启动；网络错误、非 200、非法版本或服务端版本不新时保持静默。发现新版本时，应用会更新托盘并且每个版本只发送一次非阻塞系统通知，不会自动弹出下载确认；点击通知会显示 Desktop。
-
-托盘中的 **Check for Updates…** 是当前发行通道的手动检查：稳定版只接收稳定更新，Beta 只接收 Beta 更新。即使已经是当前版本，也会显示结果；检查失败会提示稍后重试。Beta 还提供 **安装稳定版…**，它会在保留 Beta 的同时安装稳定版。用户取消不会访问计数下载入口。
-
-确认下载后，应用会先打开原生的“保存更新安装包”对话框，默认建议保存到 Downloads；你可以改用其他目录和文件名，取消对话框则不会开始下载。保存后应用才会请求当前平台的固定下载地址，并记录安装包位置。macOS 会打开 DMG，由用户把应用替换到 Applications；Windows 会准备 NSIS 安装器，再询问是否退出并启动安装。升级完成并重新启动后，应用会询问是否删除安装包以释放磁盘空间，也可以选择保留。下载和安装失败不会破坏当前版本，托盘仍可重试。
+发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可。托盘中的更新检查来自旧版发行服务（本项目不运营该端点），升级请以 GitHub Releases 为准。
 
 ## 排查
 
-Desktop 的确认、警告与操作结果会打开独立、基于 shadcn 的桌面级模态窗口，而不是侵入官方页面的 overlay。恢复窗口会先展示进入原因，再提供 **插件管理**、**回滚**、**切换配置** 与 **诊断** 四个 Tab；它与新增 Profile 窗口顶部的 utility frame 都不会重复显示标题。
+Desktop 的确认、警告与操作结果会打开独立、基于 shadcn 的桌面级模态窗口，而不是侵入官方页面的 overlay。启动失败时应用会打开恢复窗口，先展示进入原因，再提供 **插件管理**、**回滚**、**切换配置** 与 **诊断** 四个 Tab。
 
 - **应用能够进入托盘**：右键托盘图标，选择 **导出诊断信息…**。确认隐私提示后，Desktop 会生成 `diagnostics-*.zip` 并在文件管理器中显示它。
 - **应用持续闪退，无法进入托盘**：在 PowerShell 中直接运行安装后的程序并加上恢复参数。默认安装位置的命令如下；如果安装时修改过目录，请替换为实际的 EXE 路径。
@@ -84,7 +80,7 @@ Desktop 的确认、警告与操作结果会打开独立、基于 shadcn 的桌�
 - **诊断包内容**：包含最近的应用日志、本地 Crashpad `.dmp`、当前运行标记和 `system-info.txt`。系统信息会记录 Desktop、Electron、Node、平台和架构版本。日志会对可识别的认证凭据脱敏，但本地路径、工作区 ID、会话 ID 和崩溃时的内存片段仍可能存在。公开上传前必须检查；不适合公开的 dump 应通过可信渠道提供。
 - **窗口消失了**：先检查系统托盘，关闭窗口不是退出。
 - **插件没有出现**：确认命令作用于目标 profile，并重启应用。
-- **终端命令找不到**：从托盘重新打开 Desktop 终端；系统 shell 的全局 PATH 不会被 Desktop 修改。
-- **更新没有提示**：后台错误会静默；使用托盘手动检查查看结果。
+- **终端命令找不到**：从托盘重新打开 DSH 终端；系统 shell 的全局 PATH 不会被 Desktop 修改。
+- **没有更新提示**：应用不主动弹出更新；请查看 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest)。
 
 更底层的生命周期、打包和平台限制属于开发者文档，见[文档索引](README.md)。

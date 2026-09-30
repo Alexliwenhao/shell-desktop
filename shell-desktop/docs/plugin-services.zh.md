@@ -2,7 +2,7 @@
 
 [English](plugin-services.md) | 中文
 
-本文档是面向插件作者、受支持的集成 contract，覆盖 AI Shell Desktop 2.x 在兼容、扩展窗口与增强三种呈现模式下导出的 Host 公开 service `desktopProfiles`、`desktopPnpm`，以及 Client 公开 service `desktopWindow`。它不会授予第三方访问原始 Electron API 或 launcher bootstrap 状态的能力。
+本文档是面向插件作者、受支持的集成 contract，覆盖 AI Shell Desktop 2.x 在 AI Shell 呈现下导出的 Host 公开 service `desktopProfiles`、`desktopPnpm`，以及 Client 公开 service `desktopWindow`。它不会授予第三方访问原始 Electron API 或 launcher bootstrap 状态的能力。
 
 ## 分层与数据流
 
@@ -10,7 +10,7 @@
 flowchart LR
   subgraph Electron["Electron main process"]
     Launcher["Launcher<br/>选择 profile 并创建 bootstrap fact"]
-    Native["Native runtime<br/>窗口、托盘、终端、更新"]
+    Native["Native runtime<br/>窗口、托盘、终端"]
   end
 
   subgraph Host["Host Cordis generation"]
@@ -88,13 +88,13 @@ interface DesktopWindowService {
 
 所有值都会在一个 renderer generation 内保持不变，几何值使用 CSS 像素。`material` 是经过系统能力门槛解析后的实际材质，而不只是持久化的偏好。macOS 的 `availableMaterials` 为 `off/transparent`；Windows 10 为 `off`；Windows 11 build 22621 及以上为 `off/mica`。已移除的旧 `acrylic` 偏好会按 `off` 读取，并在设置文件可写时自动迁移。
 
-兼容模式与扩展窗口在 macOS 与 Windows 上都报告顶部 36 像素的预留区与拖动带，并在 macOS 左侧为红绿灯排除 80 像素，或在 Windows 右侧为原生标题栏按钮排除 138 像素。兼容模式会把完整官方 frame 下移到该区域下方。扩展窗口则由 Desktop 持有 root layout/sidebar surface，并在同一预留区下方承载官方 sidebar、conversation 与 details occupant，因此普通 occupant 不能再次叠加这一 inset。Linux 兼容模式保留普通原生 frame，因此报告零 inset 和零高度拖动区域。增强模式使用独立的紧凑几何：macOS 报告 20 像素内容 inset、32 像素拖动带与 80 像素左侧排除；Windows 报告 32 像素内容 inset、32 像素拖动带与 138 像素右侧排除。
+AI Shell 呈现为原生标题栏预留顶部 32 像素，并把它作为顶部 safe-area inset 报告：macOS 在左侧为红绿灯排除 80 像素，Windows 在右侧为原生标题栏按钮排除 138 像素；Linux 保留普通原生 frame，因此报告零 inset 和零高度拖动区域。AI Shell frame 会把内容放在该预留区下方，因此普通 occupant 不能再次叠加这一预留。
 
 `safeAreaInsets` 描述 Desktop 从哪里开始放置完整的上游内容 surface；`dragRegion` 则单独描述原生标题栏命中区域，consumer 不能假设两者高度相同。拖动带内的交互元素必须设置 `-webkit-app-region: no-drag`；Desktop 已经为标准按钮、链接、输入框、可编辑字段、菜单、标签页、开关与对话框设置该排除规则。该 service 只报告几何信息，不提供窗口 mutation、焦点、Electron 或 IPC capability；普通浏览器启动中不存在该 service。
 
-兼容模式与扩展窗口都会让操作栏保持 Desktop 私有。它们不会声明标题栏 action slot；第一方图标组由 Desktop frame 直接渲染，在 macOS 位于右侧、在 Windows 位于左侧。Web Client 插件必须使用各自已有文档的内容 slot，不能把控件放到这些原生操作旁边。Renderer 重载与开发者工具切换仍是第一方私有 launcher 操作，不会加入公开的 `desktopWindow` service。
+操作栏保持 Desktop 私有：不声明标题栏 action slot；Web Client 插件必须使用各自已有文档的内容 slot，不能把控件放到原生标题栏操作旁边。Renderer 重载与开发者工具切换仍是第一方私有 launcher 操作，不会加入公开的 `desktopWindow` service。
 
-Desktop 会用 `data-shell-desktop-frame="titlebar"` 标记操作栏，并用 `data-shell-desktop-content-viewport` 标记上游 root。Root 会成为操作栏下方独立的 fixed viewport，因此 fixed descendant 不能逃逸到 Desktop chrome；直接 portal 到 `document.body` 的全视口对话框会获得相同的内容偏移。Body 级插件 portal 可以读取 `shell-desktop-titlebar-inset` URL contract，带 frame 的模式会发布精确的 36px 预留。插件不能重复补偿已经消费的边界。
+Desktop 用 `body[data-shell-desktop-mode="aishell"]` 标记 AI Shell 页面。插件必须使用已有文档的内容 slot，并且不能重复补偿原生标题栏已经占用的边界。
 
 ## 公开 Host Cordis service
 

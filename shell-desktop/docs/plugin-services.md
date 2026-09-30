@@ -2,7 +2,7 @@
 
 English | [中文](plugin-services.zh.md)
 
-This document is the supported integration contract for plugin authors. It covers the public Host services `desktopProfiles` and `desktopPnpm`, plus the Client service `desktopWindow`, exported by AI Shell Desktop 2.x in compatibility, extended, and advanced presentation modes. It does not grant third-party access to raw Electron APIs or launcher bootstrap state.
+This document is the supported integration contract for plugin authors. It covers the public Host services `desktopProfiles` and `desktopPnpm`, plus the Client service `desktopWindow`, exported by AI Shell Desktop 2.x in its AI Shell presentation. It does not grant third-party access to raw Electron APIs or launcher bootstrap state.
 
 ## Layers and data flow
 
@@ -10,7 +10,7 @@ This document is the supported integration contract for plugin authors. It cover
 flowchart LR
   subgraph Electron["Electron main process"]
     Launcher["Launcher<br/>select profile and create bootstrap facts"]
-    Native["Native runtime<br/>window, tray, terminal, updates"]
+    Native["Native runtime<br/>window, tray, terminal"]
   end
 
   subgraph Host["Host Cordis generation"]
@@ -88,13 +88,13 @@ interface DesktopWindowService {
 
 All values remain fixed for one renderer generation, and geometry uses CSS pixels. `material` is the effective, capability-gated backdrop rather than merely the persisted preference. `availableMaterials` is `off/transparent` on macOS, `off` on Windows 10, and `off/mica` on Windows 11 build 22621 or newer. The removed legacy `acrylic` preference is read as `off` and migrated when the settings document is writable.
 
-Compatibility and extended modes report the same 36-pixel top reservation and drag band on macOS and Windows; they exclude 80 pixels on the left for macOS traffic lights or 138 pixels on the right for Windows caption controls. Desktop shifts the complete official frame below this reservation in compatibility mode. Extended instead owns the root layout/sidebar surface and hosts the official sidebar, conversation, and details occupants below the same reservation, so ordinary occupants must not add it again. Linux compatibility keeps its ordinary native frame and therefore reports zero insets and a zero-height drag region. Advanced mode has independent compact geometry: macOS reports a 20-pixel content inset and 32-pixel drag band with an 80-pixel left exclusion, while Windows reports a 32-pixel content inset and drag band with a 138-pixel right exclusion.
+The AI Shell presentation reserves a 32-pixel top band for the native caption and reports it as the top safe-area inset: macOS excludes 80 pixels on the left for the traffic lights, Windows excludes 138 pixels on the right for the native caption controls, and Linux keeps its ordinary native frame and therefore reports zero insets and a zero-height drag region. The AI Shell frame places the content below that band, so ordinary occupants must not add the reservation a second time.
 
 `safeAreaInsets` describes where Desktop starts the complete upstream content surfaces. `dragRegion` separately describes the native caption hit area, so consumers must not assume that the two heights are equal. Interactive elements inside that band must apply `-webkit-app-region: no-drag`; Desktop already applies this exclusion to standard buttons, links, inputs, editable fields, menus, tabs, switches, and dialogs. The service reports geometry only: it does not expose window mutation, focus, Electron, or IPC capabilities. It is absent from an ordinary browser boot.
 
-Compatibility and extended modes keep the command bar private to Desktop. They do not declare a titlebar action slot, and the first-party icon group is rendered directly by the Desktop frame: on the right on macOS and on the left on Windows. Web Client plugins must use their documented content slots and cannot place controls beside these native actions. Renderer reload and Developer Tools toggling remain private first-party launcher operations, not additions to the public `desktopWindow` service.
+The command bar stays private to Desktop. No titlebar action slot is declared, Web Client plugins must use their documented content slots, and they cannot place controls beside the native caption controls. Renderer reload and Developer Tools toggling remain private first-party launcher operations, not additions to the public `desktopWindow` service.
 
-Desktop marks the command bar with `data-shell-desktop-frame="titlebar"` and the upstream root with `data-shell-desktop-content-viewport`. The root is a separate fixed viewport below the command bar, so fixed descendants cannot escape into Desktop chrome. Full-viewport dialogs portalled directly to `document.body` receive the same content offset. Body-level plugin portals can read the `shell-desktop-titlebar-inset` URL contract; framed modes publish the exact 36-pixel reservation. Plugins must not compensate for a boundary they already consume.
+Desktop marks the AI Shell page with `body[data-shell-desktop-mode="aishell"]`. Plugins must use their documented content slots and must not compensate for the native caption band a second time.
 
 ## Public Host Cordis services
 

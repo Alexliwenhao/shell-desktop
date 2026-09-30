@@ -211,4 +211,4 @@ To that end we are starting a development-conventions initiative and hope it bec
 - **Declare clearly**: state the services and slots you depend on; do not rely on runtime coincidences.
 - **Compatibility first**: keep upgrades backward compatible and never break existing compositions.
 
-The manifesto is a living document that follows ecosystem practice and accepts community discussion and revisions. Once the plugin marketplace ships, plugins following shared conventions will be easier to discover, install, and evaluate for compatibility, making convention-driven development the beneficial choice for every author. See the [DSH plugin ecosystem manifesto](plugin-ecosystem.en.md) for the vision.
+The manifesto is a living document that follows ecosystem practice and accepts community discussion and revisions. Plugins that follow the shared conventions install and work alongside other plugins more easily, making convention-driven development the beneficial choice for every author. See the [DSH plugin ecosystem manifesto](plugin-ecosystem.en.md) for the vision.

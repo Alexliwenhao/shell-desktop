@@ -6,7 +6,7 @@ This page answers common questions about installation, supported platforms, the 
 
 ## What is AI Shell Desktop?
 
-AI Shell Desktop is an open-source DeepSeek Harness desktop client for Windows and macOS. It packages the official Harness local Web UI, Host service, and plugin system into a native desktop application with a window, system tray, terminal, updates, and profile management.
+AI Shell Desktop is an open-source DeepSeek Harness desktop client for Windows and macOS. It packages the official Harness Host, plugin system, and agent capabilities into a native desktop application presented as the **AI Shell** surface: terminals, files, and the AI conversation side by side, plus the system tray, a DSH terminal environment, and profile management.
 
 ## Is this an official DeepSeek product?
 
@@ -14,7 +14,7 @@ No. AI Shell Desktop is an independent, community-maintained open-source project
 
 ## Which operating systems are supported?
 
-Current release installers support Windows x64 and universal macOS (Intel and Apple Silicon). There is currently no Linux installer. Cross-platform compatibility code in the source tree does not imply that an installer has been released for that platform.
+The currently published installers target Windows x64; the macOS packaging flow is included in the source tree but no macOS installer has been published yet, and there is no Linux installer. Cross-platform compatibility code in the source tree does not imply that an installer has been released for that platform.
 
 ## Do I need to install Node.js, pnpm, or DSH?
 
@@ -22,11 +22,11 @@ No. The installer includes Electron, Node.js, pnpm, and pinned DSH dependencies.
 
 ## Does the first launch download a runtime?
 
-No separate Node.js or Harness core download is required. The installer is larger because it contains the runtime and pinned dependencies, trading download size for a more deterministic first launch and dependency set. Cloud models, update checks, and new-version downloads still require network access.
+No separate Node.js or Harness core download is required. The installer is larger because it contains the runtime and pinned dependencies, trading download size for a more deterministic first launch and dependency set. Cloud models and downloading new versions from GitHub Releases still require network access.
 
 ## Does AI Shell Desktop modify official Harness?
 
-No. The repository pins an unmodified official Harness checkout. Compatibility mode runs the upstream default Web client below an independent overlay frame. Extended and enhanced modes each install their own Desktop-owned root registration through the plugin/profile composition boundary while retaining the official slot occupants. None of these modes edits upstream source.
+No. The repository pins an unmodified official Harness checkout; the desktop shell provides the AI Shell surface through the plugin/profile composition boundary and never edits upstream source.
 
 ## Is data stored locally?
 
@@ -42,7 +42,7 @@ No plugins are copied automatically. Each profile has its own bundle and depende
 
 ## How are updates installed?
 
-Packaged applications check for stable releases in the background but never install silently. A newer version requires confirmation. Before downloading, a native save dialog lets you choose the installer's directory and filename; cancelling it does not start a download. macOS downloads and opens a DMG; Windows downloads and starts an NSIS installer. After the upgrade and next launch, the app asks whether to delete or keep the installer. Network and download failures leave the current installation intact.
+Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place; upgrades never install silently. The tray's update check belongs to the previous distribution service (this project does not operate that endpoint); upgrade from GitHub Releases.
 
 ## Where can I download the app or report a problem?
 
