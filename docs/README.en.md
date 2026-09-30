@@ -22,9 +22,7 @@ Ordinary users can start with the [user guide](user-guide.en.md) and never need 
 | Document | Covers |
 | --- | --- |
 | [Plugin ecosystem manifesto](plugin-ecosystem.en.md) | The vision of an open, composable, sustainable plugin ecosystem and its three principles |
-| [Plugin development](plugin-development.en.md) | Ordinary DSH plugins, Desktop services, compatibility, and lifecycle |
-| [Community Market design](../dsh-community-market/README.md) | The proposed market shell, extensible catalog sources, user selection, install confirmation, and safety boundary |
-| [Market catalog provider contract](../dsh-community-market/docs/catalog-provider-contract.md) | Schemas, query parameters, multi-source behavior, and adapter rules for the implementation team |
+| [Plugin development](plugin-development.en.md) | Ordinary DSH plugins, Desktop services, and lifecycle |
 | [Architecture](architecture.en.md) | Electron, Host, the Web carrier, profiles, and packaging |
 | [Desktop service reference](../shell-desktop/docs/plugin-services.md) | Stable `desktopProfiles` and `desktopPnpm` contracts with TypeScript examples |
 | [Package reference](../shell-desktop/README.md) | Detailed build, runtime, release, and limitation notes |
@@ -43,4 +41,4 @@ The outer repository has two formal product READMEs plus one legacy compatibilit
 
 ## Status convention
 
-These pages distinguish shipped behavior, platform limits, and roadmap items. Compatibility mode keeps the upstream default Web client below an independent Desktop frame; extended mode installs its own Desktop layout/sidebar registration and hosts official occupants in an inverted L; enhanced mode retains a separate root registration with compact internal captions. Desktop frames provide capability-gated native materials. The plugin marketplace now has a documentation scaffold in [`dsh-community-market`](../dsh-community-market/README.md), but no usable page or installer; mobile remote control and Channels also remain separate roadmap items and are not implied to be part of the current installer.
+These pages distinguish shipped behavior, platform limits, and roadmap items. The product now ships a single **AI Shell** surface (activity rail, navigation column, terminal workbench, and the AI conversation column side by side); a stored legacy multi-mode preference is ignored at startup. The plugin marketplace is outside the current product scope, and capabilities such as Agents-Anywhere mobile remote are optional compositions rather than entries of the default installer.

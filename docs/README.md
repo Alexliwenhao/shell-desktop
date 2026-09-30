@@ -22,9 +22,7 @@
 | 文档 | 你会得到什么 |
 | --- | --- |
 | [插件生态倡议书](plugin-ecosystem.md) | 开放、可组合、可持续的插件生态愿景与三条原则 |
-| [插件开发](plugin-development.md) | 普通 DSH 插件、Desktop 服务、兼容模式和生命周期 |
-| [Community Market 设计](../dsh-community-market/README.zh.md) | 规划中的插件市场壳、可扩展目录来源、用户选择、安装确认和安全边界 |
-| [Market 目录提供方合同](../dsh-community-market/docs/catalog-provider-contract.zh.md) | 面向后续实现团队的 Schema、query 参数、多来源和适配器规范 |
+| [插件开发](plugin-development.md) | 普通 DSH 插件、Desktop 服务与生命周期 |
 | [架构说明](architecture.md) | Electron、Host、Web carrier、profile 和打包之间的关系 |
 | [Desktop service 参考](../shell-desktop/docs/plugin-services.md) | `desktopProfiles`、`desktopPnpm` 的稳定 contract 和 TypeScript 示例 |
 | [包级参考](../shell-desktop/README.md) | 完整的构建、运行、发布和已知限制 |
@@ -43,4 +41,4 @@
 
 ## 状态约定
 
-文档会明确区分已实现能力、平台限制和 roadmap。Desktop 的兼容模式在独立 Desktop frame 下保留上游默认 Web 客户端；扩展窗口安装自己独立注册的 Desktop layout/sidebar surface，并在倒 L 中承载官方 occupant；增强模式保留独立 root registration 与紧凑内部 caption。Desktop frame 会按系统能力提供原生材质。插件市场已建立 [`dsh-community-market`](../dsh-community-market/README.zh.md) 文档初始化工程，但尚无可用页面或安装器；手机远程和 Channels 也仍是独立 roadmap，不代表当前安装包已经提供这些产品入口。
+文档会明确区分已实现能力、平台限制和 roadmap。当前产品只提供 **AI Shell** 一种外壳（活动栏 + 导航列 + 终端工作台 + AI 对话同屏协同），启动时即使存在旧的多模式配置也会按 AI Shell 运行。插件市场不在当前产品范围内；手机远程（Agents-Anywhere）等能力为可选组合，不属于默认安装包的入口。
