@@ -28,19 +28,19 @@ AI Shell Desktop 的目标不是重新实现 Harness，而是把同一个运行�
 当前 Desktop 主要提供：
 
 - macOS 和 Windows 原生窗口、托盘和单实例生命周期。
-- 兼容、扩展窗口和增强三种呈现模式。兼容模式在独立 Desktop frame 下保留上游默认客户端；扩展窗口使用自己独立注册的 Desktop layout/sidebar surface 承载官方 occupant 并形成倒 L；增强模式保留独立 root registration 与紧凑内部 caption。Desktop frame 还会按能力提供原生材质与拖动区域。
+- 单一的 AI Shell 界面：活动栏、导航列、终端工作台与 AI 对话列同屏；启动时遗留的多模式配置会被忽略并归一为 AI Shell。
 - 多 profile 选择。当前 generation 的 profile 身份由 Desktop 明确提供，切换通过有序重启生效。
 - 内置终端和固定版本 pnpm 环境。它们只作用于 Desktop 自己创建的进程，不修改用户的全局 PATH。
 - 面向插件开发者的一组受控扩展接口（详见[插件开发](plugin-development.md)）。
-- 版本检查、用户确认后的安装包下载，以及 macOS DMG/Windows NSIS 的平台交接。
+- macOS DMG / Windows NSIS 的打包与发布流程（发行包通过 GitHub Releases 分发）。
 
 ## 我们刻意不做什么
 
 - 不把上游 Web UI 重新实现成 Electron 原生页面。
-- 不在兼容模式中覆盖上游 layout、sidebar 或 conversation 组合。
+- 不提供除 AI Shell 之外的第二套窗口模式。
 - 不把记录复制到另一个“Desktop 数据库”；官方 profile 默认共享 DSH home 中的会话和设置。
 - 不给第三方插件一个未定义的 Electron 私有 API。
-- 不把 roadmap（插件市场、手机远程、Channels）写成当前版本已经交付的功能。
+- 不把 roadmap（手机远程、Channels 等）写成当前版本已经交付的功能。
 
 ## 适合谁
 

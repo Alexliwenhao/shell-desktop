@@ -28,19 +28,19 @@ The plugin boundary also tells us what not to expose. Third-party plugins can on
 The current Desktop product provides:
 
 - Native windows, a tray, and single-instance lifecycle on macOS and Windows.
-- Compatibility, extended, and enhanced presentation modes. Compatibility preserves the upstream client below an independent Desktop frame; extended uses its own Desktop layout/sidebar registration to host official occupants in an inverted L; enhanced retains a separate root registration with compact internal captions. Desktop frames provide capability-gated native materials and drag regions.
+- A single AI Shell interface: the activity rail, navigation column, terminal workbench, and AI conversation column side by side; a stored legacy mode preference is ignored and normalized to AI Shell at startup.
 - Multiple profile selection. Desktop exposes the active profile identity for the current generation, and switching takes effect through an orderly restart.
 - A bundled terminal and pinned pnpm environment. They apply only to processes created by Desktop and do not modify the user's global PATH.
 - A controlled set of extension interfaces for plugin developers (see [plugin development](plugin-development.en.md)).
-- Version discovery and confirmation-gated installer downloads, handing off to a macOS DMG or Windows NSIS installer.
+- macOS DMG / Windows NSIS packaging and release flows (artifacts ship through GitHub Releases).
 
 ## What we deliberately do not do
 
 - Reimplement the upstream Web UI as an Electron-native page.
-- Override the upstream layout, sidebar, or conversation composition in compatibility mode.
+- Ship a second window mode beside AI Shell.
 - Copy records into a separate “Desktop database”; official profiles share the DSH home for sessions and settings by default.
 - Give third-party plugins an undefined private Electron API.
-- Present roadmap items such as a plugin marketplace, mobile remote control, or Channels as shipped features.
+- Present roadmap items such as mobile remote control or Channels as shipped features.
 
 ## Who should read this
 

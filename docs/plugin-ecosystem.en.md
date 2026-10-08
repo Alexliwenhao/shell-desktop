@@ -26,11 +26,9 @@ AI Shell Desktop is the first practitioner of this approach: the desktop shell i
 
 This manifesto is not a unilateral rulebook. It is a **living document**: it follows ecosystem practice and accepts community discussion and revision. Any author can propose changes through issues, discussions, or pull requests.
 
-## The plugin marketplace: making conventions the beneficial choice
+## Making conventions the beneficial choice
 
-Once the plugin marketplace ships, plugins that follow this manifesto will be easier to discover, install, and trust. We want convention-driven development to be the beneficial choice for every author, not an extra burden.
-
-The market is still in its [product and safety design phase](../dsh-community-market/README.md), with no usable page or installer yet. Catalog inclusion means that a project matched catalog rules; it is not a security review or endorsement.
+Plugins that follow shared conventions work together and earn trust more easily. We want convention-driven development to be the beneficial choice for every author, not an extra burden.
 
 ## How to participate
 

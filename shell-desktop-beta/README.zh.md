@@ -4,15 +4,15 @@
 
 `shell-desktop-beta` 在 Electron 中运行 AI Shell Desktop 抢先版，同时仍然参与普通 Cordis 组合。安装后的应用名称为 **AI Shell Desktop Beta**。该包只提供 `shell-desktop-beta` 可执行命令和 `shell-desktop-beta` 别名，不会与稳定版 npm 包或命令冲突。
 
-稳定版 `shell-desktop` 与此 Beta 包可以安装在同一台机器上。两者使用不同的应用名、系统身份、快捷方式、单实例锁和 Electron 用户数据目录；但会有意共用同一 `DSH_HOME`（或默认的 `~/.dsh`），因此 Profile、设置、插件和会话仍然共享。支持同时安装，但不保证可靠地同时运行，因为两版可能争用 Profile 文件、端口和依赖状态。自动更新只跟随 Beta 通道；托盘中提供显式操作，可在保留 Beta 的同时安装稳定版。
+稳定版 `shell-desktop` 与此 Beta 包可以安装在同一台机器上。两者使用不同的应用名、系统身份、快捷方式、单实例锁和 Electron 用户数据目录；但会有意共用同一 `DSH_HOME`（或默认的 `~/.dsh`），因此 Profile、设置、插件和会话仍然共享。支持同时安装，但不保证可靠地同时运行，因为两版可能争用 Profile 文件、端口和依赖状态。发行版通过 GitHub Releases 分发；应用内不提供自动更新入口。
 
 ## 架构
 
-Electron 可执行文件只包含最小启动代码。它获取单实例锁、解析当前选中的 DSH profile、提供原生运行时能力，并在 Electron main 进程中启动 Host Cordis 根。`desktop-shell` Host 插件通过 Cordis effect 拥有 `BrowserWindow`、导航策略、settings namespace，以及关闭与退出生命周期。原生 runtime 拥有实体托盘；`desktop-shell`、`desktop-profiles`、`desktop-terminal` 与 `desktop-updates` 则通过有序 item registry 提供 effect-scoped 命令。
+Electron 可执行文件只包含最小启动代码。它获取单实例锁、解析当前选中的 DSH profile、提供原生运行时能力，并在 Electron main 进程中启动 Host Cordis 根。`desktop-shell` Host 插件通过 Cordis effect 拥有 `BrowserWindow`、导航策略、settings namespace，以及关闭与退出生命周期。原生 runtime 拥有实体托盘；`desktop-shell`、`desktop-profiles` 与 `desktop-terminal` 则通过有序 item registry 提供 effect-scoped 命令。
 
-三种呈现模式都复用现有 Web carrier。profile 挂载普通 `dsh-base` 与 `dsh-web-app` bundle。Host 默认把 HTTP 与 WebSocket surface 绑定到 `127.0.0.1` 的临时端口；只有明确确认的局域网设置才会绑定所有接口，Electron 则始终从 loopback 地址在沙箱 renderer 中加载同源页面。Electron 不维护自有插件 roster，不使用 preload bridge，renderer 也不会获得原始 Electron API。
+AI Shell 复用现有 Web carrier。profile 挂载普通 `dsh-base` 与 `dsh-web-app` bundle。Host 把 HTTP 与 WebSocket surface 绑定到 `127.0.0.1`（端口从 43120 起按需递增）；Electron 从 loopback 地址在沙箱 renderer 中加载同源页面。Electron 不维护自有插件 roster，不使用 preload bridge，renderer 也不会获得原始 Electron API。
 
-desktop package 拥有普通 Host 与 Web Client 两个 face。它的 Client face 会在所有模式下校验 Host 提供的模式、平台和经过能力门槛解析的材质 marker。兼容模式把保持不变的官方呈现放在独立 Desktop frame 下方。扩展窗口会用自己独立注册的 Desktop layout 与 sidebar surface 替换官方 root layout，同时继续承载官方 sidebar、conversation 和 details occupant。增强模式保留独立的 root registration，以及最初增强模式确定的紧凑内部 caption 几何。所有模式下，第三方 Web client 都继续使用普通 DSH 模块图。
+desktop package 拥有普通 Host 与 Web Client 两个 face。它的 Client face 会校验平台和经过能力门槛解析的材质 marker，并安装 Desktop 自有的 AI Shell 布局（活动栏、导航列、终端工作台、AI 对话列），官方 sidebar 与 conversation 作为官方 occupant 继续由同一组合承载。第三方 Web client 继续使用普通 DSH 模块图。
 
 托盘中的 profile 选择器会列出现有 profile，以及可延迟创建的 `desktop` 与 `web` 默认项。可选 profile 必须直接按顺序组合 `dsh-base` 与 `dsh-web-app`；headless、损坏或已经内嵌 desktop bundle 的 profile 仍会显示，但不可选择。只有 `desktop` 是 Launcher 管理的 profile：它会修复安装方拥有的前缀，同时保留第三方 bundle 的相对顺序。其他被选 profile 的 manifest、用户 patch 与依赖均保持不变。Launcher 只会为当前 generation 在 `dsh-web-app` 后插入自有 desktop layer，不会把该 layer 持久化到被选 bundle 列表。
 
@@ -34,62 +34,35 @@ Login-shell 恢复完成后，Launcher 才创建 layered launch-environment snap
 
 插件作者应遵循 [Desktop 插件 service 架构](docs/plugin-services.zh.md)中记录的受支持 contract import、生命周期规则与适配模式。
 
-## 模式设置与重启边界
+## 设置与重启边界
 
-DSH home `settings.yaml` 文档中的 `shell-desktop.mode` 字段是单一事实源：
+DSH home 的 `settings.yaml` 文档只有一个 `shell-desktop` namespace；外壳始终是 AI Shell，存储的旧值（`compatibility`、`extended`、`advanced`）会在启动时归一为 `aishell`：
 
 ```yaml
 shell-desktop:
-  mode: compatibility # compatibility、extended 或 advanced
+  mode: aishell
+  port: 43120
   macosMaterial: transparent # off 或 transparent
-  windowsMaterial: acrylic # off、acrylic，系统支持时还可用 mica
+  windowsMaterial: mica # off、acrylic，系统支持时还可用 mica
 ```
 
 Launcher 会在组合一个 generation 之前，读取当前 `@deepseek-ai/dsh-settings-file` row 解析到的同一份文件。Host 通过标准 settings service 注册 `shell-desktop` namespace。profile manifest 中没有平行的模式值。
 
-用户可以从托盘选择另一种模式，也可以手工编辑 DSH home 中的 `settings.yaml` 文档。托盘会更新已注册的 `shell-desktop` settings namespace，手工编辑则修改 settings provider 观察的同一文件。修改提交后会请求一次有序重启：先 dispose 当前 Cordis 树，仅当零退出码的 shutdown 成功时才让 Electron relaunch。应用绝不会在存活的 renderer generation 中热切换 root slot、原生窗口材质或 Loader row。
+手工编辑该文档会修改 settings provider 观察到的内容。修改提交后会请求一次有序重启：先 dispose 当前 Cordis 树，仅当零退出码的 shutdown 成功时才让 Electron relaunch。应用绝不会在存活的 renderer generation 中热切换 root slot、原生窗口材质或 Loader row。
 
-Linux 只支持兼容模式。其托盘模式命令会被禁用，自定义窗口模式值会被拒绝，而不会静默降级。
+## AI Shell 界面
 
-## 兼容模式
+AI Shell 是为 macOS 与 Windows 显式组合的 desktop 呈现。Launcher 会在读取全部用户 patch 后禁用官方 `ui-layout` Loader row，保持官方 `ui-sidebar` 与 `ui-conversation` row 启用。
 
-`shell-desktop.mode` 默认为 `compatibility`。在 macOS 与 Windows 上，该模式会在当前 DSH profile 的官方 Web surface 上方创建一条独立的 36 CSS 像素 Desktop frame，并保留原生红绿灯或窗口按钮。居中的标识、模式 pill、拖动区域与图标操作只属于该 frame；完整官方页面从它下方开始，不参与 frame 的布局或安全区计算。Linux 保留普通原生 frame 作为兼容 fallback。
+Client 提供四列分区：固定 48 CSS 像素的活动栏、官方 sidebar、对话工作台与右侧停靠。原生 caption row 之下，活动栏提供对话、文件、右侧停靠与导航命令。文件命令通过 `ctx.sidebarRight.openTab('files')` 打开右侧停靠的文件树；右侧停靠命令切换其展开呈现；没有挂载 session surface 时两者都是空操作。Sidebar 与右侧停靠的宽度沿用既有的拖拽与断点规则，列宽计算会排除活动栏宽度。
 
-desktop Client module 会校验模式与平台 marker，在兼容模式下只注册独立 frame overlay 与固定 launcher 操作，不替换任何官方呈现。它不提供或替换 `layout` service，不注册 `root` 或 `sidebar` occupant，也不改动 conversation surface。Desktop 自有的启动健康报告属于能力 effect；兼容模式仍会保留被选 profile 自身的 layout、sidebar 与 conversation 组合，普通 `desktop` 与 `web` profile 因而会原样保留官方 row。上游 dialog 仍是内容 overlay，并被限制在 Desktop frame 下方。
+活动栏命令只委托上游服务：面板选择与 sidebar 收展由 `ctx.layout` 承担，文件与停靠命令由 `ctx.sidebarRight` 承担。该界面不安装 renderer bridge，也不提供第三方命令面。
 
-Cordis row 会在 profile 激活期间登记原生窗口参数。Launcher 只在 `app-boot` 完成并审计整个 profile 后创建窗口，因此首个 renderer manifest 会包含所有已激活的官方、desktop 与第三方 client plugin，同时插件自身不会在 Loader entry 内等待整棵 Loader tree。
+窗口保留平台原生 caption 带（macOS 与 Windows 为 32 CSS 像素）与按能力门槛提供的原生材质；Linux 保留普通原生 frame。在该布局内，每个终端标签绑定自己的 AI 会话，计划模式把命令作为由人点击的卡片提交，会话面板可检索标题与会话内容。
 
 在 Windows 上，Launcher 会固定使用 browse 目录选择 backend，并保留完整的应用内目录面板。桌面构建通过补丁在该面板中加入一个小型系统文件夹图标；图标经同源路由调用 Electron 的 `dialog.showOpenDialog`，选中的路径继续进入面板原有的 workspace 接纳流程，取消后面板保持打开。普通浏览器与远程启动不会获得这个桌面桥接。macOS 与 Linux 仍使用上游自适应 chooser。
 
-本次 alpha runtime 迁移不再携带 Desktop 自有的工作区文件夹拖放行为或聊天附件拖放隔离补丁。在按 alpha Client UI 重新评估这些交互前，请使用普通工作区选择流程。
-
-在所有呈现模式下，Windows PowerShell 都会保留上游 `pwsh-sandbox` 行为与 Windows ACL confinement。Launcher generation 只会把该 Host provider 替换为同一 package 中的 `shell-desktop-beta/windows-pwsh-sandbox` 子路径。对于与上游 ACL runner 完全匹配的 argv，adapter 会让打包后的 Electron executable 通过私有 trampoline 以 Node 模式启动。Trampoline 会先精确校验上游 runner，再在导入它之前移除 Node-mode 环境变量，并确保自身这个原本没有 console 的 Windows 进程拥有一个隐藏 console。受限 PowerShell 进程随后可以继承该 console，而不必在已经使用受限 token 时自行创建。Console 分配失败会通过现有带签名的 runner 失败路径退出；全部 ACL policy 与后续失败处理仍委托给上游 runner。Desktop deploy root 还会保留 Yarn patch，在两条原生受限进程路径上把 `STARTF_USESHOWWINDOW`、现有的 `STARTF_USESTDHANDLES` 与 `SW_HIDE` 组合起来。它不会使用与上游实现不兼容的 `CREATE_NO_WINDOW` 或 `CREATE_NEW_CONSOLE` flag。直接使用 `danger-full-access` 的 PowerShell、macOS 与 Linux 执行路径保持不变；Windows confinement 失败时不会自动回退到不受限执行。
-
-## 扩展窗口模式
-
-扩展窗口会禁用官方上游 `ui-layout` root，并安装 Desktop 自有 root layout。该 layout 负责 sidebar、conversation、details、overlay 和 resize 几何，同时继续渲染官方 sidebar、conversation 与 details slot occupant。Desktop root 上方是一条固定的 36 CSS 像素操作栏；操作栏与 Desktop 自有 sidebar surface 只透出一层不会叠色的材质，组成连续的倒 L 形玻璃区域。conversation surface 位于倒 L 内侧，使用 10 像素内圆角，并让分隔线沿圆角绘制。
-
-居中的产品标题和模式 pill 不受两侧操作组影响。第一方操作使用紧凑图标：macOS 把它们放在红绿灯相对的右侧，Windows 则把它们放在原生标题栏按钮相对的左侧。图标可以打开 DSH 终端、打开包含普通重启与恢复模式重启的菜单，或打开开发者菜单来重载 renderer 与切换分离式开发者工具。这些固定操作通过私有同源 launcher 边界执行；页面不会获得原始 Electron 或任意命令接口。
-
-即使上游 overlay 打开，操作栏仍会保持可见且可以拖动窗口。macOS 红绿灯和 Windows 原生标题栏按钮保留各自命中区域；这个私有 surface 只直接渲染 Desktop 自有的第一方图标，它们会明确退出拖动区域并保持可点击。Web Client 插件在兼容模式和扩展窗口中都不能向操作栏贡献 action。
-
-DOM 会把操作栏声明为 Desktop frame，并把下移后的上游 root 声明为它的 content viewport。`shell.overlay` 会成为 fixed 插件 surface 的 containing block，直接 portal 到 `body` 的对话框则获得相同的内容偏移；两条路径都会被限制在 36 像素 frame 下方，不会再压暗或拦截顶栏。
-
-自定义窗口材质独立于模式设置。macOS 可选“关闭”或“透明材质”；Windows 可选“关闭”和原生“亚克力”，仅 Windows 11 build 22621 及以上显示 Mica。Windows 10 因此使用真正的原生亚克力，而不是 CSS 模拟。已持久化但系统不支持的 Mica 会按能力门槛回退到亚克力。切换模式或材质都会执行有序重启。
-
-## 增强模式
-
-增强模式是为 macOS 与 Windows 显式组合的 desktop 呈现。Launcher 会在读取全部用户 patch 后禁用官方 `ui-layout` Loader row，保持官方 `ui-sidebar` 与 `ui-conversation` row 启用，并把所选模式应用到 `desktop-shell`。
-
-desktop Client 会在所有呈现模式中提供不可变的 `desktopWindow` 原生几何 service。增强模式拥有独立的 Cordis effects、`layout` service 与 `root` slot registration，不会安装兼容/扩展模式的独立 frame。其 root 为不变的上游 sidebar、conversation、details 与 overlay contribution 声明 seat。官方 sidebar 继续作为 `sidebar` occupant，并继续声明 workspace browser、settings shell 与纯新增 footer action seat。这样会保留其组件行为、收起动画与第三方扩展点，而 desktop package 只拥有增强模式自己的紧凑内部 caption 几何与原生材质。
-
-高级 theme presenter 会把当前上游 theme snapshot 投影到 document，包括 color scheme、解析后的 token 值、深色模式 marker 与 theme-color metadata。它订阅普通 theme 变化，generation dispose 时只移除由自身投影的状态。
-
-对于高级 generation，Electron adapter 还会在 Host boot 完成后读取已注册的 `ui-theme.preference`，并在创建窗口前把内置 `light`、`dark` 或 `system` 值同步到 Electron 原生外观。窗口存续期间提交的 preference 变化会更新原生材质，dispose 则恢复此前的 Electron 外观。仅存在于 Client 的第三方 theme id 不会改变该 Host preference。
-
-desktop sidebar surface 会把上游 sidebar-fill token 局部设为透明，因此官方 sidebar 与 session 列表渐隐可以透出原生材质，而无需改变其组件样式。
-
-在 macOS 上，增强窗口恢复最初的 hidden-inset 几何：红绿灯位于 `x=16, y=16`，内容使用紧凑的 20 CSS 像素 inset，原生拖拽区域为 32 CSS 像素。其 90 CSS 像素收起列会把官方 56 像素 rail 居中放在该紧凑 inset 下方，并继续支持可选的原生 `sidebar` vibrancy。按钮、链接、输入框、可编辑字段、菜单、标签页、开关、对话框与显式 `.dshDesktopNoDrag` contribution 会通过精确的 `app-region: no-drag` 排除规则保持可交互。在 Windows 上，官方 sidebar 保持兼容模式几何：收起 56 像素、默认展开 280 像素，并沿用相同的上游过渡行为；透明 surface 会透出当前系统支持且用户选择的材质。增强窗口保留最初的 32 CSS 像素内部 caption row 与原生 overlay 控件；这套几何与兼容/扩展模式的 36 像素独立 frame 无关。Linux 会拒绝增强模式，而不会静默降级到与持久化设置不同的呈现。
+在 AI Shell 界面下，Windows PowerShell 都会保留上游 `pwsh-sandbox` 行为与 Windows ACL confinement。Launcher generation 只会把该 Host provider 替换为同一 package 中的 `shell-desktop-beta/windows-pwsh-sandbox` 子路径。对于与上游 ACL runner 完全匹配的 argv，adapter 会让打包后的 Electron executable 通过私有 trampoline 以 Node 模式启动。Trampoline 会先精确校验上游 runner，再在导入它之前移除 Node-mode 环境变量，并确保自身这个原本没有 console 的 Windows 进程拥有一个隐藏 console。受限 PowerShell 进程随后可以继承该 console，而不必在已经使用受限 token 时自行创建。Console 分配失败会通过现有带签名的 runner 失败路径退出；全部 ACL policy 与后续失败处理仍委托给上游 runner。Desktop deploy root 还会保留 Yarn patch，在两条原生受限进程路径上把 `STARTF_USESHOWWINDOW`、现有的 `STARTF_USESTDHANDLES` 与 `SW_HIDE` 组合起来。它不会使用与上游实现不兼容的 `CREATE_NO_WINDOW` 或 `CREATE_NEW_CONSOLE` flag。直接使用 `danger-full-access` 的 PowerShell、macOS 与 Linux 执行路径保持不变；Windows confinement 失败时不会自动回退到不受限执行。
 
 ## 开发
 
@@ -137,8 +110,6 @@ dsh plugin update
 
 显式 `--profile <name>` 始终具有更高优先级，可用于在切换前准备其他 profile。
 
-`dshmarket@1.2.3` 尚未预装，也不是 AI Shell Desktop 的 dependency。该版本仍从 config/argv 解析 profile，并通过私有 child-process 代码启动 `dsh plugin`；它既不读取 `desktopProfiles`，也不使用 `desktopPnpm`，package exports 也没有 runner injection seam。后续兼容版本必须动态探测 Desktop service，同时在普通 DSH 中保留现有 CLI fallback。此外，`1.2.3` 的源码仓库与 npm tarball 均未包含完整 MIT 许可文本或版权通知，因此该版本尚未通过内置再分发 gate。用户主动安装第三方 package 与 Desktop 将其嵌入 application archive 或 installer 是两个独立边界。
-
 Required injection、可选 Desktop 适配、TypeScript 示例、cancellation 与 fallback 指南详见[面向插件作者的 service 文档](docs/plugin-services.zh.md)。
 
 随后可以通过 npm 启动该包：
@@ -164,22 +135,12 @@ npx shell-desktop-beta
 
 如果用普通 `dsh` 命令直接启动一个组合了桌面壳的 profile（缺少 launcher 的 `desktopRuntime` service），会打印提示，告诉你用 `shell-desktop-beta` 或打包版应用启动；此时桌面壳不会注册任何功能。
 
-第三方 Host 插件只需提供普通 `dsh.bundle` patch。包含浏览器 UI 的插件还要发布普通 `dsh.client` 元数据，将 `platform` 设为 `"web"`，并导出 `./client` 产物。上游 Web 客户端模块图会在所有模式下发现它；Electron 不要求单独的客户端构建，也不引入 desktop 专用注册 API。增强模式 contribution 必须面向该显式组合中存在的 service 与 slot，不能假设官方 layout 或 sidebar occupant 拥有它们。
+第三方 Host 插件只需提供普通 `dsh.bundle` patch。包含浏览器 UI 的插件还要发布普通 `dsh.client` 元数据，将 `platform` 设为 `"web"`，并导出 `./client` 产物。上游 Web 客户端模块图会发现它；Electron 不要求单独的客户端构建，也不引入 desktop 专用注册 API。第三方 contribution 必须面向该组合中存在的 service 与 slot，不能假设官方 layout 或 sidebar occupant 拥有它们。
 
 ## 桌面操作
 
 当 Desktop 窗口没有焦点时，直接用户发起的回合到达 `completed` 会显示原生完成通知；以 `error` 或 `max-tokens` 结束时则显示需要处理的通知。后台任务完成或失败也使用同一条原生注意力路径。取消、阻塞、中断、被终止的任务、插件发起、仅 continuation、turn 不匹配及 subagent 活动都保持静默。点击通知会显示并聚焦窗口。macOS 与 Linux 会递增应用角标，Windows 会闪烁任务栏按钮；显示、聚焦或释放窗口时会清除这些提示。实时生效的 `shell-desktop-notifications` settings namespace 提供相互独立的 `notifyOnTurnCompletion`、`notifyOnTurnFailure`、`notifyOnJobCompletion` 与 `notifyOnJobFailure` 开关，默认全部开启。通知文案刻意保持通用，不会包含提示词、回复、错误、任务标签、命令、路径、会话 ID、模型或 provider 名称、工具数据及输出。
-
-打包后的 macOS 与 Windows 应用会在启动 60 秒后查询 `https://www.dshdesktop.cn/api/desktop/version`，并在每次检查完成六小时后再次查询。每次 no-cache 请求的期限为 15 秒，会携带 `X-DSH-Desktop-Channel: beta` 和当前安装版本，并与托盘中的 **Check for Updates…** 命令共用一个 in-flight operation。Beta 只接受规范的 `-beta.N` SemVer，且响应必须明确包含 `channel: "beta"`；它不会静默使用稳定版。后台失败和非更新版本保持静默；手工检查一定会显示原生结果对话框。**安装稳定版** 会另行查询稳定通道，允许目标版本更低，并把稳定版安装在 Beta 旁边。开发运行、未打包启动与 Linux 不会下载安装包。
-
-选择 **Download** 后，应用会先重新确认服务端版本没有变化，然后打开原生保存对话框。默认位置是 Downloads，但用户可以选择其他绝对路径和文件名；取消对话框不会发起下载请求。AI Shell Desktop 使用 Electron 网络跟随 service redirect，把不超过 1 GiB 的文件流式写入用户选择的路径，记录安装包位置用于升级交接，并在交付前拒绝不完整的 DMG 或 Windows PE。macOS 会打开下载好的 DMG，并提示用户替换 `Applications` 中的应用后重新打开。Windows 会在 NSIS 安装器准备完成后再次确认；选择 **Restart and Install** 会启动安装器，并在当前进程退出前请求 Cordis 有序 teardown。升级后的应用启动时会询问删除已记录的安装包，或保留它；任一选择都会消费 pending cleanup state。下载、文件系统与安装器打开失败都会保持静默，同时保留托盘中的可重试版本操作。
-
-Release operator 必须先发布两个平台产物，再让 Beta 版本可被发现。版本与下载服务在 `X-DSH-Desktop-Channel: beta` 时必须选择 Beta，并在下载响应中同时回显 `beta` 与请求的 `X-DSH-Desktop-Target-Version`。值缺失、服务不可用、响应不匹配或格式无效时，Desktop 不会显示任何提示。稳定服务仍需支持显式安装操作和旧客户端。
-
-在 macOS 与 Windows 上，**打开 DSH 终端** 会打开以当前激活 profile 为工作目录的系统终端。设置页标题区会在它旁边提供重启菜单，其中包含 **重启 Desktop** 和 **重启到恢复模式**；任何重启路径都会先显示确认，再开始有序 Cordis shutdown 和 Electron relaunch。终端欢迎信息会显示应用版本、当前 profile、profile 目录与 DSH home，并列出配置与插件管理命令。在该终端内，裸 `dsh`、`dsh --dump-config`，以及没有选择 profile 的 plugin 子命令都会默认使用当前激活 profile；显式 `--profile` 与上游 `web` alias 会保留原有含义。AI Shell Desktop 会在自身 user-data 目录下按 profile 生成私有 `dsh`、`pnpm` 与 `node` shim，设置 `DSH_HOME`，使用当前 profile 作为工作目录，并且只在该终端的 `PATH` 前置 shim 目录；之后切换 profile 不会改变已经打开的终端命令。它不会修改全局环境或 shell 启动文件。macOS launcher 会先保留用户的交互式 zsh 或 bash 设置，再恢复 desktop 自有变量。Windows 会依次选择 PowerShell 7、Windows PowerShell 或命令提示符，并在新的 Windows Terminal 窗口中打开；如果 `wt.exe` 不可用，则由私有 `cmd start` broker 创建可见控制台。同步启动失败与 broker 非正常退出会使用 Desktop dialog surface。Linux 不组合该终端命令。
-
 Desktop 的确认、警告、错误与结果统一使用基于 shadcn 的 `DesktopDialogWindow`。每个 dialog 都是独立、沙箱化的模态 `BrowserWindow`，在可用时以当前 Desktop 窗口为 parent；它不是官方 Web 页面内部的组件或 portal。作为 parent 子窗口的纯操作 dialog 不显示窗口按钮，也不会渲染空白 frame；只有独立显示并带有 macOS 红绿灯或 Windows 窗口按钮的 dialog 才使用共享的 36 像素 utility frame。Escape 或可用的窗口关闭操作会映射为有界取消，并且只向 main process 返回一次本地结果。操作系统的打开文件和保存文件选择器仍保持原生，因为它们负责选择系统路径，而不是展示 Desktop 操作。
-
 恢复模式同样使用独立的 Desktop-owned 窗口；当存在 macOS 红绿灯或 Windows 窗口按钮时显示空白 36 像素 frame。其完整 shadcn 页面先说明进入恢复模式的原因，再把操作分成 **插件管理**、**回滚**、**切换配置** 与 **诊断** 四个 Tab。新增 Profile 窗口也只在实际存在这些窗口按钮时使用无标题 utility frame。恢复操作和任何重启请求都会打开 `DesktopDialogWindow` 确认，而不会把 modal 放进恢复页面里。
 
 ## 日志与诊断
@@ -241,7 +202,7 @@ corepack.cmd yarn dist:win
 corepack.cmd yarn dist:win-portable
 ```
 
-产物为 `shell-desktop-beta\\dist\\AI-Shell-Desktop-Beta-2.0.5-beta.2-x64-Portable.zip`。用户解压到任意可写目录后运行其中的 `AI Shell Desktop Beta.exe`，不需要安装器、管理员权限、开始菜单注册或卸载步骤。它仍会把 profile、日志和缓存写入 Windows 的 Beta 用户数据目录，因此这是便携分发方式，不是把数据完全封装在 exe 旁边的自包含沙箱。绿色 ZIP 不会交给 NSIS 自动更新流程，新版本需要手动替换并重新解压。本地构建没有签名，Windows 可能显示 Unknown publisher 或 SmartScreen 警告；签名后的绿色版仍属于正式发布 gate。
+产物为 `shell-desktop-beta\\dist\\AI-Shell-Desktop-Beta-<版本>-x64-Portable.zip`。用户解压到任意可写目录后运行其中的 `AI Shell Desktop Beta.exe`，不需要安装器、管理员权限、开始菜单注册或卸载步骤。它仍会把 profile、日志和缓存写入 Windows 的 Beta 用户数据目录，因此这是便携分发方式，不是把数据完全封装在 exe 旁边的自包含沙箱。便携包不参与应用内更新，新版本需要手动替换并重新解压。本地构建没有签名，Windows 可能显示 Unknown publisher 或 SmartScreen 警告；签名后的绿色版仍属于正式发布 gate。
 
 ### macOS DMG 冒烟构建
 
@@ -258,12 +219,10 @@ corepack.cmd yarn dist:win-portable
 ## 已知限制与暂缓事项
 
 - 添加或删除 profile bundle 后必须重启 AI Shell Desktop；Launcher 不监听 profile manifest。从托盘选择其他 profile 时会自动完成该重启。
-- 切换兼容模式、扩展窗口或增强模式，或修改材质，按设计都会重启应用；存活的 generation 不会热切换 Loader row、slot 所有权或原生材质。
-- Linux 不支持扩展窗口与增强模式。Linux 继续使用兼容呈现。
-- macOS 与 Windows 托盘终端会提供私有 `dsh`、`pnpm` 与 `node` shim。除此之外，Host runtime 会在当前 Electron 进程的 `PATH` 中公开内置 `pnpm` 命令作为 ambient compatibility，并提供受管 `desktopPnpm` service；这些命令都不会加入系统 `PATH`，Linux 目前也没有 desktop 终端命令。
+- 修改原生材质偏好按设计都会重启应用；存活的 generation 不会热切换 Loader row、slot 所有权或原生材质。
+- Host runtime 会在当前 Electron 进程的 `PATH` 中公开内置 `pnpm` 命令作为 ambient compatibility，并提供受管 `desktopPnpm` service；这些命令都不会加入系统 `PATH`。
 - 在 Windows 上，ambient `pnpm` 命令与 lifecycle Node helper 是 `.cmd` shim。`desktopPnpm.run()` 会启动准确的已打包 pnpm entry，从而避免 manager process 的 shell lookup；上游 `dsh plugin`、PowerShell 与命令提示符则可通过 command interpreter 解析 ambient shim。第三方插件直接调用 Node `spawn('pnpm', { shell: false })`，或 lifecycle script 直接以 `shell: false` 执行其 `.cmd` `npm_node_execpath`，仍属于不可移植行为，应改用该 service 或 shell-aware 启动路径。
-- `dshmarket@1.2.3` 仍是用户可选安装的第三方 package，而不是内置 marketplace。只有重新审计的版本同时消费可选 Desktop service、保留普通 DSH fallback，并包含再分发所需的完整 license notice 后，才会重新评估预装。
-- 更新交接只验证下载容器，不验证 publisher 身份。macOS 仍要求用户从已打开的 DMG 替换应用；Windows 会运行已下载的 NSIS 安装器，但本地 `dist:win` 产物没有签名。签名产物、Authenticode/publisher 校验、SmartScreen 信誉与原生升级测试仍是发布 gate。
-- 共享 carrier 使用 HTTP 与 WebSocket，而不是 Electron IPC；默认只绑定 loopback，并支持经过明确确认的全接口局域网监听。替换 carrier 需要上游 DSH 提供 transport 扩展点，不属于该独立包的范围。
-- Beta 使用固定官方 release 源码构建的 DSH `0.1.5-rc.2` 运行时分发包；桌面构建解析这些包接口，不直接链接源码 checkout。历史会话由上游迁移到 V3，自动转换旧 PTC 事件和 `code` 预设引用并保留原日志，桌面端不再生成预设别名。旧运行时无法读取 V3 会话。扩展和增强模式接入右侧 Sidebar 的文档预览、分栏和全屏，并通过 keyed `main` 槽位支持独立于会话选择的全局插件面板。
+- 安装包未签名；签名产物、Authenticode/publisher 校验、SmartScreen 信誉与原生升级测试仍是发布 gate。
+- 共享 carrier 使用 HTTP 与 WebSocket，而不是 Electron IPC；只绑定 loopback。替换 carrier 需要上游 DSH 提供 transport 扩展点，不属于该独立包的范围。
+- Beta 使用固定官方 release 源码构建的 DSH `0.1.5-rc.2` 运行时分发包；桌面构建解析这些包接口，不直接链接源码 checkout。历史会话由上游迁移到 V3，自动转换旧 PTC 事件和 `code` 预设引用并保留原日志，桌面端不再生成预设别名。旧运行时无法读取 V3 会话。右侧 Sidebar 接入文档预览、分栏和全屏，并通过 keyed `main` 槽位支持独立于会话选择的全局插件面板。
 - `package:dir` 是用于 smoke 的未封装产物。`dist:win` 会额外生成未签名的 NSIS 测试安装包，但不会建立 Authenticode 身份或 SmartScreen 信誉。安装与升级行为、原生通知与终端、Windows ACL sandbox，以及每台目标机器上的原生材质外观仍属于目标平台验证边界。

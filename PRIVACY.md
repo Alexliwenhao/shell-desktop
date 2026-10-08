@@ -40,7 +40,7 @@ Packaged macOS and Windows applications request the following endpoint about 60 
 GET https://www.dshdesktop.cn/api/desktop/version
 ```
 
-Another check occurs about six hours after each completed check. You can also select **Check for Updates** manually. Development runs, unpackaged launches, and Linux do not currently use this packaged automatic-update flow.
+Another check occurs about six hours after each completed check. Development runs, unpackaged launches, and Linux do not currently use this packaged automatic-update flow.
 
 ### 3.2 What the request contains
 
