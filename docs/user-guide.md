@@ -45,21 +45,7 @@ dsh plugin --profile desktop remove <plugin>
 dsh plugin --profile desktop update
 ```
 
-在 AI Shell Desktop 托盘打开的终端中，裸 `dsh` 和不带 `--profile` 的 plugin 命令默认使用当前激活 profile：
-
-```sh
-dsh plugin add <plugin>
-dsh plugin remove <plugin>
-dsh plugin update
-```
-
-显式 `--profile <name>` 始终优先。插件变更后需要重启 AI Shell Desktop，才能让新的 bundle 进入 Loader 组合。
-
-## 打开终端
-
-可以从托盘的「打开 DSH 终端」打开带完整 DSH 环境的终端。macOS 会打开 Terminal，Windows 会优先使用 Windows Terminal，找不到时回退到 PowerShell 或命令提示符。
-
-欢迎信息会显示：应用版本、当前 profile、profile 目录和 DSH home。Desktop 会在自己的 user-data 目录生成 `dsh`、`pnpm` 和 `node` 私有 shim，只对这个终端进程设置 PATH，不会修改系统 PATH 或用户 shell 配置。
+显式 `--profile <name>` 始终优先；插件变更后需要重启 AI Shell Desktop，才能让新的 bundle 进入 Loader 组合。桌面版不提供插件管理界面，请通过官方 DSH CLI 执行上面的命令。
 
 ## 更新
 
@@ -69,8 +55,8 @@ dsh plugin update
 
 Desktop 的确认、警告与操作结果会打开独立、基于 shadcn 的桌面级模态窗口，而不是侵入官方页面的 overlay。启动失败时应用会打开恢复窗口，先展示进入原因，再提供 **插件管理**、**回滚**、**切换配置** 与 **诊断** 四个 Tab。
 
-- **应用能够进入托盘**：右键托盘图标，选择 **导出诊断信息…**。确认隐私提示后，Desktop 会生成 `diagnostics-*.zip` 并在文件管理器中显示它。
-- **应用持续闪退，无法进入托盘**：在 PowerShell 中直接运行安装后的程序并加上恢复参数。默认安装位置的命令如下；如果安装时修改过目录，请替换为实际的 EXE 路径。
+- **导出诊断信息**：在 PowerShell 中直接运行安装后的程序并加上 `--export-diagnostics`。默认安装位置的命令如下；如果安装时修改过目录，请替换为实际的 EXE 路径。
+- **应用持续闪退**：同样使用上面的命令；它不会启动 Host、profile、插件或窗口，可在闪退后直接运行。
 
   ```powershell
   & "$env:LOCALAPPDATA\Programs\AI Shell Desktop\AI Shell Desktop.exe" --export-diagnostics
@@ -80,7 +66,6 @@ Desktop 的确认、警告与操作结果会打开独立、基于 shadcn 的桌�
 - **诊断包内容**：包含最近的应用日志、本地 Crashpad `.dmp`、当前运行标记和 `system-info.txt`。系统信息会记录 Desktop、Electron、Node、平台和架构版本。日志会对可识别的认证凭据脱敏，但本地路径、工作区 ID、会话 ID 和崩溃时的内存片段仍可能存在。公开上传前必须检查；不适合公开的 dump 应通过可信渠道提供。
 - **窗口消失了**：先检查系统托盘，关闭窗口不是退出。
 - **插件没有出现**：确认命令作用于目标 profile，并重启应用。
-- **终端命令找不到**：从托盘重新打开 DSH 终端；系统 shell 的全局 PATH 不会被 Desktop 修改。
 - **没有更新提示**：应用不主动弹出更新；请查看 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest)。
 
 更底层的生命周期、打包和平台限制属于开发者文档，见[文档索引](README.md)。

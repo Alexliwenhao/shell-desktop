@@ -34,7 +34,7 @@ The Desktop Host, profiles, and DSH home live on the local machine. Whether cont
 
 ## Can I install DSH plugins?
 
-Yes. AI Shell Desktop uses the official Harness plugin system. Open DSH Terminal from the tray and run `dsh plugin add`, `dsh plugin remove`, or `dsh plugin update`. These commands default to the active profile, and Desktop must be restarted after plugin changes.
+Yes. AI Shell Desktop uses the official Harness plugin system. Manage plugins through the official DSH CLI (`dsh plugin --profile desktop add|remove|update`); Desktop must be restarted after plugin changes.
 
 ## Does the Desktop profile automatically sync with an existing web profile?
 

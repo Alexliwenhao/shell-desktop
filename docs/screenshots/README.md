@@ -103,7 +103,7 @@ $env:SHELL_DESKTOP_ONLY='11,12,13,14'; node scripts/capture-feature-screenshots.
 ## 需要补拍的镜头
 
 - **尚未覆盖的新能力**：主机编辑表单、文件上传、会话检索（采集脚本步骤 25 起待补）
-- CDP 抓不到的原生界面：系统托盘菜单（Profile 切换、导出诊断）
+- CDP 抓不到的原生界面：系统托盘菜单（打开窗口 / Profile 切换 / 退出）
 - 安装包与桌面/开始菜单快捷方式、应用图标（Windows NSIS、macOS DMG）
 - 启动恢复窗口（需要构造启动故障）
 - 多主机同时连接的会话分组演示（当前环境仅存两台主机）

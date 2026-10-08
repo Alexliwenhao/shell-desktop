@@ -1746,28 +1746,27 @@ describe('Electron desktop runtime', () => {
   })
 
 
-  it('rebuilds ordered effect-scoped tray contributions without replacing native commands', async () => {
+  it('keeps the tray to the window entry, profile switching, and quit', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
     const runtime = new ElectronDesktopRuntime(async () => {})
-    const later = runtime.registerTrayItem({
-      group: 'tools',
-      order: 20,
-      label: () => 'Later Tool',
-      invoke: vi.fn(),
-    })
-    let statusLabel = 'Check for Updates…'
-    const status = runtime.registerTrayItem({
-      group: 'status',
-      order: 10,
-      label: () => statusLabel,
-      enabled: () => false,
-      invoke: vi.fn(),
-    })
-    const earlier = runtime.registerTrayItem({
+    const tool = runtime.registerTrayItem({
       group: 'tools',
       order: 10,
       label: () => 'Earlier Tool',
+      invoke: vi.fn(),
+    })
+    const status = runtime.registerTrayItem({
+      group: 'status',
+      order: 10,
+      label: () => 'Check for Updates…',
+      enabled: () => false,
+      invoke: vi.fn(),
+    })
+    const profile = runtime.registerTrayItem({
+      group: 'profiles',
+      order: 10,
+      label: () => 'Profile: desktop',
       invoke: vi.fn(),
     })
     const release = runtime.schedule(spec)
@@ -1777,25 +1776,17 @@ describe('Electron desktop runtime', () => {
     const labels = (electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label)
     expect(labels).toEqual([
       'Open AI Shell Desktop', undefined,
-      'Earlier Tool', 'Later Tool', undefined,
-      'Check for Updates…', undefined,
+      'Profile: desktop', undefined,
       'Quit',
     ])
-    expect(electron.menuTemplates.at(-1)).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Check for Updates…', enabled: false }),
-    ]))
 
-    statusLabel = 'Version 2.1.0 Available'
-    status.refresh()
-    expect(electron.menuTemplates.at(-1)).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Version 2.1.0 Available', enabled: false }),
-    ]))
-
-    earlier.dispose()
-    later.dispose()
+    tool.dispose()
     status.dispose()
+    profile.dispose()
     expect(electron.menuTemplates.at(-1)).not.toEqual(expect.arrayContaining([
       expect.objectContaining({ label: 'Earlier Tool' }),
+      expect.objectContaining({ label: 'Check for Updates…' }),
+      expect.objectContaining({ label: 'Profile: desktop' }),
     ]))
 
     await release()
@@ -2157,12 +2148,8 @@ describe('Electron desktop runtime', () => {
     expect(restart).toHaveBeenCalledWith('recovery')
   })
 
-  it.each([
-    { platform: 'win32', surface: 'tray' },
-    { platform: 'darwin', surface: 'tray' },
-    { platform: 'darwin', surface: 'application' },
-  ] as const)('enters Safe Mode from the localized $platform $surface menu', async ({ platform, surface }) => {
-    vi.spyOn(process, 'platform', 'get').mockReturnValue(platform)
+  it('enters Safe Mode from the localized macOS application menu', async () => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
     const restart = vi.fn(async () => {})
     const runtime = new ElectronDesktopRuntime(restart)
@@ -2176,15 +2163,19 @@ describe('Electron desktop runtime', () => {
     await runtime.mountScheduled()
 
     type MenuCommand = { label?: string, enabled?: boolean, click?: () => void }
-    const menuItems = (): MenuCommand[] => surface === 'application'
-      ? (electron.applicationMenuTemplates.at(-1)?.[0] as { submenu: MenuCommand[] }).submenu
-      : electron.menuTemplates.at(-1) as MenuCommand[]
-    expect(menuItems()).toEqual(expect.arrayContaining([
+    const applicationMenuItems = (): MenuCommand[] =>
+      (electron.applicationMenuTemplates.at(-1)?.[0] as { submenu: MenuCommand[] }).submenu
+    expect(applicationMenuItems()).toEqual(expect.arrayContaining([
       expect.objectContaining({ label: 'Enter Safe Mode…', enabled: true }),
+    ]))
+    // The tray right-click menu stays minimal: contributed tool/status items
+    // never render there.
+    expect(electron.menuTemplates.at(-1)).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: 'Enter Safe Mode…' }),
     ]))
 
     runtime.setLocalePreference('zh')
-    const command = menuItems().find(item => item.label === '进入安全模式…')
+    const command = applicationMenuItems().find(item => item.label === '进入安全模式…')
     expect(command?.click).toEqual(expect.any(Function))
     command?.click?.()
 
@@ -2195,13 +2186,13 @@ describe('Electron desktop runtime', () => {
     })
 
     registration.dispose()
-    expect(menuItems()).not.toEqual(expect.arrayContaining([
+    expect(applicationMenuItems()).not.toEqual(expect.arrayContaining([
       expect.objectContaining({ label: '进入安全模式…' }),
     ]))
     await release()
   })
 
-  it.each(['tray', 'application'] as const)('exits Safe Mode from the localized macOS %s menu', async surface => {
+  it('exits Safe Mode from the localized macOS application menu', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
     const runtime = new ElectronDesktopRuntime(async () => {})
@@ -2216,25 +2207,26 @@ describe('Electron desktop runtime', () => {
     await runtime.mountScheduled()
 
     type MenuCommand = { label?: string, enabled?: boolean, click?: () => void }
-    const menuItems = (): MenuCommand[] => surface === 'application'
-      ? (electron.applicationMenuTemplates.at(-1)?.[0] as { submenu: MenuCommand[] }).submenu
-      : electron.menuTemplates.at(-1) as MenuCommand[]
-    expect(menuItems()).toEqual(expect.arrayContaining([
+    const applicationMenuItems = (): MenuCommand[] =>
+      (electron.applicationMenuTemplates.at(-1)?.[0] as { submenu: MenuCommand[] }).submenu
+    expect(applicationMenuItems()).toEqual(expect.arrayContaining([
       expect.objectContaining({ label: 'Exit Safe Mode and Restart…', enabled: true }),
     ]))
-    expect(menuItems().some(item => item.label === 'Enter Safe Mode…')).toBe(false)
+    expect(applicationMenuItems().some(item => item.label === 'Enter Safe Mode…')).toBe(false)
+    expect(electron.menuTemplates.at(-1)).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: 'Exit Safe Mode and Restart…' }),
+    ]))
 
     runtime.setLocalePreference('zh')
-    const command = menuItems().find(item => item.label === '退出安全模式并重启…')
+    const command = applicationMenuItems().find(item => item.label === '退出安全模式并重启…')
     expect(command?.click).toEqual(expect.any(Function))
     command?.click?.()
     await vi.waitFor(() => { expect(exitSafeMode).toHaveBeenCalledOnce() })
 
     registration.dispose()
-    expect(menuItems().some(item => item.label === '退出安全模式并重启…')).toBe(false)
+    expect(applicationMenuItems().some(item => item.label === '退出安全模式并重启…')).toBe(false)
     await release()
   })
-
   it('cancels, coalesces, and suppresses Safe Mode restart requests while quitting', async () => {
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
     const restart = vi.fn(async () => {})

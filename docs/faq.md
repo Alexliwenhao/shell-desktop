@@ -34,7 +34,7 @@ Desktop Host、profile 和 DSH home 位于本机。是否向外部服务发送�
 
 ## 可以安装 DSH 插件吗？
 
-可以。AI Shell Desktop 使用官方 Harness 插件体系。可以从托盘打开 DSH Terminal，然后运行 `dsh plugin add`、`dsh plugin remove` 和 `dsh plugin update`；命令默认作用于当前激活的 profile，插件变更后需要重启 Desktop。
+可以。AI Shell Desktop 使用官方 Harness 插件体系。使用官方 DSH CLI 运行 `dsh plugin --profile desktop add|remove|update`；插件变更后需要重启 Desktop。
 
 ## Desktop profile 和已有 web profile 会自动同步吗？
 
