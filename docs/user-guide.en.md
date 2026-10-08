@@ -8,7 +8,7 @@ On first launch, the application prepares the default profile and starts the DSH
 
 ## Profiles
 
-A profile is a composition of DSH bundles, dependencies, and patches. The tray **Profile** menu lists existing profiles and can create new ones.
+A profile is a composition of DSH bundles, dependencies, and patches. The desktop build uses the fixed `desktop` profile; manage other profiles through the official DSH CLI.
 
 Selecting a profile performs an orderly restart. The new profile becomes the last-known-good choice only after the Host and the window both start successfully; a failed startup returns to the previous working choice. Official profiles normally use the same DSH home, so sessions, settings, and storage do not need to be migrated. A custom configuration (patch) can deliberately redirect a persistence root, in which case that profile's configuration wins.
 
@@ -49,7 +49,7 @@ An explicit `--profile <name>` always wins. Restart AI Shell Desktop after plugi
 
 ## Updates
 
-Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place. The tray's update check belongs to the previous distribution service (this project does not operate that endpoint); upgrade from GitHub Releases.
+Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place.
 
 ## Troubleshooting
 

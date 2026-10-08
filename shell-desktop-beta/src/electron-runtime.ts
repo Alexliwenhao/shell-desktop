@@ -872,19 +872,16 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
 
   private buildTrayTemplate(spec: DesktopShellSpec): Electron.MenuItemConstructorOptions[] {
     const show = (): void => { this.show() }
-    // The tray stays minimal: the window entry, profile switching, and quit.
-    // 'tools' and 'status' contributions (the DSH terminal, diagnostics export,
-    // safe mode, and update checks) are intentionally not surfaced here.
-    const profiles = this.contributedTrayItems('profiles')
-    const template: Electron.MenuItemConstructorOptions[] = [
+    // The tray stays minimal: open the window and quit. Contributed tool,
+    // profile, and status items (the DSH terminal, diagnostics export, safe
+    // mode, profile switching, and update checks) are intentionally not
+    // surfaced in the tray; profiles remain available from the macOS
+    // application menu.
+    return [
       { label: desktopTrayLabel(this.locale, 'openDesktop', spec.productName), click: show },
-    ]
-    if (profiles.length > 0) template.push({ type: 'separator' }, ...profiles)
-    template.push(
       { type: 'separator' },
       { label: desktopTrayLabel(this.locale, 'quit'), click: () => { spec.requestQuit(0) } },
-    )
-    return template
+    ]
   }
 
   private rebuildTrayMenu(): void {

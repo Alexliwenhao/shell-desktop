@@ -8,7 +8,7 @@
 
 ## Profile
 
-Profile 是一组 DSH bundle、依赖和 patch 的组合。托盘中的 **Profile** 菜单会列出现有 profile，并可按需创建新的 profile。
+Profile 是一组 DSH bundle、依赖和 patch 的组合。桌面版固定使用 `desktop` profile；如需管理其他 profile，请通过官方 DSH CLI 操作。
 
 选择 profile 后应用会有序重启。新 profile 在 Host 和窗口都成功启动后才会被记录为最近一次可用 profile；启动失败会回到上一次可用选择。官方 profile 默认使用同一个 DSH home，所以 sessions、settings 和 storage 通常不需要迁移。自定义配置（patch）如果主动改写持久化路径，则以该 profile 自己的设置为准。
 
@@ -49,7 +49,7 @@ dsh plugin --profile desktop update
 
 ## 更新
 
-发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可。托盘中的更新检查来自旧版发行服务（本项目不运营该端点），升级请以 GitHub Releases 为准。
+发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可。
 
 ## 排查
 

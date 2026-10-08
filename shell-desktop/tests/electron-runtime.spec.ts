@@ -1746,24 +1746,24 @@ describe('Electron desktop runtime', () => {
   })
 
 
-  it('keeps the tray to the window entry, profile switching, and quit', async () => {
+  it('keeps the tray to the window entry and quit', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
     const runtime = new ElectronDesktopRuntime(async () => {})
-    const tool = runtime.registerTrayItem({
+    runtime.registerTrayItem({
       group: 'tools',
       order: 10,
       label: () => 'Earlier Tool',
       invoke: vi.fn(),
     })
-    const status = runtime.registerTrayItem({
+    runtime.registerTrayItem({
       group: 'status',
       order: 10,
       label: () => 'Check for Updates…',
       enabled: () => false,
       invoke: vi.fn(),
     })
-    const profile = runtime.registerTrayItem({
+    runtime.registerTrayItem({
       group: 'profiles',
       order: 10,
       label: () => 'Profile: desktop',
@@ -1773,26 +1773,15 @@ describe('Electron desktop runtime', () => {
 
     await runtime.mountScheduled()
 
-    const labels = (electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label)
-    expect(labels).toEqual([
-      'Open AI Shell Desktop', undefined,
-      'Profile: desktop', undefined,
-      'Quit',
+    expect(electron.menuTemplates.at(-1)).toEqual([
+      expect.objectContaining({ label: 'Open AI Shell Desktop' }),
+      expect.objectContaining({ type: 'separator' }),
+      expect.objectContaining({ label: 'Quit' }),
     ])
-
-    tool.dispose()
-    status.dispose()
-    profile.dispose()
-    expect(electron.menuTemplates.at(-1)).not.toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Earlier Tool' }),
-      expect.objectContaining({ label: 'Check for Updates…' }),
-      expect.objectContaining({ label: 'Profile: desktop' }),
-    ]))
 
     await release()
   })
-
-  it('renders contributed radio submenus in their own profile section', async () => {
+  it('renders contributed radio submenus in the macOS application menu profile section', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
     const invoke = vi.fn()
@@ -1814,27 +1803,22 @@ describe('Electron desktop runtime', () => {
 
     await runtime.mountScheduled()
 
-    const profile = (electron.menuTemplates.at(-1) as Array<{
+    // The tray stays minimal; the application menu keeps the profile section.
+    expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).some(item => item.label === 'Profile: desktop')).toBe(false)
+
+    const application = (electron.applicationMenuTemplates.at(-1) as Array<{
       label?: string
-      submenu?: Array<{ label?: string, type?: string, checked?: boolean, click?: () => void }>
-    }>).find(item => item.label === 'Profile: desktop')
+      submenu?: Array<{ label?: string, submenu?: Array<{ label?: string, type?: string, checked?: boolean, click?: () => void }> }>
+    }>).find(item => item.label === 'AI Shell Desktop')
+    const profile = application?.submenu?.find(item => item.label === 'Profile: desktop')
     expect(profile?.submenu).toEqual([
       expect.objectContaining({ label: 'web', type: 'radio', checked: false }),
     ])
     profile?.submenu?.[0]?.click?.()
     await vi.waitFor(() => { expect(invoke).toHaveBeenCalledOnce() })
 
-    const application = (electron.applicationMenuTemplates.at(-1) as Array<{
-      label?: string
-      submenu?: Array<{ label?: string, submenu?: unknown }>
-    }>).find(item => item.label === 'AI Shell Desktop')
-    expect(application?.submenu).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Profile: desktop' }),
-    ]))
-
     await release()
   })
-
   it('opens the active profile through the packaged terminal adapter', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     Object.defineProperty(process.versions, 'electron', {

@@ -42,7 +42,7 @@ Desktop Host、profile 和 DSH home 位于本机。是否向外部服务发送�
 
 ## 应用如何更新？
 
-发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可，升级不会静默进行。托盘中的更新检查来自旧版发行服务（本项目不运营该端点），升级请以 GitHub Releases 为准。
+发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可，升级不会静默进行。
 
 ## 在哪里下载和报告问题？
 

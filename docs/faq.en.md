@@ -42,7 +42,7 @@ No plugins are copied automatically. Each profile has its own bundle and depende
 
 ## How are updates installed?
 
-Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place; upgrades never install silently. The tray's update check belongs to the previous distribution service (this project does not operate that endpoint); upgrade from GitHub Releases.
+Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place; upgrades never install silently.
 
 ## Where can I download the app or report a problem?
 

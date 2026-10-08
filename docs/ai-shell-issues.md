@@ -49,6 +49,7 @@
 | 40 | 文件模块缺少「上传本地文件到远端」 | 已修复 | 文件面板新增上传按钮（`<input type=file>`）；新路由 `sftp-upload` 流式写 SFTP（`body: File`，不传本地路径、不整包进内存）；回环守卫 + AI web 工具禁非公网地址，模型不可达 |
 | 41 | 会话面板缺少检索（模糊查标题或内容） | 已修复 | `SessionHistory` 新增检索框：本地标题/主机名子串匹配（新→旧）+ 宿主 `session.search` 内容检索（带摘要）合并去重；250ms 防抖 + 取消；归档/空白/子代理不参与；新增 `session-search.ts` 纯函数与用例 |
 | 42 | 会话检索报「检索失败，请重试」 | 已修复 | 根因：`dsh-base` 把 `session-query-sqlite` 挂成 `openAt: never`（内容检索 opt-in），桌面组合未覆盖 → 宿主 `sessionQuery` 搜索被禁用；修复：`profile.ts` 覆盖为 `openAt: first-search` + 持久索引 `~/.dsh/session-query/index.sqlite`；UI 展示真实失败原因；补组合断言 |
+| 43 | 托盘右键菜单项过多（DSH 终端 / 导出诊断 / 安全模式 / 检查更新仍存在），只保留打开与退出 | 已修复 | `electron-runtime.ts` `buildTrayTemplate` 固定为「打开窗口 + 分隔线 + 退出」，不再渲染 tools/status/profiles 贡献项；Profile 区域保留在 macOS 应用菜单；相关文档同步 |
 
 ## 细节
 
@@ -266,6 +267,11 @@
 - 修复：`profile.ts` 在组合后为 `session-query-sqlite` 行补丁 `openAt: 'first-search'` + `path: <home>/session-query/index.sqlite`（首次检索才打开 SQLite；索引持久化、WAL）；同时在 UI 上展示宿主返回的真实失败原因（`search.message ?? 通用文案`），不再是单一笼统提示。
 - 验证：新增 `profile.spec.ts` 断言（组合后该行 `name` / `openAt: 'first-search'` / 持久 `path`）；`client-session-history.spec.ts` 断言失败原因展示；CDP 实测运行中的应用：输入 `a` → 3 条带内容摘要的结果（本机/测试环境），输入 `的` → 1 条，无匹配显示「没有匹配的会话」，清空后恢复会话树；索引按 `first-search` 懒创建（`index.sqlite` + `-shm` + `-wal`）。
 - 证据：两版 typecheck 0；12 个 spec 129 例 × 2 版通过；`check:desktop-variants` 200 对齐。
+### 43 托盘菜单收敛（只保留打开与退出）
+- 现象（用户）：右键托盘仍能看到 DSH 终端、导出诊断、进入安全模式、检查更新等项；要求只保留「打开」与「退出」。
+- 实现：`buildTrayTemplate` 不再渲染 `tools`/`status`/`profiles` 贡献项，菜单固定为「打开窗口 + 分隔线 + 退出」；`buildApplicationMenuItems`（macOS 应用菜单）不变，Profile 区域仍保留。底层插件（terminal / diagnostics / 安全模式 / updates）暂留，随 D3 / B1b 一并清理。
+- 说明：若旧实例仍在运行，Windows 单实例锁会让新包只聚焦旧窗口（托盘仍是旧菜单）——先「退出」旧实例，再启动新包；GitHub Release 里的旧附件同样带旧托盘。
+- 证据：两版 `electron-runtime.spec.ts` 更新（托盘精确断言为「打开 / 分隔 / 退出」；Profile 子菜单断言移到应用菜单），各 85 通过 + 1 个已知 Windows 基线失败；README、用户指南、FAQ、截图清单与包级 README 同步移除托盘 Profile / 更新检查表述。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。

@@ -69,7 +69,7 @@ All 24 screenshots, per-shot narration, and a storyboard live in [`docs/screensh
 - **Session management**: sessions grouped by host, with **full-text search over titles and content**, and two-step inline delete
 - **Plan mode**: type `/plan`; commands arrive as cards and run only when a human clicks
 - **Appearance**: light / dark / system, with a terminal that stays readable in dark mode
-- **Desktop surfaces**: system tray (open, profile switch, quit) and startup recovery
+- **Desktop surfaces**: system tray (open, quit) and startup recovery
 - **Packaging**: Windows NSIS installer and portable zip; the macOS packaging flow is included
 
 ## Download

@@ -12,7 +12,7 @@ AI Shell 复用现有 Web carrier。profile 挂载普通 `dsh-base` 与 `dsh-web
 
 desktop package 拥有普通 Host 与 Web Client 两个 face。它的 Client face 会校验平台和经过能力门槛解析的材质 marker，并安装 Desktop 自有的 AI Shell 布局（活动栏、导航列、终端工作台、AI 对话列），官方 sidebar 与 conversation 作为官方 occupant 继续由同一组合承载。第三方 Web client 继续使用普通 DSH 模块图。
 
-托盘中的 profile 选择器会列出现有 profile，以及可延迟创建的 `desktop` 与 `web` 默认项。可选 profile 必须直接按顺序组合 `dsh-base` 与 `dsh-web-app`；headless、损坏或已经内嵌 desktop bundle 的 profile 仍会显示，但不可选择。只有 `desktop` 是 Launcher 管理的 profile：它会修复安装方拥有的前缀，同时保留第三方 bundle 的相对顺序。其他被选 profile 的 manifest、用户 patch 与依赖均保持不变。Launcher 只会为当前 generation 在 `dsh-web-app` 后插入自有 desktop layer，不会把该 layer 持久化到被选 bundle 列表。
+profile 是 Host 层的概念：托盘不再列出它们，macOS 应用菜单保留 profile 区域。可选 profile 必须直接按顺序组合 `dsh-base` 与 `dsh-web-app`；headless、损坏或已经内嵌 desktop bundle 的 profile 不可选择。只有 `desktop` 是 Launcher 管理的 profile：它会修复安装方拥有的前缀，同时保留第三方 bundle 的相对顺序。其他被选 profile 的 manifest、用户 patch 与依赖均保持不变。Launcher 只会为当前 generation 在 `dsh-web-app` 后插入自有 desktop layer，不会把该 layer 持久化到被选 bundle 列表。
 
 Profile 选择保存在 Electron user data 下的 desktop 自有状态中，而不是被选 profile 内的另一个字段。被接受的切换会直接持久化精确的激活 profile，并通过有序重启生效。启动失败时不会替换成 last-known-good profile，也不会自动改写配置。每次健康启动都会写入三个轮转 checkpoint 之一，其中同时包含激活 Profile 的声明式 package 与 patch 文件，以及共享 DSH home 中的 `settings.yaml` 和 `cordis.patch.yml`；恢复时始终打开恢复页面，由用户选择精确槽位。执行恢复后的下一次健康启动会跳过一次 checkpoint 替换。版本 2 的旧槽位仍可恢复，但只影响原有五个 Profile 文件。凭据、`.env`、sessions、storage、缓存和生成的依赖状态绝不会写入 checkpoint。官方 profile 默认共用同一个 DSH home 中的 sessions、settings 与 storage，因此除非用户明确恢复 checkpoint，切换 Profile 不会复制或迁移这些记录；自定义 profile patch 仍可主动重定向其中某个持久化根。
 
