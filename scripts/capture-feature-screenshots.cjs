@@ -374,7 +374,7 @@ const step = async (label, run) => {
     await shot(page, '22-theme-light-overview.png')
   })
 
-  await step('23 会话删除的行内二次确认', async () => {
+  await step('23 会话删除的弹窗确认', async () => {
     await goRail('会话')
     await settle(1000)
     for (const header of await page.locator('.dshAishellSessionGroupHeader[aria-expanded="false"]').all()) {
@@ -384,20 +384,24 @@ const step = async (label, run) => {
     const remove = page.locator('.dshAishellHostDeleteButton').first()
     if (await remove.count() === 0) throw new Error('no session row with a delete button')
     await remove.click()
-    await settle(900)
+    await page.locator('[data-aishell-confirm]').waitFor({ timeout: 5000 })
+    await settle(600)
     await shot(page, '23-session-delete-confirm.png')
     await page.keyboard.press('Escape')
     await settle(500)
   })
 
-  await step('24 主机删除的行内二次确认', async () => {
+  await step('24 主机删除的弹窗确认', async () => {
     await goRail('主机')
     await settle(1200)
     const remove = page.locator('.dshAishellHostDeleteButton').first()
     if (await remove.count() === 0) throw new Error('no host with a delete button')
     await remove.click()
-    await settle(900)
+    await page.locator('[data-aishell-confirm]').waitFor({ timeout: 5000 })
+    await settle(600)
     await shot(page, '24-host-delete-confirm.png')
+    await page.keyboard.press('Escape')
+    await settle(600)
     await page.locator('.dshAishellHostOpen').first().click()
     await settle(500)
   })

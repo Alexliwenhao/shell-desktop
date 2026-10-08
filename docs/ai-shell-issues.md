@@ -50,6 +50,8 @@
 | 41 | 会话面板缺少检索（模糊查标题或内容） | 已修复 | `SessionHistory` 新增检索框：本地标题/主机名子串匹配（新→旧）+ 宿主 `session.search` 内容检索（带摘要）合并去重；250ms 防抖 + 取消；归档/空白/子代理不参与；新增 `session-search.ts` 纯函数与用例 |
 | 42 | 会话检索报「检索失败，请重试」 | 已修复 | 根因：`dsh-base` 把 `session-query-sqlite` 挂成 `openAt: never`（内容检索 opt-in），桌面组合未覆盖 → 宿主 `sessionQuery` 搜索被禁用；修复：`profile.ts` 覆盖为 `openAt: first-search` + 持久索引 `~/.dsh/session-query/index.sqlite`；UI 展示真实失败原因；补组合断言 |
 | 43 | 托盘右键菜单项过多（DSH 终端 / 导出诊断 / 安全模式 / 检查更新仍存在），只保留打开与退出 | 已修复 | `electron-runtime.ts` `buildTrayTemplate` 固定为「打开窗口 + 分隔线 + 退出」，不再渲染 tools/status/profiles 贡献项；Profile 区域保留在 macOS 应用菜单；相关文档同步 |
+| 44 | 危险操作的确认方式不统一（主机删除是行内红勾，误触风险） | 已修复 | 新增客户端 `ConfirmDialog`（居中卡片、危险色确认、Esc/遮罩取消、确认自动聚焦、busy 禁用）；主机删除改为弹窗确认（`HostPanel` 移除 `confirmingId`/`data-confirm`） |
+| 45 | 会话面板不能批量删除 | 已修复 | 会话面板新增「批量选择」模式：逐行勾选（终端行不可选）、全选/取消、底部「删除所选 (n)」；确认弹窗后调用新增的 `deleteSessions(ids)`（逐个归档，当前会话只重建一次）；行内单条删除也统一走弹窗 |
 
 ## 细节
 
@@ -272,6 +274,14 @@
 - 实现：`buildTrayTemplate` 不再渲染 `tools`/`status`/`profiles` 贡献项，菜单固定为「打开窗口 + 分隔线 + 退出」；`buildApplicationMenuItems`（macOS 应用菜单）不变，Profile 区域仍保留。底层插件（terminal / diagnostics / 安全模式 / updates）暂留，随 D3 / B1b 一并清理。
 - 说明：若旧实例仍在运行，Windows 单实例锁会让新包只聚焦旧窗口（托盘仍是旧菜单）——先「退出」旧实例，再启动新包；GitHub Release 里的旧附件同样带旧托盘。
 - 证据：两版 `electron-runtime.spec.ts` 更新（托盘精确断言为「打开 / 分隔 / 退出」；Profile 子菜单断言移到应用菜单），各 85 通过 + 1 个已知 Windows 基线失败；README、用户指南、FAQ、截图清单与包级 README 同步移除托盘 Profile / 更新检查表述。
+
+### 44 / 45 删除交互统一为弹窗（含批量）
+- 需求（用户）：① 主机删除改为弹窗二次确认；② 会话删除支持批量勾选；③ 行内单条删除也统一用弹窗，避免两套确认逻辑。
+- 实现：新增纯客户端 `src/client/ConfirmDialog.tsx`（遮罩 + 居中卡片，复用现有设计 token；标题/说明/取消/危险色确认；Esc、点遮罩、「取消」均可关闭；打开时聚焦确认按钮，busy 时两个按钮都禁用）。`HostPanel` 删除按钮直接开弹窗（移除 `confirmingId`/`data-confirm` 行内两步）。`SessionHistory` 新增批量模式：「批量选择」→ 每行会话左侧勾选框（终端行不可选）、操作区切换「全选 / 取消」、进入时清空并禁用检索框、底部「删除所选 (n)」（n=0 禁用）；单条与批量都经 `ConfirmDialog`。
+- 宿主：`aishell-shell.ts` 新增 `deleteSessions(ids)`——先清理这些会话的终端绑定，再逐个调用 `archiveSession`（`uiWorkspace` 优先，回退 `workspaces`）；被删的是当前会话时只重建一次（沿用「终端换新会话」的 `fresh + terminalId` 逻辑），不再逐条触发。`AishellFrame` 注入 `deleteSessions` 取代原 `deleteSession`。
+- 文案：`desktop-settings-locales.ts` zh/en 新增 `aishellSessionDeleteTitle/Body`、`aishellSessionsBatch*`、`aishellSessionsDeleteSelected*`、`aishellDialogDelete/Cancel`。
+- 样式：`aishell-styles.ts` 新增 `.dshAishellDialogBackdrop`/`.dshAishellDialog*`、`.dshAishellDangerAction`、`.dshAishellSelectBox`。
+- 证据：新增 `tests/client-confirm-dialog.spec.ts`（静态 3 例）与 `tests/client-session-batch.spec.ts`（jsdom 4 例：批量选择→确认→回调、单条弹窗、取消保留选择、全选计数）；`client-host-panel.spec.ts` +3 例（打开弹窗 / 取消 / 确认）；`client-session-history.spec.ts` 适配 `onDeleteSessions`；两版 typecheck 0；4 个相关 spec 21 例 ×2 版通过；全量 stable 20 / beta 19 与改动前基线一致（均为平台基线失败，重跑后超时类噪音消失）；`check:desktop-variants` 201 对齐；README 与截图清单改为「弹窗确认」，`capture-feature-screenshots.cjs` 的 23/24 步骤改为弹窗流程并重拍。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。

@@ -44,6 +44,8 @@ body[data-shell-desktop-mode="aishell"] { margin: 0; background: var(--dsw-alias
 .dshAishellPanelAction svg { width: 15px; height: 15px; }
 .dshAishellPanelAction:disabled { opacity: 0.5; cursor: default; }
 .dshAishellPrimaryAction { background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); border-color: transparent; justify-content: center; }
+.dshAishellDangerAction { border-color: transparent; background: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-label-primary-foreground); }
+.dshAishellDangerAction:hover:not(:disabled) { filter: brightness(1.05); }
 .dshAishellField { box-sizing: border-box; width: 100%; height: 30px; padding: 0 8px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 12px; }
 .dshAishellFieldRow { display: flex; gap: 6px; }
 .dshAishellFieldPort { width: 72px; flex: none; }
@@ -65,6 +67,12 @@ body[data-shell-desktop-mode="aishell"] { margin: 0; background: var(--dsw-alias
 .dshAishellPanelAlert { margin: 6px 4px 0; font-size: 11.5px; line-height: 1.5; color: var(--dsw-alias-state-error-primary); }
 .dshAishellPanelHint { margin: 0; font-size: 12px; line-height: 1.6; color: var(--dsw-alias-label-tertiary); }
 .dshAishellPanelError { margin: 0; font-size: 12px; color: var(--dsw-alias-label-primary-bluish); }
+.dshAishellSelectBox { flex: none; width: 14px; height: 14px; margin: 0; accent-color: var(--dsw-alias-brand-primary); }
+.dshAishellDialogBackdrop { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.32); }
+.dshAishellDialog { display: flex; flex-direction: column; gap: 10px; min-width: 240px; max-width: 340px; padding: 14px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24); }
+.dshAishellDialogTitle { font-size: 13px; font-weight: 600; }
+.dshAishellDialogBody { margin: 0; font-size: 12px; line-height: 1.6; color: var(--dsw-alias-label-secondary); overflow-wrap: anywhere; }
+.dshAishellDialogActions { display: flex; justify-content: flex-end; gap: 8px; }
 .dshAishellSessionPane { position: relative; padding: 0; gap: 0; overflow: hidden; }
 .dshAishellSessionActions { padding: 8px 8px 6px; }
 .dshAishellSessionActions .dshAishellPanelAction { flex: 1; justify-content: center; }

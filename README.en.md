@@ -49,7 +49,7 @@ An open-source Windows / macOS desktop client for [DeepSeek Harness](https://git
 | Dark theme · settings | Dark theme · terminal |
 | --- | --- |
 | ![Dark settings](docs/screenshots/19-theme-dark-settings.png) | ![Dark terminal](docs/screenshots/21-theme-dark-terminal.png) |
-| Delete a session · inline confirm | Delete a host · inline confirm |
+| Delete a session · confirmation dialog | Delete a host · confirmation dialog |
 | ![Session delete confirm](docs/screenshots/23-session-delete-confirm.png) | ![Host delete confirm](docs/screenshots/24-host-delete-confirm.png) |
 
 All 24 screenshots, per-shot narration, and a storyboard live in [`docs/screenshots/README.md`](docs/screenshots/README.md).
@@ -64,9 +64,9 @@ All 24 screenshots, per-shot narration, and a storyboard live in [`docs/screensh
 ## Features
 
 - **AI-Shell layout**: activity rail, navigation column (sessions / hosts / files), central terminal workbench, and the AI conversation column in one window
-- **Remote hosts**: save, edit, and two-step-delete SSH hosts; an SFTP panel that browses, previews, creates directories, and **uploads local files**
+- **Remote hosts**: save, edit, and delete SSH hosts behind a confirmation dialog; an SFTP panel that browses, previews, creates directories, and **uploads local files**
 - **Terminal workbench**: parallel tabs; the same experience for local and remote shells; quote selections into the chat
-- **Session management**: sessions grouped by host, with **full-text search over titles and content**, and two-step inline delete
+- **Session management**: sessions grouped by host, with **full-text search over titles and content** and **batch selection**; every delete goes through a confirmation dialog
 - **Plan mode**: type `/plan`; commands arrive as cards and run only when a human clicks
 - **Appearance**: light / dark / system, with a terminal that stays readable in dark mode
 - **Desktop surfaces**: system tray (open, quit) and startup recovery

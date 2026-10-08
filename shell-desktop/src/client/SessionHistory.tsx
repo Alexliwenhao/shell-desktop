@@ -1,7 +1,8 @@
 /** Host-grouped session tree for the Desktop AI-Shell left panel. */
 
 import { useState } from 'react'
-import { Check, ChevronDown, ChevronRight, MessageSquare, Plus, Search, Server, TerminalSquare, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, ListChecks, MessageSquare, Plus, Search, Server, TerminalSquare, Trash2, X } from 'lucide-react'
+import { ConfirmDialog } from './ConfirmDialog.tsx'
 import type { DesktopSettingsLocaleKey } from './desktop-settings-locales.ts'
 import { formatSessionTimestamp, type SessionTreeGroup } from './session-groups.ts'
 import type { SessionSearchPage } from './session-search.ts'
@@ -28,8 +29,8 @@ export interface SessionHistoryProps {
   readonly onToggle: (key: string) => void
   readonly onNewSession: () => void
   readonly onOpenSession: (id: string) => void
-  /** Remove one conversation; rejects when the Host refuses the removal. */
-  readonly onDeleteSession: (id: string) => Promise<void>
+  /** Remove conversations (one row or a batch); rejects when the Host refuses. */
+  readonly onDeleteSessions: (ids: readonly string[]) => Promise<void>
   readonly onFocusTerminal: (id: string) => void
   readonly onCloseTerminal: (id: string) => void
   /** Live search over session titles and Host message content, when composed. */
@@ -42,31 +43,69 @@ export interface SessionHistoryProps {
 
 /**
  * Render the session tree: one collapsible section per host, each listing the
- * host's open terminals before its AI session history.
+ * host's open terminals before its AI session history. Removal always goes
+ * through a confirmation dialog; batch mode turns the rows into a checkbox
+ * list with its own select-all/delete bar.
  */
 export function SessionHistory(props: SessionHistoryProps) {
   const {
     groups, collapsed, currentSessionId, search, onSearch,
-    onToggle, onNewSession, onOpenSession, onDeleteSession, onFocusTerminal, onCloseTerminal, t,
+    onToggle, onNewSession, onOpenSession, onDeleteSessions, onFocusTerminal, onCloseTerminal, t,
   } = props
   /** Non-blank query: the panel shows ranked search results instead of the tree. */
   const searching = search !== undefined && search.query.trim() !== ''
-  /** Row armed for removal: the button turns into a check and confirms on the next click. */
-  const [confirmingId, setConfirmingId] = useState<string>()
-  /** Row whose removal is in flight, so its button can stay disabled. */
-  const [deletingId, setDeletingId] = useState<string>()
+  /** Multi-select mode: rows grow checkboxes and the footer deletes the batch. */
+  const [batching, setBatching] = useState(false)
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  /** Row whose removal awaits confirmation, if any. */
+  const [pendingDelete, setPendingDelete] = useState<{ readonly id: string; readonly title: string }>()
+  /** Whether the batch confirmation dialog is open. */
+  const [confirmingBatch, setConfirmingBatch] = useState(false)
+  /** Removal in flight, so every destructive control stays disabled. */
+  const [deleting, setDeleting] = useState(false)
   /** Removal failure surfaced in the panel instead of looking like a dead click. */
   const [deleteError, setDeleteError] = useState(false)
 
-  const remove = (id: string): void => {
-    if (deletingId !== undefined) return
-    setDeletingId(id)
+  const remove = (ids: readonly string[]): void => {
+    if (deleting || ids.length === 0) return
+    setDeleting(true)
     setDeleteError(false)
-    void onDeleteSession(id).then(
-      () => { setDeletingId(undefined) },
-      () => { setDeletingId(undefined); setDeleteError(true) },
+    void onDeleteSessions(ids).then(
+      () => {
+        setDeleting(false)
+        setBatching(false)
+        setSelected(new Set())
+      },
+      () => { setDeleting(false); setDeleteError(true) },
     )
   }
+
+  /** Enter batch mode on a clean sheet: the search view gives way to the tree. */
+  const startBatching = (): void => {
+    onSearch?.('')
+    setSelected(new Set())
+    setBatching(true)
+  }
+
+  const stopBatching = (): void => {
+    setBatching(false)
+    setSelected(new Set())
+  }
+
+  const toggleSelected = (id: string): void => {
+    setSelected(current => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAll = (): void => {
+    setSelected(new Set(groups.flatMap(group => group.sessions.map(session => session.id))))
+  }
+
+  const selectedCount = selected.size
   return (
     <div className="dshAishellPanelBody dshAishellSessionPane" data-aishell-session-pane="">
       <div className="dshAishellSearchBar">
@@ -78,6 +117,7 @@ export function SessionHistory(props: SessionHistoryProps) {
           placeholder={t('aishellSearchPlaceholder')}
           aria-label={t('aishellSearchLabel')}
           spellCheck={false}
+          disabled={batching}
           onChange={event => { onSearch?.(event.target.value) }}
           onKeyDown={event => { if (event.key === 'Escape') onSearch?.('') }}
         />
@@ -93,10 +133,34 @@ export function SessionHistory(props: SessionHistoryProps) {
         )}
       </div>
       <div className="dshAishellPanelActions dshAishellSessionActions">
-        <button type="button" className="dshAishellPanelAction dshAishellPrimaryAction" onClick={onNewSession}>
-          <Plus aria-hidden="true" />
-          <span>{t('aishellSessionsNew')}</span>
-        </button>
+        {batching ? (
+          <>
+            <button
+              type="button"
+              className="dshAishellPanelAction"
+              disabled={deleting || groups.every(group => group.sessions.length === 0)}
+              onClick={selectAll}
+            >
+              <ListChecks aria-hidden="true" />
+              <span>{t('aishellSessionsBatchSelectAll')}</span>
+            </button>
+            <button type="button" className="dshAishellPanelAction" disabled={deleting} onClick={stopBatching}>
+              <X aria-hidden="true" />
+              <span>{t('aishellSessionsBatchCancel')}</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="dshAishellPanelAction dshAishellPrimaryAction" onClick={onNewSession}>
+              <Plus aria-hidden="true" />
+              <span>{t('aishellSessionsNew')}</span>
+            </button>
+            <button type="button" className="dshAishellPanelAction" data-ghost="" onClick={startBatching}>
+              <ListChecks aria-hidden="true" />
+              <span>{t('aishellSessionsBatch')}</span>
+            </button>
+          </>
+        )}
       </div>
       <div className="dshAishellSessionTree" data-aishell-session-tree="">
         {searching && search !== undefined && (
@@ -160,16 +224,27 @@ export function SessionHistory(props: SessionHistoryProps) {
                       </button>
                     </div>
                   ))}
-                  {group.sessions.map(session => {
-                    const confirming = confirmingId === session.id
-                    return (
+                  {group.sessions.map(session => (
                     <div className="dshAishellHostRow" key={session.id} data-current={session.id === currentSessionId || undefined}>
+                      {batching && (
+                        <input
+                          type="checkbox"
+                          className="dshAishellSelectBox"
+                          checked={selected.has(session.id)}
+                          disabled={deleting}
+                          aria-label={`${t('aishellSessionsBatch')} ${session.title}`}
+                          onChange={() => { toggleSelected(session.id) }}
+                        />
+                      )}
                       <span className="dshAishellHostGlyph" aria-hidden="true"><MessageSquare /></span>
                       <button
                         type="button"
                         className="dshAishellHostOpen"
                         onClick={() => {
-                          setConfirmingId(undefined)
+                          if (batching) {
+                            toggleSelected(session.id)
+                            return
+                          }
                           onOpenSession(session.id)
                         }}
                       >
@@ -179,35 +254,61 @@ export function SessionHistory(props: SessionHistoryProps) {
                           {session.running ? ` · ${t('aishellSessionRunning')}` : session.completed ? ` · ${t('aishellSessionCompleted')}` : ''}
                         </small>
                       </button>
-                      <button
-                        type="button"
-                        className="dshAishellHostIconButton dshAishellHostDeleteButton"
-                        data-confirm={confirming || undefined}
-                        title={confirming ? t('aishellSessionDeleteConfirm') : t('aishellSessionDelete')}
-                        aria-label={confirming
-                          ? `${t('aishellSessionDeleteConfirm')} ${session.title}`
-                          : `${t('aishellSessionDelete')} ${session.title}`}
-                        disabled={deletingId === session.id}
-                        onClick={() => {
-                          if (!confirming) {
-                            setConfirmingId(session.id)
-                            return
-                          }
-                          setConfirmingId(undefined)
-                          remove(session.id)
-                        }}
-                      >
-                        {confirming ? <Check aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
-                      </button>
+                      {!batching && (
+                        <button
+                          type="button"
+                          className="dshAishellHostIconButton dshAishellHostDeleteButton"
+                          title={t('aishellSessionDelete')}
+                          aria-label={`${t('aishellSessionDelete')} ${session.title}`}
+                          disabled={deleting}
+                          onClick={() => { setPendingDelete({ id: session.id, title: session.title }) }}
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </button>
+                      )}
                     </div>
-                    )
-                  })}
+                  ))}
                 </div>
               )}
             </section>
           )
         })}
       </div>
+      {batching && (
+        <div className="dshAishellPanelFooter dshAishellBatchBar">
+          <button
+            type="button"
+            className="dshAishellPanelAction dshAishellDangerAction"
+            disabled={deleting || selectedCount === 0}
+            onClick={() => { setConfirmingBatch(true) }}
+          >
+            <Trash2 aria-hidden="true" />
+            <span>{t('aishellSessionsDeleteSelected')} ({selectedCount})</span>
+          </button>
+        </div>
+      )}
+      {pendingDelete !== undefined && (
+        <ConfirmDialog
+          title={t('aishellSessionDeleteTitle')}
+          body={t('aishellSessionDeleteBody').replace('{title}', pendingDelete.title)}
+          confirmLabel={t('aishellDialogDelete')}
+          cancelLabel={t('aishellDialogCancel')}
+          busy={deleting}
+          onCancel={() => { if (!deleting) setPendingDelete(undefined) }}
+          onConfirm={() => { setPendingDelete(undefined); remove([pendingDelete.id]) }}
+        />
+      )}
+      {confirmingBatch && (
+        <ConfirmDialog
+          title={t('aishellSessionsDeleteSelectedTitle')}
+          body={t('aishellSessionsDeleteSelectedBody').replace('{count}', String(selectedCount))}
+          confirmLabel={t('aishellDialogDelete')}
+          cancelLabel={t('aishellDialogCancel')}
+          busy={deleting}
+          onCancel={() => { if (!deleting) setConfirmingBatch(false) }}
+          onConfirm={() => { setConfirmingBatch(false); remove([...selected]) }}
+        />
+      )}
     </div>
   )
 }

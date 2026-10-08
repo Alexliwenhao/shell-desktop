@@ -330,17 +330,18 @@ export function applyAishellShell(
   }
 
   /**
-   * Remove one conversation from the history. The Host archive set is the
+   * Remove conversations from the history. The Host archive set is the
    * authority — the session log itself is retained — and the UI-facing
    * `uiWorkspace` path is preferred over the controller service because it is
    * the one the shipped sidebar uses. The shell also forgets any terminal bound
-   * to that conversation and, when it was the current one, hands the column to
-   * the terminal's next conversation or to a fresh one.
-   * @param sessionId - the conversation to remove from the history.
-   * @returns fulfillment once the Host accepted the removal; rejects otherwise so
-   *   the caller can report it instead of leaving a dead-looking click.
+   * to a removed conversation and, when the current one was among them, hands
+   * the column to that terminal's next conversation or to a fresh one exactly
+   * once — never once per removed id.
+   * @param sessionIds - the conversations to remove from the history.
+   * @returns fulfillment once the Host accepted every removal; rejects otherwise
+   *   so the caller can report it instead of leaving a dead-looking click.
    */
-  const deleteSession = async (sessionId: string): Promise<void> => {
+  const deleteSessions = async (sessionIds: readonly string[]): Promise<void> => {
     const navigation = rawContext.get('uiWorkspace') as
       { archiveSession?(id: unknown): Promise<void> } | undefined
     const workspaces = workspacesFace()
@@ -348,17 +349,20 @@ export function applyAishellShell(
     if (archive === undefined) {
       throw new Error('shell-desktop: AI-Shell found no session removal service')
     }
+    const removed = new Set(sessionIds.map(String))
     let closed: { key: string; binding: TerminalBinding } | undefined
     for (const [key, entry] of terminalSessions) {
-      if (String(entry.sessionId) !== sessionId) continue
-      closed = { key, binding: entry }
+      if (!removed.has(String(entry.sessionId))) continue
+      if (closed === undefined) closed = { key, binding: entry }
       terminalSessions.delete(key)
     }
-    await archive.call(navigation?.archiveSession !== undefined ? navigation : workspaces, sessionId)
+    for (const sessionId of removed) {
+      await archive.call(navigation?.archiveSession !== undefined ? navigation : workspaces, sessionId)
+    }
     const sessions = rawContext.get('sessions') as {
       list?: { getSnapshot?(): { current?: unknown } }
     } | undefined
-    if (String(sessions?.list?.getSnapshot?.().current ?? '') !== sessionId) return
+    if (!removed.has(String(sessions?.list?.getSnapshot?.().current ?? ''))) return
     // Hand the terminal to a fresh conversation bound to the same terminal, so
     // the replacement keeps operating where the removed conversation did.
     if (closed?.binding.terminalId !== undefined) {
@@ -670,7 +674,7 @@ export function applyAishellShell(
       newSession,
       openTerminalSession,
       openSession,
-      deleteSession,
+      deleteSessions,
       syncTerminalTabs,
       searchSessions,
       searchResultLimit: sessionsSearchFace()?.searchResultLimit ?? 20,

@@ -74,8 +74,8 @@ export interface AishellFrameInjected {
   syncTerminalTabs(openTerminalIds: readonly string[]): void
   /** Open an existing AI session, e.g. from a history row. */
   openSession(sessionId: string): void
-  /** Remove one conversation from the session history; rejects when the Host refuses. */
-  deleteSession(sessionId: string): Promise<void>
+  /** Remove conversations from the session history (one row or a batch); rejects when the Host refuses. */
+  deleteSessions(sessionIds: readonly string[]): Promise<void>
   /** Search the Host's visible message-content index (bounded result page). */
   searchSessions(query: string, signal?: AbortSignal): Promise<{ items: readonly SessionSearchHit[]; hasMore: boolean }>
   /** Host-owned maximum number of content-search rows. */
@@ -167,7 +167,7 @@ function ActivityRail(props: {
 
 /** AI-Shell owner: rail, navigation column, terminal workbench, AI conversation. */
 export function AishellFrame(props: AishellFrameProps) {
-  const { layout, platform, remote, renderSlot, t, usePanelInfo, useSessions, newSession, openTerminalSession, openSession, deleteSession, syncTerminalTabs, searchSessions, searchResultLimit, quoteTerminalSelection, subscribeTheme } = props
+  const { layout, platform, remote, renderSlot, t, usePanelInfo, useSessions, newSession, openTerminalSession, openSession, deleteSessions, syncTerminalTabs, searchSessions, searchResultLimit, quoteTerminalSelection, subscribeTheme } = props
   const frameRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<TerminalWorkspaceHandle>(null)
   const [viewport, setViewport] = useState(() => window.innerWidth)
@@ -442,7 +442,7 @@ export function AishellFrame(props: AishellFrameProps) {
                 onToggle={toggleGroup}
                 onNewSession={() => { newSession(activeTerminalKey, activeTerminal?.id) }}
                 onOpenSession={id => { setSearchQuery(''); openSession(id) }}
-                onDeleteSession={deleteSession}
+                onDeleteSessions={deleteSessions}
                 onFocusTerminal={id => { terminalRef.current?.focus(id) }}
                 onCloseTerminal={id => { terminalRef.current?.close(id) }}
                 t={t}

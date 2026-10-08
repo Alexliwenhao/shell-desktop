@@ -1,7 +1,8 @@
 /** Saved-host manager for the Desktop AI-Shell left panel. */
 
 import { useCallback, useEffect, useState } from 'react'
-import { Check, Pencil, PlugZap, Plus, Server, TerminalSquare, Trash2 } from 'lucide-react'
+import { Pencil, PlugZap, Plus, Server, TerminalSquare, Trash2 } from 'lucide-react'
+import { ConfirmDialog } from './ConfirmDialog.tsx'
 import type { RemoteBridgeApi, RemoteHost } from './remote-api.ts'
 
 /** Left-panel host manager props. */
@@ -59,8 +60,8 @@ export function HostPanel({ api, onOpenHost, onOpenLocal }: HostPanelProps) {
   const [editingId, setEditingId] = useState<string>()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
-  /** Host armed for removal: the button turns into a check and confirms on the next click. */
-  const [confirmingId, setConfirmingId] = useState<string>()
+  /** Host whose removal awaits confirmation, if any. */
+  const [pendingRemove, setPendingRemove] = useState<RemoteHost>()
 
   const refresh = useCallback(async (): Promise<void> => {
     try {
@@ -100,7 +101,6 @@ export function HostPanel({ api, onOpenHost, onOpenLocal }: HostPanelProps) {
 
   /** Move one saved host into the form for editing. */
   const edit = useCallback((host: RemoteHost): void => {
-    setConfirmingId(undefined)
     setCreating(false)
     setEditingId(host.id)
     setForm(hostFormFrom(host))
@@ -186,18 +186,13 @@ export function HostPanel({ api, onOpenHost, onOpenLocal }: HostPanelProps) {
 
       <div className="dshAishellHostList">
         {hosts.length === 0 && <p className="dshAishellPanelHint">还没有主机。添加 SSH 主机后可在中央工作台打开终端，并让 AI 在同一台主机上执行。</p>}
-        {hosts.map(host => {
-          const confirming = confirmingId === host.id
-          return (
+        {hosts.map(host => (
           <div className="dshAishellHostRow" key={host.id}>
             <span className="dshAishellHostGlyph" aria-hidden="true"><Server /></span>
             <button
               type="button"
               className="dshAishellHostOpen"
-              onClick={() => {
-                setConfirmingId(undefined)
-                onOpenHost(host)
-              }}
+              onClick={() => { onOpenHost(host) }}
             >
               <strong>{host.name}</strong>
               <small>{host.username}@{host.host}:{String(host.port)}</small>
@@ -215,30 +210,33 @@ export function HostPanel({ api, onOpenHost, onOpenLocal }: HostPanelProps) {
             <button
               type="button"
               className="dshAishellHostIconButton dshAishellHostDeleteButton"
-              data-confirm={confirming || undefined}
-              title={confirming ? '再点一次确认删除' : `删除 ${host.name}`}
-              aria-label={confirming ? `确认删除 ${host.name}` : `删除 ${host.name}`}
+              title={`删除 ${host.name}`}
+              aria-label={`删除 ${host.name}`}
               disabled={busy}
-              onClick={() => {
-                if (!confirming) {
-                  setConfirmingId(host.id)
-                  return
-                }
-                setConfirmingId(undefined)
-                void remove(host.id)
-              }}
+              onClick={() => { setPendingRemove(host) }}
             >
-              {confirming ? <Check aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
+              <Trash2 aria-hidden="true" />
             </button>
             <button type="button" className="dshAishellHostIconButton" aria-label={`连接 ${host.name}`} disabled={busy} onClick={() => { onOpenHost(host) }}>
               <PlugZap aria-hidden="true" />
             </button>
           </div>
-          )
-        })}
+        ))}
       </div>
 
       {error !== undefined && <p className="dshAishellPanelError" role="alert">{error}</p>}
+
+      {pendingRemove !== undefined && (
+        <ConfirmDialog
+          title="删除主机"
+          body={`删除主机「${pendingRemove.name}」？该操作不可撤销。`}
+          confirmLabel="删除"
+          cancelLabel="取消"
+          busy={busy}
+          onCancel={() => { if (!busy) setPendingRemove(undefined) }}
+          onConfirm={() => { setPendingRemove(undefined); void remove(pendingRemove.id) }}
+        />
+      )}
     </div>
   )
 }

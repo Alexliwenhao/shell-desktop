@@ -14,7 +14,7 @@ function render(overrides: Partial<SessionHistoryProps> = {}): string {
     onToggle: vi.fn(),
     onNewSession: vi.fn(),
     onOpenSession: vi.fn(),
-    onDeleteSession: vi.fn(),
+    onDeleteSessions: vi.fn(),
     onFocusTerminal: vi.fn(),
     onCloseTerminal: vi.fn(),
     t,

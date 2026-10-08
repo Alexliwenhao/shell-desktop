@@ -47,15 +47,17 @@ describe('host panel editing', () => {
     container.remove()
   })
 
-  async function mount(): Promise<{ saveHost: ReturnType<typeof vi.fn> }> {
+  async function mount(): Promise<{ saveHost: ReturnType<typeof vi.fn>; removeHost: ReturnType<typeof vi.fn> }> {
     const saveHost = vi.fn(async () => [HOST])
+    const removeHost = vi.fn(async () => [])
     const api = {
       listHosts: vi.fn(async () => [HOST]),
       saveHost,
+      removeHost,
     } as unknown as RemoteBridgeApi
     const props: HostPanelProps = { api, onOpenHost: vi.fn(), onOpenLocal: vi.fn() }
     await act(async () => { root.render(createElement(HostPanel, props)) })
-    return { saveHost }
+    return { saveHost, removeHost }
   }
 
   async function openEditor(): Promise<void> {
@@ -122,5 +124,39 @@ describe('host panel editing', () => {
       passphrase: 'p-a-s-s',
       password: '',
     })
+  })
+
+  async function openRemoveDialog(): Promise<void> {
+    const trash = container.querySelector<HTMLButtonElement>('button[aria-label="删除 生产机"]')
+    expect(trash).not.toBeNull()
+    await act(async () => { trash?.click() })
+  }
+
+  it('opens a confirmation dialog instead of removing the host right away', async () => {
+    const { removeHost } = await mount()
+    await openRemoveDialog()
+
+    expect(container.querySelector('[data-aishell-confirm]')?.textContent).toContain('删除主机「生产机」？该操作不可撤销。')
+    expect(removeHost).not.toHaveBeenCalled()
+  })
+
+  it('keeps the host when the removal dialog is cancelled', async () => {
+    const { removeHost } = await mount()
+    await openRemoveDialog()
+
+    await act(async () => { buttonByText(container, '取消')?.click() })
+
+    expect(removeHost).not.toHaveBeenCalled()
+    expect(container.querySelector('[data-aishell-confirm]')).toBeNull()
+  })
+
+  it('removes the host once the dialog is confirmed', async () => {
+    const { removeHost } = await mount()
+    await openRemoveDialog()
+
+    await act(async () => { buttonByText(container, '删除')?.click() })
+
+    expect(removeHost).toHaveBeenCalledWith('h-1')
+    expect(container.querySelector('[data-aishell-confirm]')).toBeNull()
   })
 })
