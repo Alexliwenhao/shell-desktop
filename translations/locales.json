@@ -1,0 +1,13 @@
+{
+  "default": "en",
+  "locales": [
+    { "id": "en", "label": "English" },
+    { "id": "zh", "label": "中文" },
+    { "id": "zh-Hant", "label": "繁體中文", "fallback": "zh" },
+    { "id": "ja", "label": "日本語", "fallback": "en" },
+    { "id": "ko", "label": "한국어", "fallback": "en" },
+    { "id": "es", "label": "Español", "fallback": "en" },
+    { "id": "fr", "label": "Français", "fallback": "en" },
+    { "id": "de", "label": "Deutsch", "fallback": "en" }
+  ]
+}
