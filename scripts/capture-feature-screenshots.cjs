@@ -3,8 +3,9 @@
  *
  * The shots follow the end-user flow: open the app, start a session, add a host,
  * work in its terminal, hand evidence to the AI, use plan mode to have the AI
- * propose commands and run one from a card, browse files, review history,
- * configure, switch appearance, and finally the safe-delete interactions.
+ * propose commands and run one from a card, browse files and upload into them,
+ * review and search history, configure, switch appearance, and finally the
+ * safe-delete interactions (single and batch) plus the host edit form.
  *
  * The application must already be running with remote debugging enabled:
  *
@@ -17,7 +18,7 @@
  *
  *   node scripts/capture-feature-screenshots.cjs
  *
- * Shots land in `docs/screenshots/` in usage order (01–24). Steps are
+ * Shots land in `docs/screenshots/` in usage order (01–29). Steps are
  * independent: a failing step is reported and the remaining shots still run.
  * Set `SHELL_DESKTOP_ONLY='11,12,13,14'` to re-shoot a subset.
  *
@@ -29,6 +30,7 @@
 
 const { execFileSync } = require('node:child_process')
 const { mkdirSync, writeFileSync } = require('node:fs')
+const { tmpdir } = require('node:os')
 const { join } = require('node:path')
 const { chromium } = require('C:/Users/Administrator/.agents/skills/playwright-skill/node_modules/playwright-core')
 
@@ -39,8 +41,18 @@ const WINDOW_CAPTURE = join(__dirname, 'capture-window.ps1')
 const TERMINAL_COMMANDS = ['hostname', 'uname -a']
 /** Prompt that makes plan mode answer with command cards. */
 const PLAN_PROMPT = '看一下这台机器的磁盘使用情况'
+/** Local file the upload step sends into the remote /tmp directory. */
+const UPLOAD_DEMO_NAME = 'aishell-upload-demo.txt'
+const UPLOAD_DEMO_FILE = join(tmpdir(), UPLOAD_DEMO_NAME)
 
 mkdirSync(OUT, { recursive: true })
+writeFileSync(UPLOAD_DEMO_FILE, [
+  'AI Shell Desktop 上传演示文件',
+  '',
+  '本文件由 capture-feature-screenshots.cjs 上传到远端 /tmp，',
+  '用于展示文件面板的「上传本地文件」能力。',
+  '',
+].join('\n'))
 
 /**
  * Raise and restore the application window. A minimized or occluded window
@@ -298,6 +310,8 @@ const step = async (label, run) => {
     }
     if (cards <= before) throw new Error('no command card appeared for the plan prompt')
     await settle(1500)
+    await page.locator('.dshPlanCommandCard').last().scrollIntoViewIfNeeded().catch(() => {})
+    await settle(600)
     await shot(page, '13-plan-command-card.png')
   })
 
@@ -314,7 +328,7 @@ const step = async (label, run) => {
   await step('15 文件面板：远端目录（行内无删除按钮）', async () => {
     await goRail('文件')
     await settle(2000)
-    if (await page.locator('.dshAishellPanelHint').count() > 0) {
+    if (await page.locator('.dshAishellPanelHint:has-text("文件面板跟随")').count() > 0) {
       await goRail('主机')
       await settle(1000)
       await connectFirstHost()
@@ -404,6 +418,110 @@ const step = async (label, run) => {
     await settle(600)
     await page.locator('.dshAishellHostOpen').first().click()
     await settle(500)
+  })
+
+  await step('25 主机编辑：改完保存即覆盖原配置', async () => {
+    await goRail('主机')
+    await settle(1200)
+    const edit = page.locator('.dshAishellHostRow button[aria-label^="编辑 "]').first()
+    if (await edit.count() === 0) throw new Error('no host with an edit button')
+    await edit.click({ timeout: 15000 })
+    await page.locator('.dshAishellHostForm').waitFor({ timeout: 5000 })
+    await settle(900)
+    await shot(page, '25-host-edit-form.png')
+    await page.locator('.dshAishellHostForm button:has-text("取消")').first().click({ timeout: 10000 }).catch(() => {})
+    await settle(800)
+  })
+
+  await step('26 文件上传：本地文件上传到远端目录', async () => {
+    await goRail('文件')
+    await settle(2000)
+    if (await page.locator('.dshAishellPanelHint:has-text("文件面板跟随")').count() > 0) {
+      await goRail('主机')
+      await settle(1000)
+      await connectFirstHost()
+      await goRail('文件')
+      await settle(2500)
+    }
+    const pathField = page.locator('.dshAishellPathField')
+    await pathField.click({ timeout: 15000 })
+    await page.keyboard.press('Control+a')
+    await page.keyboard.type('/tmp')
+    await page.keyboard.press('Enter')
+    await settle(2000)
+    const chooserPromise = page.waitForEvent('filechooser', { timeout: 15000 })
+    await page.locator('button[aria-label="上传文件"]').click({ timeout: 15000 })
+    const chooser = await chooserPromise
+    await chooser.setFiles(UPLOAD_DEMO_FILE)
+    const uploading = page.locator('.dshAishellPanelHint:has-text("正在上传")')
+    await uploading.waitFor({ timeout: 5000 }).catch(() => {})
+    await uploading.waitFor({ state: 'hidden', timeout: 30000 }).catch(() => {})
+    await page.locator(`.dshAishellFileRow:has-text("${UPLOAD_DEMO_NAME}")`).waitFor({ timeout: 30000 })
+    await page.locator(`.dshAishellFileRow:has-text("${UPLOAD_DEMO_NAME}")`).scrollIntoViewIfNeeded().catch(() => {})
+    await settle(900)
+    await shot(page, '26-file-upload.png')
+  })
+
+  await step('27 会话检索：标题与内容全文检索', async () => {
+    await goRail('会话')
+    await settle(1200)
+    const input = page.locator('.dshAishellSearchInput')
+    await input.click({ timeout: 15000 })
+    let hit = false
+    for (const query of ['机器', '磁盘', '一句话']) {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.keyboard.type(query)
+      await page.waitForFunction(() => {
+        const pane = document.querySelector('[data-aishell-session-pane]')
+        if (pane === null) return false
+        const results = pane.querySelectorAll('[data-aishell-search-result]').length
+        const empty = [...pane.querySelectorAll('.dshAishellPanelHint')]
+          .some(element => element.textContent.includes('没有匹配的会话'))
+        return results > 0 || empty
+      }, undefined, { timeout: 20000 }).catch(() => {})
+      if (await page.locator('[data-aishell-search-result]').count() > 0) { hit = true; break }
+    }
+    if (!hit) throw new Error('no session matched the demo queries')
+    await settle(800)
+    await shot(page, '27-session-search.png')
+    await page.keyboard.press('Escape')
+    await settle(800)
+  })
+
+  await step('28 会话批量选择：勾选多个会话', async () => {
+    await goRail('会话')
+    await settle(1200)
+    await page.locator('.dshAishellPanelAction:has-text("批量选择")').click({ timeout: 15000 })
+    await settle(900)
+    for (const header of await page.locator('.dshAishellSessionGroupHeader[aria-expanded="false"]').all()) {
+      await header.click({ timeout: 5000 }).catch(() => {})
+      await settle(300)
+    }
+    const boxes = page.locator('.dshAishellSelectBox')
+    const count = Math.min(2, await boxes.count())
+    if (count === 0) throw new Error('no session rows for batch selection')
+    for (let index = 0; index < count; index += 1) {
+      await boxes.nth(index).check({ timeout: 10000, force: true }).catch(async () => {
+        await boxes.nth(index).click({ timeout: 10000, force: true })
+      })
+      await settle(300)
+    }
+    await settle(800)
+    await shot(page, '28-session-batch-select.png')
+  })
+
+  await step('29 批量删除的弹窗确认', async () => {
+    const remove = page.locator('.dshAishellBatchBar button:has-text("删除所选")')
+    if (await remove.count() === 0) throw new Error('batch bar missing')
+    await remove.click({ timeout: 10000 })
+    await page.locator('[data-aishell-confirm]').waitFor({ timeout: 5000 })
+    await settle(700)
+    await shot(page, '29-session-batch-delete-confirm.png')
+    await page.keyboard.press('Escape')
+    await settle(600)
+    await page.locator('.dshAishellPanelAction:has-text("取消批量")').click({ timeout: 10000 }).catch(() => {})
+    await settle(600)
   })
 
   await browser.close()
