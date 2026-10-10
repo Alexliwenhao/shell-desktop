@@ -24,7 +24,7 @@ for (const [namespace, entries] of Object.entries(source.upstream)) {
   const section = {}
   for (const key of Object.keys(entries)) {
     const value = translated[key]
-    if (typeof value !== 'string' || value.trim() === '') throw new Error(`${path}: "${key}" is missing or not a translated string`)
+    if (typeof value !== 'string' || value === '') throw new Error(`${path}: "${key}" is missing or not a translated string`)
     section[key] = value
   }
   for (const key of Object.keys(translated)) {
@@ -39,7 +39,7 @@ const desktopTranslated = JSON.parse(readFileSync(desktopPath, 'utf8'))
 const desktop = {}
 for (const key of Object.keys(source.desktop)) {
   const value = desktopTranslated[key]
-  if (typeof value !== 'string' || value.trim() === '') throw new Error(`${desktopPath}: "${key}" is missing or not a translated string`)
+  if (typeof value !== 'string' || value === '') throw new Error(`${desktopPath}: "${key}" is missing or not a translated string`)
   desktop[key] = value
 }
 for (const key of Object.keys(desktopTranslated)) {

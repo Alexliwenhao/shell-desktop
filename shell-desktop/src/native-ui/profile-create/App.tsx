@@ -6,12 +6,9 @@ import { Input } from '../components/ui/input.tsx'
 import { Label } from '../components/ui/label.tsx'
 import { DesktopFrame } from '../shared/DesktopFrame.tsx'
 import { desktopProfileCreateCopy } from '../../profile-create-copy.ts'
+import { nativeLocaleFromUrl } from '../../native-locale-format.ts'
 
 const SCHEME = 'dsh-profile-create:'
-
-function locale(): 'en' | 'zh' {
-  return new URLSearchParams(window.location.search).get('locale') === 'zh' ? 'zh' : 'en'
-}
 
 function submit(name: string): void {
   const url = new URL(`${SCHEME}//submit`)
@@ -20,7 +17,7 @@ function submit(name: string): void {
 }
 
 export function ProfileCreateApp(): JSX.Element {
-  const copy = desktopProfileCreateCopy(locale())
+  const copy = desktopProfileCreateCopy(nativeLocaleFromUrl())
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   useEffect(() => {

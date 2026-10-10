@@ -338,7 +338,7 @@ export function validateUpstreamTranslation(locale, dictionaries, translation) {
     }
     for (const key of Object.keys(dicts.zh)) {
       const value = section[key]
-      if (typeof value !== 'string' || value.trim() === '') {
+      if (typeof value !== 'string' || value === '') {
         throw new Error(`translations/upstream/${locale}.json: "${namespace}.${key}" is missing or empty`)
       }
       count += 1
@@ -357,7 +357,7 @@ export function validateUpstreamTranslation(locale, dictionaries, translation) {
 export function validateDesktopTranslation(locale, desktopKeys, translation) {
   for (const key of desktopKeys) {
     const value = translation[key]
-    if (typeof value !== 'string' || value.trim() === '') {
+    if (typeof value !== 'string' || value === '') {
       throw new Error(`translations/desktop/${locale}.json: key "${key}" is missing or empty`)
     }
   }

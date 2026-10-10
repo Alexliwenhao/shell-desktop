@@ -5,7 +5,8 @@ import { createRoot } from 'react-dom/client'
 import { useEffect, useState } from 'react'
 import type { CompatibilityChromeBridge, CompatibilityChromeCommand, CompatibilityChromeState } from '../../compatibility-chrome-contract.ts'
 import { DesktopFrameTitlebarView } from '../../client/DesktopFrameTitlebarView.tsx'
-import { en, zh } from '../../client/desktop-settings-locales.ts'
+import { en, zh, type DesktopSettingsLocaleKey } from '../../client/desktop-settings-locales.ts'
+import { DESKTOP_LOCALE_PACKS } from '../../client/locales/generated/index.ts'
 import { installChromeOverlay } from './overlay.ts'
 
 declare global {
@@ -22,6 +23,20 @@ const api = {
   checkForUpdates: () => invoke('check-for-updates'),
 }
 
+/** Resolve the desktop-settings dictionary for one active locale. */
+function copyFor(locale: CompatibilityChromeState['locale'] | undefined): Record<DesktopSettingsLocaleKey, string> {
+  if (locale === 'zh') return zh
+  const pack = DESKTOP_LOCALE_PACKS.find(candidate => candidate.id === locale)
+  return (pack?.desktopSettings as Record<DesktopSettingsLocaleKey, string> | undefined) ?? en
+}
+
+/** Map a locale id to the document language used by the served markup. */
+function documentLanguage(locale: CompatibilityChromeState['locale'] | undefined): string {
+  if (locale === 'zh') return 'zh-CN'
+  if (locale === 'zh-Hant') return 'zh-TW'
+  return locale ?? 'en'
+}
+
 export function Chrome() {
   const [state, setState] = useState<CompatibilityChromeState>()
   const [generation, setGeneration] = useState(0)
@@ -35,9 +50,9 @@ export function Chrome() {
     return () => { off(); offDismiss(); offOverlay() }
   }, [])
   useEffect(() => {
-    document.documentElement.lang = state?.locale === 'zh' ? 'zh-CN' : 'en'
+    document.documentElement.lang = documentLanguage(state?.locale)
   }, [state?.locale])
-  const copy = state?.locale === 'zh' ? zh : en
+  const copy = copyFor(state?.locale)
   if (!state) return <header className="dshDesktopFrameTitlebar">AI Shell Desktop {failed && <span role="alert">{copy.operationFailed}</span>}</header>
   return <DesktopFrameTitlebarView
     key={generation}

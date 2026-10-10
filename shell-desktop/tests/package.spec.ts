@@ -848,7 +848,7 @@ describe('published package surface', () => {
       extendInfo: {
         CFBundleAllowMixedLocalizations: true,
         CFBundleDevelopmentRegion: 'en',
-        CFBundleLocalizations: ['en', 'zh_CN'],
+        CFBundleLocalizations: ['en', 'zh_CN', 'zh_TW', 'ja', 'ko', 'es', 'fr', 'de'],
       },
       hardenedRuntime: true,
       mergeASARs: false,

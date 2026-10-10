@@ -50,6 +50,7 @@ import {
   type DesktopRecoveryTab,
   type DesktopStartupFailureStage,
 } from '../../recovery-copy.ts'
+import { nativeCount, nativeIntlTag, nativeLocaleFromUrl, nativeSlotLabel } from '../../native-locale-format.ts'
 import type { DesktopLocale } from '../../runtime.ts'
 
 const SCHEME = 'dsh-recovery:'
@@ -123,10 +124,6 @@ function decodeState(): RecoveryState | undefined {
   return undefined
 }
 
-function fallbackLocale(): DesktopLocale {
-  return new URLSearchParams(window.location.search).get('locale') === 'zh' ? 'zh' : 'en'
-}
-
 function href(action: string, id?: string, name?: string, path?: string): string {
   const url = new URL(`${SCHEME}//${action}`)
   if (id !== undefined) url.searchParams.set('id', id)
@@ -161,7 +158,7 @@ function formatCheckpointSize(bytes: number, locale: DesktopLocale): string {
     value /= 1024
     unit = units[index]!
   }
-  return `${new Intl.NumberFormat(locale === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 }).format(value)} ${unit}`
+  return `${new Intl.NumberFormat(nativeIntlTag(locale), { maximumFractionDigits: 1 }).format(value)} ${unit}`
 }
 
 function CheckpointFact({ label, value }: { readonly label: string; readonly value: ReactNode }): JSX.Element {
@@ -170,10 +167,10 @@ function CheckpointFact({ label, value }: { readonly label: string; readonly val
 
 function RollbackPanel({ copy, state }: { readonly copy: DesktopRecoveryCopy; readonly state: RecoveryState }): JSX.Element {
   if (state.snapshot === undefined) return <PanelScroll><Alert variant="destructive"><AlertTriangle /><AlertTitle>{copy.checkpoints}</AlertTitle><AlertDescription>{copy.checkpointsUnavailable}</AlertDescription></Alert></PanelScroll>
-  const numberLocale = state.locale === 'zh' ? 'zh-CN' : 'en-US'
+  const numberLocale = nativeIntlTag(state.locale)
   return <PanelScroll><div className="grid grid-cols-1 gap-4">{state.snapshot.checkpoints.map(checkpoint => {
     const slotNumber = checkpoint.slotId.slice(-1)
-    return <Card key={checkpoint.slotId} className="w-full overflow-hidden"><CardHeader className="gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0 space-y-1.5"><CardTitle>{state.locale === 'zh' ? `槽位 ${slotNumber}` : `Slot ${slotNumber}`}</CardTitle><CardDescription>{checkpoint.status === 'empty' ? copy.noHealthyStartup : checkpoint.capturedAt === undefined ? copy.rollbackBody : new Date(checkpoint.capturedAt).toLocaleString(numberLocale)}</CardDescription></div><span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{checkpoint.status === 'empty' ? copy.emptySlot : copy.availableSlot}</span></CardHeader>{checkpoint.status === 'empty' ? null : <><CardContent><dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"><CheckpointFact label={copy.desktopVersion} value={checkpoint.appVersion ?? copy.unknown} />{checkpoint.pluginCount === undefined ? null : <CheckpointFact label={copy.pluginCount} value={state.locale === 'zh' ? `${checkpoint.pluginCount} 个` : checkpoint.pluginCount.toLocaleString(numberLocale)} />}<CheckpointFact label={copy.configurationFileCount} value={state.locale === 'zh' ? `${checkpoint.fileCount ?? 0} 个` : (checkpoint.fileCount ?? 0).toLocaleString(numberLocale)} />{checkpoint.totalBytes === undefined ? null : <CheckpointFact label={copy.checkpointSize} value={formatCheckpointSize(checkpoint.totalBytes, state.locale)} />}</dl></CardContent><CardFooter className="flex-wrap justify-end gap-2 border-t bg-muted/20 px-6 py-4"><Action action="open-checkpoint" icon={<FolderOpen />} id={checkpoint.slotId}>{copy.openCheckpoint}</Action><Action action="preview-checkpoint" icon={<RotateCcw />} id={checkpoint.slotId} variant="default">{copy.rollbackCheckpoint}</Action></CardFooter></>}
+    return <Card key={checkpoint.slotId} className="w-full overflow-hidden"><CardHeader className="gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0 space-y-1.5"><CardTitle>{nativeSlotLabel(state.locale, Number(slotNumber))}</CardTitle><CardDescription>{checkpoint.status === 'empty' ? copy.noHealthyStartup : checkpoint.capturedAt === undefined ? copy.rollbackBody : new Date(checkpoint.capturedAt).toLocaleString(numberLocale)}</CardDescription></div><span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{checkpoint.status === 'empty' ? copy.emptySlot : copy.availableSlot}</span></CardHeader>{checkpoint.status === 'empty' ? null : <><CardContent><dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"><CheckpointFact label={copy.desktopVersion} value={checkpoint.appVersion ?? copy.unknown} />{checkpoint.pluginCount === undefined ? null : <CheckpointFact label={copy.pluginCount} value={nativeCount(state.locale, checkpoint.pluginCount)} />}<CheckpointFact label={copy.configurationFileCount} value={nativeCount(state.locale, checkpoint.fileCount ?? 0)} />{checkpoint.totalBytes === undefined ? null : <CheckpointFact label={copy.checkpointSize} value={formatCheckpointSize(checkpoint.totalBytes, state.locale)} />}</dl></CardContent><CardFooter className="flex-wrap justify-end gap-2 border-t bg-muted/20 px-6 py-4"><Action action="open-checkpoint" icon={<FolderOpen />} id={checkpoint.slotId}>{copy.openCheckpoint}</Action><Action action="preview-checkpoint" icon={<RotateCcw />} id={checkpoint.slotId} variant="default">{copy.rollbackCheckpoint}</Action></CardFooter></>}
     </Card>
   })}</div></PanelScroll>
 }
@@ -269,7 +266,7 @@ export function RecoveryApp(): JSX.Element {
     setActiveTab(tab)
   }
   if (state === undefined) {
-    const copy = desktopRecoveryCopy(fallbackLocale())
+    const copy = desktopRecoveryCopy(nativeLocaleFromUrl())
     return <><DesktopFrame /><main className="dshNativeContent flex h-screen items-center justify-center p-6"><Alert variant="destructive"><AlertTriangle /><AlertTitle>{copy.title}</AlertTitle><AlertDescription>{copy.fallbackBody}</AlertDescription></Alert></main></>
   }
   const copy = desktopRecoveryCopy(state.locale)

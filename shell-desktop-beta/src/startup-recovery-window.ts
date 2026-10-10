@@ -11,6 +11,7 @@ import {
 } from './auxiliary-window-options.ts'
 import { showDesktopDialog, showDesktopMessageBox } from './desktop-dialog-window.ts'
 import { createDesktopLocalWindow } from './local-window-policy.ts'
+import { nativeIntlTag, nativeSlotLabel } from './native-locale-format.ts'
 import type { DesktopLocale } from './runtime.ts'
 import { applicationNeedsReveal, revealApplication } from './electron-reveal.ts'
 import { desktopRestartConfirmationCopy } from './tray-locale.ts'
@@ -381,8 +382,8 @@ export class DesktopStartupRecoveryWindow {
         if (await this.confirmRecoveryAction('checkpoint', preview)) {
           await this.runBusy(async () => {
             const result = await this.requireController().executeCheckpointRestore(preview.previewId)
-            const slotNumber = result.slotId.slice(-1)
-            const slotLabel = this.options.locale === 'zh' ? `槽位 ${slotNumber}` : `Slot ${slotNumber}`
+            const slotNumber = Number(result.slotId.slice(-1))
+            const slotLabel = nativeSlotLabel(this.options.locale, slotNumber)
             this.notice = {
               tone: 'success',
               title: slotLabel,
@@ -596,12 +597,12 @@ export class DesktopStartupRecoveryWindow {
     const window = this.window
     if (window === undefined || window.isDestroyed()) return false
     const copy = desktopRecoveryCopy(this.options.locale)
-    const slotNumber = 'slotId' in preview ? preview.slotId.slice(-1) : undefined
+    const slotNumber = 'slotId' in preview ? Number(preview.slotId.slice(-1)) : undefined
     const message = 'packageName' in preview
       ? preview.packageName
-      : this.options.locale === 'zh' ? `槽位 ${slotNumber}` : `Slot ${slotNumber}`
+      : nativeSlotLabel(this.options.locale, slotNumber ?? 0)
     const checkpointTime = 'capturedAt' in preview && !Number.isNaN(Date.parse(preview.capturedAt))
-      ? new Date(preview.capturedAt).toLocaleString(this.options.locale === 'zh' ? 'zh-CN' : 'en-US')
+      ? new Date(preview.capturedAt).toLocaleString(nativeIntlTag(this.options.locale))
       : copy.unknown
     const result = await showDesktopMessageBox({
       type: kind === 'uninstall' ? 'warning' : 'question',

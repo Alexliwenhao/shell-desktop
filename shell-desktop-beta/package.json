@@ -378,7 +378,13 @@
         "CFBundleDevelopmentRegion": "en",
         "CFBundleLocalizations": [
           "en",
-          "zh_CN"
+          "zh_CN",
+          "zh_TW",
+          "ja",
+          "ko",
+          "es",
+          "fr",
+          "de"
         ]
       },
       "hardenedRuntime": true,

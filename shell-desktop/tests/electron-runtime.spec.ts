@@ -1248,11 +1248,11 @@ describe('Electron desktop runtime', () => {
 
     electron.app.getLocale.mockReturnValueOnce('zh-CN')
     runtime.setLocalePreference(undefined)
-    expect(runtime.locale).toBe('zh')
+    expect(runtime.locale).toBe('en')
     expect((electron.menuTemplates.at(-1) as Array<{ label?: string }>).map(item => item.label))
       .toEqual(expect.arrayContaining([
-        '打开 AI Shell Desktop',
-        '退出',
+        'Open AI Shell Desktop',
+        'Quit',
       ]))
 
     await release()

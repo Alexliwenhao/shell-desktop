@@ -16,7 +16,7 @@ import { formatDesktopExitCode } from './desktop-logger.ts'
 import { showDesktopMessageBox } from './desktop-dialog-window.ts'
 import { applicationNeedsReveal, revealApplication } from './electron-reveal.ts'
 import type { ElectronPlatformStrategy } from './electron-platform.ts'
-import type { DesktopNotification, DesktopShellSpec } from './runtime.ts'
+import type { DesktopNotification, DesktopLocale, DesktopShellSpec } from './runtime.ts'
 import { prepareTrayIcon } from './tray-icons.ts'
 import { desktopWindowOptions } from './window-options.ts'
 import type { DesktopRestartConfirmationCopy } from './tray-locale.ts'
@@ -168,6 +168,7 @@ export interface ElectronShellGenerationOptions {
   readonly spec: DesktopShellSpec
   readonly preloadPath: string
   readonly buildApplicationMenuItems: () => readonly Electron.MenuItemConstructorOptions[]
+  readonly readLocale: () => DesktopLocale
   readonly isQuitting: () => boolean
   readonly buildTrayTemplate: () => Electron.MenuItemConstructorOptions[]
   readonly stopRendererBootMonitoring: () => void
@@ -245,7 +246,7 @@ export class ElectronShellGeneration {
     if (icon.isEmpty()) {
       throw new Error(`shell-desktop: failed to load application icon ${spec.iconPath}`)
     }
-    platform.configureApplication(icon, spec.productName, this.options.buildApplicationMenuItems())
+    platform.configureApplication(icon, spec.productName, this.options.buildApplicationMenuItems(), this.options.readLocale())
     const origin = new URL(spec.url).origin
     if (platform.platform !== 'linux') nativeTheme.themeSource = spec.readThemeSource()
     let persistedBounds: MainWindowBounds | undefined

@@ -18,6 +18,7 @@ import { showDesktopMessageBox } from './desktop-dialog-window.ts'
 import { packagedDependencyPath } from './packaged-runtime-path.ts'
 import { ElectronShellGeneration } from './electron-shell-generation.ts'
 import { electronPlatformStrategy, type ElectronPlatformStrategy } from './electron-platform.ts'
+import { DESKTOP_DEFAULT_LOCALE } from './runtime.ts'
 import type {
   DesktopNotification,
   DesktopLocale,
@@ -42,7 +43,6 @@ import type { DesktopLogger } from './desktop-logger.ts'
 import { exportDesktopDiagnostics } from './diagnostic-export.ts'
 import {
   desktopDiagnosticsPrivacyCopy,
-  desktopLocaleFromLanguageTag,
   desktopRestartConfirmationCopy,
   desktopTrayLabel,
   rendererRecoveryCopy,
@@ -244,6 +244,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
         spec,
         preloadPath: desktopPreloadPath(),
         buildApplicationMenuItems: () => this.buildApplicationMenuItems(),
+        readLocale: () => this.locale,
         isQuitting: () => this.quitting,
         buildTrayTemplate: () => this.buildTrayTemplate(spec),
         stopRendererBootMonitoring: () => { this.stopRendererBootMonitoring() },
@@ -466,7 +467,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
 
   /** @inheritdoc */
   setLocalePreference(preference: DesktopLocale | undefined): void {
-    const locale = preference ?? desktopLocaleFromLanguageTag(app.getLocale())
+    const locale = preference ?? DESKTOP_DEFAULT_LOCALE
     if (locale === this.currentLocale) return
     this.currentLocale = locale
     this.rebuildTrayMenu()
@@ -892,7 +893,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
 
   /** Rebuild the macOS application menu from the same native, Host-owned commands as the tray. */
   private rebuildApplicationMenu(): void {
-    this.platformStrategy.refreshApplicationMenu(this.buildApplicationMenuItems())
+    this.platformStrategy.refreshApplicationMenu(this.buildApplicationMenuItems(), this.currentLocale)
   }
 
   /** Keep the app menu renderer-free by reusing trusted native tray contributions. */

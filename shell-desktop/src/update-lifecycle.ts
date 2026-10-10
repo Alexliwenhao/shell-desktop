@@ -353,10 +353,19 @@ function parseState(text: string): ParsedUpdateState {
   throw new Error('invalid update state')
 }
 
+const UPDATE_AVAILABLE_NOTIFICATION: Record<DesktopLocale, (version: string) => DesktopNotification> = {
+  en: version => ({ title: 'AI Shell Desktop Update Available', body: `Version ${version} is ready to download. Open AI Shell Desktop to continue.` }),
+  zh: version => ({ title: 'AI Shell Desktop 有可用更新', body: `版本 ${version} 已可下载。打开 AI Shell Desktop 即可继续。` }),
+  'zh-Hant': version => ({ title: 'AI Shell Desktop 有可用更新', body: `版本 ${version} 已可下載。開啟 AI Shell Desktop 即可繼續。` }),
+  ja: version => ({ title: 'AI Shell Desktopのアップデートがあります', body: `バージョン${version}をダウンロードできます。AI Shell Desktopを開いて続行してください。` }),
+  ko: version => ({ title: 'AI Shell Desktop 업데이트 사용 가능', body: `버전 ${version}을(를) 다운로드할 수 있어요. AI Shell Desktop을 열어 계속하세요.` }),
+  es: version => ({ title: 'Actualización de AI Shell Desktop disponible', body: `La versión ${version} ya está lista para descargar. Abrir AI Shell Desktop para continuar.` }),
+  fr: version => ({ title: 'Mise à jour d’AI Shell Desktop disponible', body: `La version ${version} est prête à être téléchargée. Ouvrez AI Shell Desktop pour continuer.` }),
+  de: version => ({ title: 'AI Shell Desktop-Update verfügbar', body: `Version ${version} kann heruntergeladen werden. AI Shell Desktop öffnen, um fortzufahren.` }),
+}
+
 function updateAvailableNotification(locale: DesktopLocale, version: string): DesktopNotification {
-  return locale === 'zh'
-    ? { title: 'AI Shell Desktop 有可用更新', body: `版本 ${version} 已可下载。打开 AI Shell Desktop 即可继续。` }
-    : { title: 'AI Shell Desktop Update Available', body: `Version ${version} is ready to download. Open AI Shell Desktop to continue.` }
+  return UPDATE_AVAILABLE_NOTIFICATION[locale](version)
 }
 
 async function readState(filename: string): Promise<string> {

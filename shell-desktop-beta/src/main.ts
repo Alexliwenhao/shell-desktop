@@ -162,8 +162,9 @@ import {
   type WindowsVolumeConcern,
 } from './windows-volume-diagnostics.ts'
 import type { RendererBootReport } from './renderer-boot-contract.ts'
-import { desktopLocaleFromLanguageTag, desktopTrayLabel } from './tray-locale.ts'
-import { desktopNativeCopy } from './native-dialog-copy.ts'
+import { DESKTOP_DEFAULT_LOCALE } from './runtime.ts'
+import { desktopTrayLabel } from './tray-locale.ts'
+import { desktopNativeCopy, desktopVolumeConcernLabel } from './native-dialog-copy.ts'
 import {
   DESKTOP_NOTIFICATIONS_SETTINGS_NAMESPACE,
   type DesktopNotificationSettings,
@@ -286,13 +287,7 @@ function notifyWindowsVolumeConcerns(
 ): void {
   if (concerns.length === 0) return
   const copy = desktopNativeCopy(runtime.locale)
-  const concernLabel = concerns[0]?.label
-  const label = runtime.locale === 'zh'
-    ? concernLabel === 'application install' ? '应用安装目录'
-      : concernLabel === 'desktop user data' ? '桌面用户数据'
-        : concernLabel === 'DSH home' ? 'DSH 主目录'
-          : '某个配置路径'
-    : concernLabel ?? 'A configured path'
+  const label = desktopVolumeConcernLabel(runtime.locale, concerns[0]?.label)
   try {
     runtime.updates.notify({
       title: copy.unsupportedStorageTitle,
@@ -557,7 +552,7 @@ async function start(): Promise<void> {
         ...(startupRecoveryConfigurationPaths === undefined
           ? {}
           : { configurationPaths: startupRecoveryConfigurationPaths }),
-        locale: desktopLocaleFromLanguageTag(app.getLocale()),
+        locale: DESKTOP_DEFAULT_LOCALE,
         failureStage: startupStage,
         failureDetail: maskSecrets(failureDetail),
         ...(requested ? { requested: true } : {}),
@@ -715,7 +710,7 @@ async function start(): Promise<void> {
       listDesktopProfiles(homeDir).map(profile => profile.dir),
     )
     // Keep Profile recovery usable when the persisted selection no longer exists.
-    const locale = desktopLocaleFromLanguageTag(app.getLocale())
+    const locale = DESKTOP_DEFAULT_LOCALE
     const recoveryProfileToken = randomUUID()
     let activeProfileName = readDesktopProfileState(selectionStatePath).active
     let expectedRecoveryProfileName = activeProfileName
@@ -1656,7 +1651,7 @@ async function handleFatalLauncherFailure(cause: unknown): Promise<void> {
   }
   try {
     const recoveryWindow = new DesktopStartupRecoveryWindow({
-      locale: desktopLocaleFromLanguageTag(app.getLocale()),
+      locale: DESKTOP_DEFAULT_LOCALE,
       failureStage: 'electron-ready',
       failureDetail: detail,
       exportDiagnostics: async signal => await exportDesktopDiagnostics(app.getPath('userData'), {

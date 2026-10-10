@@ -44,6 +44,42 @@ const NOTIFICATION_COPY: Record<DesktopLocale, Record<NotificationOutcome, Deskt
     'job-completed': { title: '后台任务已完成', body: '有一个后台任务已结束。' },
     'job-failed': { title: '后台任务失败', body: '一个后台任务未能完成，请打开 AI Shell Desktop 查看详情。' },
   },
+  'zh-Hant': {
+    'turn-completed': { title: '使用者回合已完成', body: '一個由你發起的回合已完成。' },
+    'turn-failed': { title: '使用者回合失敗', body: '一個由你發起的回合未能完成，請開啟 AI Shell Desktop 查看詳情。' },
+    'job-completed': { title: '背景工作已完成', body: '有一個背景工作已結束。' },
+    'job-failed': { title: '背景工作失敗', body: '一個背景工作未能完成，請開啟 AI Shell Desktop 查看詳情。' },
+  },
+  ja: {
+    'turn-completed': { title: 'ユーザーターン完了', body: 'ユーザーが開始したターンが完了しました。' },
+    'turn-failed': { title: 'ユーザーターン失敗', body: 'ユーザーが開始したターンを完了できませんでした。詳細はAI Shell Desktopを開いて確認してください。' },
+    'job-completed': { title: 'バックグラウンドジョブ完了', body: 'バックグラウンドジョブが完了しました。' },
+    'job-failed': { title: 'バックグラウンドジョブ失敗', body: 'バックグラウンドジョブを完了できませんでした。詳細はAI Shell Desktopを開いて確認してください。' },
+  },
+  ko: {
+    'turn-completed': { title: '사용자 턴 완료', body: '사용자가 시작한 턴이 완료되었어요.' },
+    'turn-failed': { title: '사용자 턴 실패', body: '사용자가 시작한 턴을 완료하지 못했어요. 자세한 내용은 AI Shell Desktop을 열어 확인하세요.' },
+    'job-completed': { title: '백그라운드 작업 완료', body: '백그라운드 작업이 완료되었어요.' },
+    'job-failed': { title: '백그라운드 작업 실패', body: '백그라운드 작업을 완료하지 못했어요. 자세한 내용은 AI Shell Desktop을 열어 확인하세요.' },
+  },
+  es: {
+    'turn-completed': { title: 'Turno del usuario completado', body: 'Un turno iniciado por el usuario ha finalizado.' },
+    'turn-failed': { title: 'Turno del usuario fallido', body: 'Un turno iniciado por el usuario no pudo finalizar. Abrir AI Shell Desktop para ver los detalles.' },
+    'job-completed': { title: 'Tarea en segundo plano completada', body: 'Una tarea en segundo plano ha finalizado.' },
+    'job-failed': { title: 'Tarea en segundo plano fallida', body: 'Una tarea en segundo plano no pudo finalizar. Abrir AI Shell Desktop para ver los detalles.' },
+  },
+  fr: {
+    'turn-completed': { title: 'Tour utilisateur terminé', body: 'Un tour lancé par l’utilisateur est terminé.' },
+    'turn-failed': { title: 'Échec du tour utilisateur', body: 'Un tour lancé par l’utilisateur n’a pas pu se terminer. Ouvrez AI Shell Desktop pour plus de détails.' },
+    'job-completed': { title: 'Tâche d’arrière-plan terminée', body: 'Une tâche d’arrière-plan est terminée.' },
+    'job-failed': { title: 'Échec de la tâche d’arrière-plan', body: 'Une tâche d’arrière-plan n’a pas pu se terminer. Ouvrez AI Shell Desktop pour plus de détails.' },
+  },
+  de: {
+    'turn-completed': { title: 'Benutzerrunde abgeschlossen', body: 'Eine vom Benutzer gestartete Runde wurde abgeschlossen.' },
+    'turn-failed': { title: 'Benutzerrunde fehlgeschlagen', body: 'Eine vom Benutzer gestartete Runde konnte nicht abgeschlossen werden. AI Shell Desktop öffnen, um Details zu sehen.' },
+    'job-completed': { title: 'Hintergrundaufgabe abgeschlossen', body: 'Eine Hintergrundaufgabe wurde abgeschlossen.' },
+    'job-failed': { title: 'Hintergrundaufgabe fehlgeschlagen', body: 'Eine Hintergrundaufgabe konnte nicht abgeschlossen werden. AI Shell Desktop öffnen, um Details zu sehen.' },
+  },
 }
 
 interface OpenTurn {

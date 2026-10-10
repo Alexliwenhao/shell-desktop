@@ -59,7 +59,7 @@ import type {} from './desktop-settings-controller.ts'
 import { acknowledgeWelcomeNotice } from './desktop-onboarding.ts'
 import { DESKTOP_LAN_HTTPS_CA_PATH } from './lan-https-runtime.ts'
 import { desktopBootRecoveryInjections } from './desktop-boot-recovery.ts'
-import type { DesktopLocale, DesktopShellMode } from './runtime.ts'
+import { DESKTOP_LOCALES, type DesktopLocale, type DesktopShellMode } from './runtime.ts'
 import type {} from './runtime.ts'
 import { DESKTOP_DEFAULT_WEB_PORT } from './desktop-port.ts'
 import {
@@ -107,9 +107,11 @@ function rejectDesktopRequest(
   return true
 }
 
-/** Narrow the upstream locale preference to the translations bundled by Desktop chrome. */
+/** Narrow the upstream locale preference to the locales shipped by Desktop chrome. */
 function desktopLocalePreference(preference: string | undefined): DesktopLocale | undefined {
-  return preference === 'zh' || preference === 'en' ? preference : undefined
+  return preference === undefined || !DESKTOP_LOCALES.includes(preference as DesktopLocale)
+    ? undefined
+    : preference as DesktopLocale
 }
 
 /** Desktop settings presented by the standard settings service. */

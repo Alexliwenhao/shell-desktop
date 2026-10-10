@@ -26,8 +26,18 @@ export const DEFAULT_DESKTOP_SHELL_MODE: DesktopShellMode = 'aishell'
 /** Electron appearance source used by native frame and material rendering. */
 export type DesktopThemeSource = 'system' | 'light' | 'dark'
 
-/** Locale identifiers shared by the Web client and native desktop tray. */
-export type DesktopLocale = 'zh' | 'en'
+/**
+ * Locale identifiers shared by the Web client and native desktop copy. The
+ * first two are shipped by the upstream locale service; the rest are added by
+ * the Desktop language packs (see translations/).
+ */
+export const DESKTOP_LOCALES = ['en', 'zh', 'zh-Hant', 'ja', 'ko', 'es', 'fr', 'de'] as const
+
+/** Locale identifier used by the Desktop chrome and the language packs. */
+export type DesktopLocale = typeof DESKTOP_LOCALES[number]
+
+/** Locale the native shell shows when no explicit preference is stored. */
+export const DESKTOP_DEFAULT_LOCALE: DesktopLocale = 'en'
 
 /** Window values resolved from the desktop-shell Cordis row. */
 export interface DesktopWindowConfig {

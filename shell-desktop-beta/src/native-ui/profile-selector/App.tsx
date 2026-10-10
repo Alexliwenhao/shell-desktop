@@ -11,6 +11,7 @@ import {
   type RecoveryNotice,
 } from '../shared/RecoveryWindowPrimitives.tsx'
 import { desktopRecoveryCopy } from '../../recovery-copy.ts'
+import { nativeLocaleFromUrl } from '../../native-locale-format.ts'
 import type { DesktopLocale } from '../../runtime.ts'
 
 const SCHEME = 'dsh-profile-selector:'
@@ -45,7 +46,7 @@ function href(action: 'cancel' | 'create' | 'restart' | 'switch', name?: string)
 
 export function ProfileSelectorApp(): JSX.Element {
   const state = decodeState()
-  const locale = state?.locale ?? (new URLSearchParams(window.location.search).get('locale') === 'zh' ? 'zh' : 'en')
+  const locale = state?.locale ?? nativeLocaleFromUrl()
   const copy = desktopRecoveryCopy(locale)
   if (state === undefined) return <><DesktopFrame /><main className="dshNativeContent flex h-screen items-center justify-center p-6"><Alert variant="destructive"><AlertTriangle /><AlertDescription>{copy.profilesUnavailable}</AlertDescription></Alert></main></>
 

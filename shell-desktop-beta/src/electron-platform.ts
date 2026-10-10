@@ -1,7 +1,7 @@
 import { app, Menu } from 'electron'
 import type { BrowserWindow, MenuItemConstructorOptions, NativeImage } from 'electron'
-import { macApplicationMenuTemplate, nativeMenuLocale } from './native-menu.ts'
-import type { DesktopPlatform } from './runtime.ts'
+import { macApplicationMenuTemplate } from './native-menu.ts'
+import type { DesktopLocale, DesktopPlatform } from './runtime.ts'
 import type { DesktopWindowMaterial } from './window-material.ts'
 import type { DesktopDownloadPlatform } from './update-download.ts'
 
@@ -13,9 +13,10 @@ export interface ElectronPlatformStrategy {
   configureApplication(
     icon: NativeImage,
     productName: string,
-    applicationMenuItems?: readonly MenuItemConstructorOptions[],
+    applicationMenuItems: readonly MenuItemConstructorOptions[],
+    locale: DesktopLocale,
   ): void
-  refreshApplicationMenu(applicationMenuItems: readonly MenuItemConstructorOptions[]): void
+  refreshApplicationMenu(applicationMenuItems: readonly MenuItemConstructorOptions[], locale: DesktopLocale): void
   configureWindow(window: BrowserWindow): void
   refreshThemeMaterial(window: BrowserWindow, material: DesktopWindowMaterial): void
 }
@@ -29,9 +30,10 @@ class WindowsPlatformStrategy implements ElectronPlatformStrategy {
     _icon: NativeImage,
     _productName: string,
     _applicationMenuItems: readonly MenuItemConstructorOptions[] = [],
+    _locale: DesktopLocale = 'en',
   ): void {}
 
-  refreshApplicationMenu(_applicationMenuItems: readonly MenuItemConstructorOptions[]): void {}
+  refreshApplicationMenu(_applicationMenuItems: readonly MenuItemConstructorOptions[], _locale: DesktopLocale): void {}
 
   configureWindow(window: BrowserWindow): void {
     window.removeMenu()
@@ -53,16 +55,16 @@ class MacPlatformStrategy implements ElectronPlatformStrategy {
     icon: NativeImage,
     productName: string,
     applicationMenuItems: readonly MenuItemConstructorOptions[] = [],
+    locale: DesktopLocale = 'en',
   ): void {
     app.dock?.setIcon(icon)
     this.applicationName = productName
-    this.refreshApplicationMenu(applicationMenuItems)
+    this.refreshApplicationMenu(applicationMenuItems, locale)
   }
 
-  refreshApplicationMenu(applicationMenuItems: readonly MenuItemConstructorOptions[]): void {
+  refreshApplicationMenu(applicationMenuItems: readonly MenuItemConstructorOptions[], locale: DesktopLocale): void {
     const applicationName = this.applicationName
     if (applicationName === undefined) return
-    const locale = nativeMenuLocale(app.getPreferredSystemLanguages())
     Menu.setApplicationMenu(Menu.buildFromTemplate(macApplicationMenuTemplate(
       applicationName,
       locale,
@@ -84,9 +86,10 @@ class LinuxPlatformStrategy implements ElectronPlatformStrategy {
     _icon: NativeImage,
     _productName: string,
     _applicationMenuItems: readonly MenuItemConstructorOptions[] = [],
+    _locale: DesktopLocale = 'en',
   ): void {}
 
-  refreshApplicationMenu(_applicationMenuItems: readonly MenuItemConstructorOptions[]): void {}
+  refreshApplicationMenu(_applicationMenuItems: readonly MenuItemConstructorOptions[], _locale: DesktopLocale): void {}
 
   configureWindow(_window: BrowserWindow): void {}
 

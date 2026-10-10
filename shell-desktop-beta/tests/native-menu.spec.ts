@@ -1,6 +1,7 @@
 import type { MenuItemConstructorOptions } from 'electron'
 import { describe, expect, it, vi } from 'vitest'
-import { macApplicationMenuTemplate, nativeMenuLocale } from '../src/native-menu.ts'
+import { macApplicationMenuTemplate } from '../src/native-menu.ts'
+import type { DesktopLocale } from '../src/runtime.ts'
 
 function submenu(item: MenuItemConstructorOptions): MenuItemConstructorOptions[] {
   if (!Array.isArray(item.submenu)) throw new Error('expected an array submenu')
@@ -8,16 +9,8 @@ function submenu(item: MenuItemConstructorOptions): MenuItemConstructorOptions[]
 }
 
 describe('native macOS application menu', () => {
-  it('uses the first supported macOS preferred language', () => {
-    expect(nativeMenuLocale(['zh-Hans-CN', 'en-CN'])).toBe('zh-CN')
-    expect(nativeMenuLocale(['zh_CN', 'en-CN'])).toBe('zh-CN')
-    expect(nativeMenuLocale(['zh-Hant-TW', 'en-US'])).toBe('en')
-    expect(nativeMenuLocale(['fr-FR', 'en-US', 'zh-Hans'])).toBe('en')
-    expect(nativeMenuLocale(['fr-FR'])).toBe('en')
-  })
-
   it('localizes the complete Simplified Chinese menu while retaining native roles', () => {
-    const template = macApplicationMenuTemplate('AI Shell Desktop', 'zh-CN')
+    const template = macApplicationMenuTemplate('AI Shell Desktop', 'zh')
 
     expect(template.map(item => item.label)).toEqual([
       'AI Shell Desktop', '文件', '编辑', '显示', '窗口',
@@ -38,6 +31,24 @@ describe('native macOS application menu', () => {
       expect.objectContaining({ label: '放大', role: 'zoomIn' }),
       expect.objectContaining({ label: '缩小', role: 'zoomOut' }),
     ]))
+  })
+
+  it('localizes every added Desktop locale without empty labels', () => {
+    const expectedFileLabels: readonly (readonly [DesktopLocale, string])[] = [
+      ['zh-Hant', '檔案'],
+      ['ja', 'ファイル'],
+      ['ko', '파일'],
+      ['es', 'Archivo'],
+      ['fr', 'Fichier'],
+      ['de', 'Ablage'],
+    ]
+    for (const [locale, fileLabel] of expectedFileLabels) {
+      const template = macApplicationMenuTemplate('AI Shell Desktop', locale)
+      expect(template[1]!.label).toBe(fileLabel)
+      for (const item of submenu(template[0]!)) {
+        if (typeof item.label === 'string' && item.label !== '') expect(item.label).not.toMatch(/^undefined/)
+      }
+    }
   })
 
   it('keeps the English fallback complete', () => {

@@ -15,6 +15,7 @@ import { applyDesktopSettings } from './desktop-settings.ts'
 import { installDesktopDirectoryPickerBridge } from './directory-picker.ts'
 import { parseDesktopClientEnvironment } from './environment.ts'
 import { applyExtendedShell } from './extended-shell.ts'
+import { applyDesktopLocalePacks, installDesktopEnglishDefault } from './locales/registry.ts'
 import { installSidebarFooterStyles } from './sidebar-footer-styles.ts'
 import { desktopWindowService, provideDesktopWindow } from './window-service.ts'
 
@@ -91,6 +92,8 @@ export function apply(ctx: ClientContext): void {
     'shell-desktop: native window geometry service',
   )
   const desktopSettings = applyDesktopSettings(ctx, environment)
+  applyDesktopLocalePacks(ctx)
+  installDesktopEnglishDefault(ctx)
   // Every mode shares the footer seat: upstream's row flex would otherwise let
   // two launchers crush each other, and compatibility mode installs no frame styles.
   ctx.effect(
