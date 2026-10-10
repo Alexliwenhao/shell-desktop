@@ -14,6 +14,10 @@
  *     --disable-backgrounding-occluded-windows --disable-renderer-backgrounding \
  *     --disable-background-timer-throttling
  *
+ * The steps match Simplified Chinese labels, so set the interface language to
+ * 中文 under Settings -> General -> Language before capturing (fresh profiles
+ * default to English).
+ *
  * Then run:
  *
  *   node scripts/capture-feature-screenshots.cjs

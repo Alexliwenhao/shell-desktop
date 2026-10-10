@@ -22,6 +22,12 @@ The product now ships a single **AI Shell** surface: the activity rail (sessions
 - **Plan mode**: type `/plan`; commands arrive as proposed-command cards and run only when a human clicks.
 - **Session search**: the sessions panel searches titles and conversation content.
 
+## Language
+
+The interface ships in eight languages: English (default), 中文, 繁體中文, 日本語, 한국어, Español, Français, Deutsch. Switch anytime under Settings → General → Language; the interface updates immediately without a restart, and the tray menu and native dialogs follow.
+
+A fresh install defaults to English until a language is chosen, and a manual choice is remembered. Users upgrading from an earlier version who never picked a language also start in English — pick another under Settings.
+
 ## Local service
 
 AI Shell Desktop starts the Host service locally. It binds only to `127.0.0.1`, starting at port `43120` (and walking upward, up to 32 attempts, when the port is taken). The port can be pinned in the settings file:
