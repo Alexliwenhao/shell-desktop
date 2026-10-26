@@ -1126,7 +1126,7 @@ export function prepareDesktopProfile(
   if (webserver === undefined) {
     throw new Error(`${BIN_NAME}: desktop profile has no webserver row`)
   }
-  if (platform === 'win32') {
+  if (platform === 'win32' || platform === 'linux') {
     if (!rows.has(DIRECTORY_PICKER_ROW_ID)) {
       throw new Error(`${BIN_NAME}: desktop profile has no directory-picker row`)
     }

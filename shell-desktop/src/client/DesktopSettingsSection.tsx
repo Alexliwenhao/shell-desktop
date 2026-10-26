@@ -662,9 +662,9 @@ export function DesktopSettingsSection({
         <div className="dshDesktopSettingsList" role="radiogroup" aria-labelledby="shell-desktop-presentation-title">
           <Choice
             title={t('aishellMode')}
-            body={platform === 'linux' ? t('aishellUnavailableLinux') : t('aishellModeBody')}
+            body={t('aishellModeBody')}
             selected={mode === 'aishell'}
-            disabled={platform === 'linux' || !settingsWritable || busy !== undefined || restart !== 'none'}
+            disabled={!settingsWritable || busy !== undefined || restart !== 'none'}
             action={() => { setMode('aishell') }}
             status={mode === 'aishell' ? t('selected') : undefined}
           />

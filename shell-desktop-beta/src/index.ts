@@ -203,7 +203,7 @@ export function desktopRendererUrl(
   url.searchParams.set('shell-desktop-platform', platform)
   url.searchParams.set('shell-desktop-version', appVersion)
   url.searchParams.set('shell-desktop-material', material)
-  if (mode === 'extended' || (mode === 'compatibility' && platform !== 'linux')) {
+  if (mode === 'extended' || mode === 'compatibility') {
     // Body-level plugin portals do not inherit the framed root's geometry.
     // Publish the exact content boundary so they can yield Desktop chrome.
     url.searchParams.set('shell-desktop-titlebar-inset', String(DESKTOP_FRAME_HEIGHT))
@@ -261,9 +261,6 @@ export function apply(ctx: Context, config: Config): void {
       validate: (value) => {
         if (!desktopBrowserAccessAvailable(value.mode) && value.openBrowser) {
           throw new Error('shell-desktop: browser access requires compatibility mode')
-        }
-        if (value.mode !== 'compatibility' && runtime.platform === 'linux') {
-          throw new Error('shell-desktop: custom desktop shell modes are supported on macOS and Windows')
         }
       },
     },
@@ -372,7 +369,7 @@ export function apply(ctx: Context, config: Config): void {
     }),
     'shell-desktop: renderer boot report route',
   )
-  if (runtime.platform === 'win32') {
+  if (runtime.platform === 'win32' || runtime.platform === 'linux') {
     ctx.effect(
       () => ctx.webServer.register({
         kind: 'exact',
@@ -465,12 +462,10 @@ export function apply(ctx: Context, config: Config): void {
       void lanHttps.stop()
     }
   }, 'shell-desktop: live browser access and restart-applied native settings')
-  if (runtime.platform !== 'linux') {
-    ctx.on('settings/updated', (namespace, next) => {
-      if (namespace !== UI_THEME_SETTINGS_NAMESPACE) return
-      runtime.setThemeSource((next as ThemeSettings).preference)
-    })
-  }
+  ctx.on('settings/updated', (namespace, next) => {
+    if (namespace !== UI_THEME_SETTINGS_NAMESPACE) return
+    runtime.setThemeSource((next as ThemeSettings).preference)
+  })
   ctx.on('settings/updated', (namespace, next) => {
     if (namespace !== UI_LOCALE_SETTINGS_NAMESPACE) return
     runtime.setLocalePreference(desktopLocalePreference((next as LocaleSettings).preference))

@@ -28,9 +28,18 @@ describe('Desktop auxiliary window chrome', () => {
     expect(auxiliaryWindowHasCustomFrame('win32')).toBe(true)
   })
 
-  it('does not fake native controls on Linux', () => {
-    expect(auxiliaryWindowChromeOptions('linux')).toEqual({})
-    expect(auxiliaryWindowHasCustomFrame('linux')).toBe(false)
+  it('uses native caption controls over an empty 36px frame on Linux', () => {
+    expect(auxiliaryWindowChromeOptions('linux')).toEqual({
+      titleBarStyle: 'hidden',
+      titleBarOverlay: {
+        color: '#00000000',
+        symbolColor: '#7f858f',
+        height: 36,
+      },
+      hasShadow: true,
+      roundedCorners: true,
+    })
+    expect(auxiliaryWindowHasCustomFrame('linux')).toBe(true)
   })
 
   it('removes both native controls and the renderer frame from action-only dialogs', () => {

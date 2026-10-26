@@ -78,7 +78,7 @@ class MacPlatformStrategy implements ElectronPlatformStrategy {
 class LinuxPlatformStrategy implements ElectronPlatformStrategy {
   readonly platform = 'linux'
   readonly updateDownloadPlatform = undefined
-  readonly canPickDirectory = false
+  readonly canPickDirectory = true
 
   configureApplication(
     _icon: NativeImage,
@@ -88,7 +88,9 @@ class LinuxPlatformStrategy implements ElectronPlatformStrategy {
 
   refreshApplicationMenu(_applicationMenuItems: readonly MenuItemConstructorOptions[]): void {}
 
-  configureWindow(_window: BrowserWindow): void {}
+  configureWindow(window: BrowserWindow): void {
+    window.removeMenu()
+  }
 
   refreshThemeMaterial(_window: BrowserWindow, _material: DesktopWindowMaterial): void {}
 }

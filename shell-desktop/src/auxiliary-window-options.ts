@@ -8,7 +8,7 @@ export function auxiliaryWindowHasCustomFrame(
   platform: NodeJS.Platform = process.platform,
   windowControls = true,
 ): boolean {
-  return windowControls && (platform === 'darwin' || platform === 'win32')
+  return windowControls && (platform === 'darwin' || platform === 'win32' || platform === 'linux')
 }
 
 /** Hide the ordinary OS title row while retaining native window controls. */
@@ -41,6 +41,18 @@ export function auxiliaryWindowChromeOptions(
       hasShadow: true,
       roundedCorners: true,
       thickFrame: true,
+    }
+  }
+  if (platform === 'linux') {
+    return {
+      titleBarStyle: 'hidden',
+      titleBarOverlay: {
+        color: '#00000000',
+        symbolColor: '#7f858f',
+        height: DESKTOP_FRAME_HEIGHT,
+      },
+      hasShadow: true,
+      roundedCorners: true,
     }
   }
   return {}

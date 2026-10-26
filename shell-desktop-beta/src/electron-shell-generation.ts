@@ -247,7 +247,7 @@ export class ElectronShellGeneration {
     }
     platform.configureApplication(icon, spec.productName, this.options.buildApplicationMenuItems())
     const origin = new URL(spec.url).origin
-    if (platform.platform !== 'linux') nativeTheme.themeSource = spec.readThemeSource()
+    nativeTheme.themeSource = spec.readThemeSource()
     let persistedBounds: MainWindowBounds | undefined
     let restoredBounds: MainWindowBounds | undefined
     try {
@@ -262,7 +262,7 @@ export class ElectronShellGeneration {
     } catch (cause) {
       this.options.logError(`shell-desktop: failed to restore main-window state: ${cause instanceof Error ? cause.message : String(cause)}`)
     }
-    const isolated = spec.mode !== 'advanced' && spec.mode !== 'aishell' && platform.platform !== 'linux'
+    const isolated = spec.mode !== 'advanced' && spec.mode !== 'aishell'
     const windowOptions = desktopWindowOptions(spec, icon, platform.platform, this.options.preloadPath)
     const window = new BrowserWindow({
       ...windowOptions,

@@ -101,7 +101,7 @@ export function apply(ctx: ClientContext): void {
     () => startRendererBootReporter(ctx.loader),
     'shell-desktop: renderer boot health report',
   )
-  if (environment.platform === 'win32') {
+  if (environment.platform === 'win32' || environment.platform === 'linux') {
     ctx.effect(
       () => installDesktopDirectoryPickerBridge(),
       'shell-desktop: native directory picker bridge',

@@ -20,7 +20,7 @@ function baseWindowOptions(
   preload: string,
 ): BrowserWindowConstructorOptions {
   return {
-    title: platform === 'win32' ? spec.windowTitle : '',
+    title: platform === 'darwin' ? '' : spec.windowTitle,
     width: spec.width,
     height: spec.height,
     minWidth: spec.minWidth,
@@ -44,7 +44,7 @@ function baseWindowOptions(
  * @param spec - shell values resolved from the active Cordis row.
  * @param icon - validated application icon.
  * @param platform - current Electron platform.
- * @returns custom frame options on macOS/Windows and a native Linux fallback.
+ * @returns custom frame options on macOS, Windows and Linux.
  */
 export function compatibilityWindowOptions(
   spec: DesktopShellSpec,
@@ -55,14 +55,12 @@ export function compatibilityWindowOptions(
   if (spec.mode !== 'compatibility') {
     throw new Error(`shell-desktop: unsupported compatibility window mode ${spec.mode}`)
   }
-  if (platform === 'darwin' || platform === 'win32') {
+  if (platform === 'darwin' || platform === 'win32' || platform === 'linux') {
     return customChromeWindowOptions(spec, icon, platform, preload, {
       titlebarHeight: DESKTOP_FRAME_HEIGHT,
       macosTrafficLightTop: DESKTOP_FRAME_MACOS_TRAFFIC_LIGHT_TOP,
     })
   }
-  const options = baseWindowOptions(spec, icon, platform, preload)
-  if (platform === 'linux') return options
   throw new Error('shell-desktop: compatibility mode is unsupported on this platform')
 }
 
@@ -163,7 +161,24 @@ function customChromeWindowOptions(
       thickFrame: true,
     }
   }
-  throw new Error('shell-desktop: custom desktop shell modes are supported on macOS and Windows')
+  if (platform === 'linux') {
+    // Linux exposes the same Window Controls Overlay surface as Windows
+    // (`titleBarOverlay` is supported on win32 and linux), so the Desktop frame
+    // keeps its renderer-owned caption row and native min/max/close controls.
+    return {
+      ...options,
+      autoHideMenuBar: true,
+      titleBarStyle: 'hidden',
+      titleBarOverlay: {
+        color: '#00000000',
+        symbolColor: '#7f858f',
+        height: geometry.titlebarHeight,
+      },
+      hasShadow: true,
+      roundedCorners: true,
+    }
+  }
+  throw new Error('shell-desktop: custom desktop shell modes are supported on macOS, Windows and Linux')
 }
 
 /**

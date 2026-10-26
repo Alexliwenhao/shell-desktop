@@ -326,7 +326,13 @@ describe('desktop Host plugin', () => {
       'compatibility',
       'linux',
       '2.0.3',
-    )).searchParams)).not.toHaveProperty('shell-desktop-titlebar-inset')
+    )).searchParams)).toEqual({
+      'shell-desktop-mode': 'compatibility',
+      'shell-desktop-platform': 'linux',
+      'shell-desktop-version': '2.0.3',
+      'shell-desktop-material': 'off',
+      'shell-desktop-titlebar-inset': '36',
+    })
   })
 
   it('registers settings and the active Web port without re-entering Loader settlement', async () => {
@@ -635,7 +641,7 @@ describe('desktop Host plugin', () => {
     expect(() => apply(harness.ctx, { ...config, networkExposure: 'lan' })).not.toThrow()
   })
 
-  it('validates the effective Linux mode while a browser migration is deferred', () => {
+  it('accepts every stored shell mode on Linux while browser access stays gated', () => {
     const harness = createHarness('linux')
     apply(harness.ctx, config)
     const register = vi.mocked(harness.ctx.settings.register)
@@ -651,23 +657,20 @@ describe('desktop Host plugin', () => {
       logLevel: 'info',
       aishellWorkspace: '',
     }
-    expect(() => options?.validate?.({ ...settings, mode: 'advanced' })).toThrow(
-      'supported on macOS and Windows',
-    )
-    expect(() => options?.validate?.({ ...settings, mode: 'extended' })).toThrow(
-      'supported on macOS and Windows',
-    )
+    expect(() => options?.validate?.({ ...settings, mode: 'aishell' })).not.toThrow()
+    expect(() => options?.validate?.({ ...settings, mode: 'advanced' })).not.toThrow()
+    expect(() => options?.validate?.({ ...settings, mode: 'extended' })).not.toThrow()
     expect(() => options?.validate?.({ ...settings, mode: 'compatibility' })).not.toThrow()
     expect(() => options?.validate?.({
       ...settings,
-      mode: 'advanced',
+      mode: 'aishell',
       openBrowser: true,
     })).toThrow('browser access requires compatibility mode')
     expect(() => options?.validate?.({
       ...settings,
       mode: 'advanced',
       networkExposure: 'lan',
-    })).toThrow('supported on macOS and Windows')
+    })).not.toThrow()
   })
 
   it('accepts a deferred LAN preference independently of browser mode on supported platforms', () => {

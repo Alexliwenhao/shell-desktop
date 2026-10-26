@@ -47,7 +47,7 @@ export function desktopWindowService(environment: DesktopClientEnvironment): Des
       ),
     })
   }
-  if (environment.platform === 'win32') {
+  if (environment.platform === 'win32' || environment.platform === 'linux') {
     return Object.freeze({
       ...environment,
       availableMaterials,

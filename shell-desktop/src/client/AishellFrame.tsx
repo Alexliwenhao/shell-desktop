@@ -396,7 +396,7 @@ export function AishellFrame(props: AishellFrameProps) {
       data-dragging={dragging || undefined}
       style={{ gridTemplateColumns: `${AISHELL_RAIL_WIDTH}px ${resolvedLeft}px minmax(0, 1fr) ${resolvedChat}px` }}
     >
-      {platform !== 'linux' && <div className="dshAishellCaptionRow" data-aishell-caption="" aria-hidden="true" />}
+      <div className="dshAishellCaptionRow" data-aishell-caption="" aria-hidden="true" />
       <ActivityRail
         view={leftView}
         leftVisible={leftVisible}

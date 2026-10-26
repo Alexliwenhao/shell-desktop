@@ -27,10 +27,10 @@ body:is([data-shell-desktop-mode="extended"], [data-shell-desktop-mode="advanced
 .dshDesktopConversationSurface { grid-column: 2; grid-row: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--dsw-alias-bg-base); }
 .dshDesktopRightbarSurface { position: relative; grid-column: 3; grid-row: 1; min-width: 0; min-height: 0; overflow: visible; }
 .dshDesktopFrame[data-rightbar-fullscreen], .dshDesktopFrame[data-rightbar-fullscreen] .dshDesktopResizeHandle { transition: none; }
-.dshDesktopFrame[data-desktop-mode="advanced"][data-desktop-platform="win32"] { grid-template-rows: ${ADVANCED_WINDOWS_TITLEBAR_HEIGHT}px minmax(0, 1fr); }
-.dshDesktopFrame[data-desktop-mode="advanced"][data-desktop-platform="win32"] .dshDesktopSidebarSurface { grid-row: 1 / -1; }
-.dshDesktopFrame[data-desktop-mode="advanced"][data-desktop-platform="win32"] .dshDesktopConversationSurface,
-.dshDesktopFrame[data-desktop-mode="advanced"][data-desktop-platform="win32"] .dshDesktopRightbarSurface { grid-row: 2; }
+.dshDesktopFrame[data-desktop-mode="advanced"]:is([data-desktop-platform="win32"], [data-desktop-platform="linux"]) { grid-template-rows: ${ADVANCED_WINDOWS_TITLEBAR_HEIGHT}px minmax(0, 1fr); }
+.dshDesktopFrame[data-desktop-mode="advanced"]:is([data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshDesktopSidebarSurface { grid-row: 1 / -1; }
+.dshDesktopFrame[data-desktop-mode="advanced"]:is([data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshDesktopConversationSurface,
+.dshDesktopFrame[data-desktop-mode="advanced"]:is([data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshDesktopRightbarSurface { grid-row: 2; }
 .dshDesktopWindowsCaptionRow { position: relative; grid-column: 2 / -1; grid-row: 1; min-width: 0; background: var(--dsw-alias-bg-base); }
 .dshDesktopWindowsCaptionRow::before { content: ""; position: absolute; inset: 0 ${WINDOWS_CAPTION_CONTROLS_WIDTH}px 0 0; user-select: none; -webkit-app-region: drag; }
 .dshDesktopFrame[data-dragging] { transition: none; }

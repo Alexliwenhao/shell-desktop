@@ -426,7 +426,7 @@ describe('Electron desktop runtime', () => {
     expect(options).not.toHaveProperty('titleBarOverlay')
     expect(electron.contentViews).toHaveLength(2)
     expect(electron.contentViews[1]?.options).toEqual({ webPreferences: {
-      preload: expect.stringMatching(/\/preload\.cjs$/),
+      preload: expect.stringMatching(/[\\/]preload\.cjs$/),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -783,7 +783,7 @@ describe('Electron desktop runtime', () => {
     expect(electron.trays[0]?.off).toHaveBeenCalledWith('click', expect.any(Function))
   })
 
-  it('selects the restricted Linux platform adapter once for native capabilities', async () => {
+  it('selects the Linux platform adapter once for Windows-equivalent native capabilities', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('linux')
     electron.app.isPackaged = true
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
@@ -793,12 +793,13 @@ describe('Electron desktop runtime', () => {
     await runtime.mountScheduled()
 
     expect(runtime.platform).toBe('linux')
-    expect(electron.contentViews).toHaveLength(0)
+    expect(electron.contentViews).toHaveLength(2)
     expect(runtime.updates.canDownload).toBe(false)
-    await expect(runtime.pickDirectory()).rejects.toThrow('native workspace picker is unavailable on linux')
+    electron.dialog.showOpenDialog.mockResolvedValue({ canceled: true, filePaths: [] })
+    await expect(runtime.pickDirectory()).resolves.toBeNull()
     expect(electron.app.dock.setIcon).not.toHaveBeenCalled()
     expect(electron.Menu.setApplicationMenu).not.toHaveBeenCalled()
-    expect(electron.browserWindows[0]?.removeMenu).not.toHaveBeenCalled()
+    expect(electron.browserWindows[0]?.removeMenu).toHaveBeenCalled()
 
     await release()
   })

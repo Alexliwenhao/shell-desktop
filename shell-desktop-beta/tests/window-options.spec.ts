@@ -84,12 +84,16 @@ describe('compatibility BrowserWindow options', () => {
     expect(options.titleBarOverlay).toEqual(expect.objectContaining({ height: DESKTOP_FRAME_HEIGHT }))
   })
 
-  it('keeps the ordinary native frame as the Linux compatibility fallback', () => {
+  it('uses the independent frame with native controls on Linux', () => {
     const options = compatibilityWindowOptions(spec, {} as NativeImage, 'linux', preload)
 
-    expect(options).not.toHaveProperty('titleBarStyle')
-    expect(options).not.toHaveProperty('titleBarOverlay')
+    expect(options.title).toBe('AI Shell Desktop')
+    expect(options.autoHideMenuBar).toBe(true)
+    expect(options.titleBarStyle).toBe('hidden')
+    expect(options.titleBarOverlay).toEqual(expect.objectContaining({ height: DESKTOP_FRAME_HEIGHT }))
     expect(options).not.toHaveProperty('trafficLightPosition')
+    expect(options).not.toHaveProperty('thickFrame')
+    expect(options).not.toHaveProperty('backgroundMaterial')
   })
 
   it('reveals transparent material behind the macOS compatibility frame', () => {
@@ -203,12 +207,49 @@ describe('compatibility BrowserWindow options', () => {
     expect(DESKTOP_FRAME_HEIGHT).toBe(36)
   })
 
-  it('rejects enhanced mode on Linux', () => {
-    expect(() => advancedWindowOptions(
-      { ...spec, mode: 'advanced' },
+  it('uses native Linux controls for enhanced mode', () => {
+    const options = advancedWindowOptions(
+      { ...spec, mode: 'advanced', material: 'off' },
       {} as NativeImage,
       'linux',
       preload,
-    )).toThrow('supported on macOS and Windows')
+    )
+
+    expect(options.titleBarStyle).toBe('hidden')
+    expect(options.titleBarOverlay).toEqual(expect.objectContaining({
+      height: ADVANCED_WINDOWS_TITLEBAR_HEIGHT,
+    }))
+    expect(options.backgroundColor).toBe('#202124')
+    expect(options).not.toHaveProperty('thickFrame')
+    expect(options).not.toHaveProperty('backgroundMaterial')
+  })
+
+  it('builds the AI Shell window on Linux with the same frame as Windows', () => {
+    const options = advancedWindowOptions(
+      { ...spec, mode: 'aishell' },
+      {} as NativeImage,
+      'linux',
+      preload,
+    )
+
+    expect(options.titleBarStyle).toBe('hidden')
+    expect(options.titleBarOverlay).toEqual(expect.objectContaining({
+      height: ADVANCED_WINDOWS_TITLEBAR_HEIGHT,
+    }))
+    expect(options).not.toHaveProperty('trafficLightPosition')
+    expect(options).not.toHaveProperty('backgroundMaterial')
+    expect(options.backgroundColor).toBe('#ffffff')
+    expect(options.webPreferences).toEqual(expect.objectContaining({
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      partition: DESKTOP_RENDERER_SESSION_PARTITION,
+    }))
+    expect(desktopWindowOptions(
+      { ...spec, mode: 'aishell' },
+      {} as NativeImage,
+      'linux',
+      preload,
+    )).toEqual(options)
   })
 })

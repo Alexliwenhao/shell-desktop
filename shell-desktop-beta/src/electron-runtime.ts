@@ -213,7 +213,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
           this.generation = undefined
           this.mountTask = undefined
           if (this.scheduled === spec) {
-            if (this.platform !== 'linux') nativeTheme.themeSource = previousThemeSource
+            nativeTheme.themeSource = previousThemeSource
             this.scheduled = undefined
           }
         }
@@ -475,7 +475,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
 
   /** @inheritdoc */
   setThemeSource(source: DesktopThemeSource): void {
-    if (this.platform !== 'linux' && this.generation !== undefined) {
+    if (this.generation !== undefined) {
       nativeTheme.themeSource = source
       // Windows can retain the preceding DWM Mica palette until the window is
       // recomposed (for example after minimize/restore). Reapplying the active

@@ -14,18 +14,18 @@ body[data-shell-desktop-mode="aishell"] { margin: 0; background: var(--dsw-alias
 .dshAishellFrame { position: relative; display: grid; grid-template-rows: 100%; width: 100%; height: 100%; overflow: hidden; background: transparent; transition: grid-template-columns var(--ds-transition-duration-slow) var(--ds-ease-in-out); }
 .dshAishellFrame[data-dragging] { transition: none; }
 .dshAishellCaptionRow { grid-column: 1 / -1; grid-row: 1; position: relative; min-width: 0; background: var(--dsw-alias-bg-base); user-select: none; }
-.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"]) { grid-template-rows: ${ADVANCED_MACOS_DRAG_REGION_HEIGHT}px minmax(0, 1fr); }
-.dshAishellFrame[data-desktop-platform="win32"] { grid-template-rows: ${ADVANCED_WINDOWS_TITLEBAR_HEIGHT}px minmax(0, 1fr); }
-.dshAishellFrame[data-desktop-platform="win32"] .dshAishellCaptionRow { -webkit-app-region: drag; }
-.dshAishellFrame[data-desktop-platform="win32"] .dshAishellCaptionRow::before { content: ""; position: absolute; inset: 0 ${WINDOWS_CAPTION_CONTROLS_WIDTH}px 0 0; -webkit-app-region: drag; }
+.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"], [data-desktop-platform="linux"]) { grid-template-rows: ${ADVANCED_MACOS_DRAG_REGION_HEIGHT}px minmax(0, 1fr); }
+.dshAishellFrame:is([data-desktop-platform="win32"], [data-desktop-platform="linux"]) { grid-template-rows: ${ADVANCED_WINDOWS_TITLEBAR_HEIGHT}px minmax(0, 1fr); }
+.dshAishellFrame:is([data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshAishellCaptionRow { -webkit-app-region: drag; }
+.dshAishellFrame:is([data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshAishellCaptionRow::before { content: ""; position: absolute; inset: 0 ${WINDOWS_CAPTION_CONTROLS_WIDTH}px 0 0; -webkit-app-region: drag; }
 .dshAishellRail,
 .dshAishellLeftPanel,
 .dshAishellWorkspace,
 .dshAishellChatColumn { grid-row: 1; }
-.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"]) .dshAishellRail,
-.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"]) .dshAishellLeftPanel,
-.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"]) .dshAishellWorkspace,
-.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"]) .dshAishellChatColumn { grid-row: 2; }
+.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshAishellRail,
+.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshAishellLeftPanel,
+.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshAishellWorkspace,
+.dshAishellFrame:is([data-desktop-platform="darwin"], [data-desktop-platform="win32"], [data-desktop-platform="linux"]) .dshAishellChatColumn { grid-row: 2; }
 
 .dshAishellRail { grid-column: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 4px; box-sizing: border-box; padding: 6px 0; background: var(--dsw-alias-bg-layer-2); border-right: 1px solid var(--dsw-alias-border-l1); }
 .dshAishellRailGroup { display: flex; flex-direction: column; align-items: center; gap: 2px; }
