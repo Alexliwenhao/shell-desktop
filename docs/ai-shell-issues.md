@@ -25,7 +25,7 @@
 | 16 | 历史会话要支持删除 | 已修复（待人工确认） | 历史行删除按钮：点一次变 ✓（红），再点一次才真正删除；失败会在面板提示 |
 | 17 | 文件的默认路径是 `/` | 已修复（待人工确认） | `FilePanel` 初始加载远端根目录 `/`（不再用 `.`） |
 | 18 | 产品改名：AI Shell Desktop → AI Shell Desktop，窗口标题 AI Shell Desktop | 已修复 | 全包（`src`/`tests`/`scripts`/`build`/文档）改文案；保留机器键（`X-DSH-Desktop-*` 头、`shell-desktop` 包名；产物名后在 #27 一并改名） |
-| 19 | logo 全部换成 `JLY.png` | 已修复 | 矢量化四面体标 → `build/app-icon.png` / `tray-icon.svg` → 生成 ICO/托盘/应用图标；应用内占用 `conversation.hero.brand.mark` 槽位 |
+| 19 | logo 改为开源可用的自有标记 | 已修复 | 自绘“菱形包裹 S”科技标 → `build/app-icon.png` / `tray-icon.svg` → 生成 ICO/托盘/应用图标；应用内占用 `conversation.hero.brand.mark` 槽位 |
 | 20 | 首次启动的初始化向导要全部去掉（市场/手机连接/浏览器页删除） | 已修复 | 删除 Setup Wizard（窗口/契约/文案/状态/native-ui/vite 入口/测试）；启动直接进主界面，模式默认 AI Shell |
 | 21 | 内测声明改为 Host 自动确认（不再弹给用户） | 已修复 | `src/desktop-onboarding.ts`：Host 启动即写入 `ui-onboarding.welcomeNoticeVersion` |
 | 22 | 深色模式下终端内容看不见 | 已修复（待人工确认） | 终端改为跟随主题的独立调色板（深色=深底白字），由 `terminal-theme.ts` 提供 |
@@ -130,11 +130,11 @@
 - 连带影响：应用数据目录从 `%APPDATA%\AI Shell Desktop` 变为 `%APPDATA%\AI Shell Desktop`；旧目录数据不会自动迁移（首启会进安装向导）。本机已手工把旧目录中的 profile-setup/profile-selection/preferences/identity 等拷入新目录。
 - 变体校验：`scripts/verify-desktop-variants.mjs` 的 `normalizeIdentity` 已由 `AI Shell Desktop Beta` 改为 `AI Shell Desktop Beta`；`check:desktop-variants` 通过（203 个共享源文件对齐）。
 
-### 19 logo 更换（JLY.png）
-- 来源：仓库根 `JLY.png`（441×442，透明底、蓝系多面标记）。处理：按 5 色（`#0062a4/#9dd3ed/#009ad7/#1eaadd/#55bbe5`）分类 → 逐面描边成 SVG → `build/app-icon.png`（1024² RGBA16 + sRGB ICC）与 `build/tray-icon.svg`（单色 `#4D6BFE` 剪影，50×50）。
-- 派生：`generate-windows-app-icon.mjs`（ICO 16–256，≤40px 用剪影黑/白圆角底）、`generate-mac-app-icon.mjs`（824px 内缩，trim 后 824×823，`trimOffsetTop=-101`）、`generate-tray-icons.mjs`（蓝/黑模板 PNG）。Beta 版按历史规则 = 稳定版 RGB 反相（alpha 不变）。
-- 应用内：`src/client/BrandMark.tsx` 用描边路径注册 `conversation.hero.brand.mark`（single/root）替换官方鱼标；在 AI Shell 模式下启动即打开会话，hero 一般不出现，界面内可见品牌位以托盘/任务栏图标为主。
-- 测试：`tests/package.spec.ts` 图标摘要与 macOS 内缩断言已更新（stable `d629cf2f…`，beta `c43abe99…`）。
+### 19 logo 更换（自有 S 标记）
+- 来源：自绘“菱形包裹 S”科技标（100×100 viewBox，四段断裂菱形环 + 方块 S 单字，渐变 `#4D6BFE → #22D3EE`）。公司 logo 源图已从仓库删除，不再使用任何公司标识资产。
+- 派生：`build/app-icon.png`（1024² RGBA16 + sRGB ICC，深色圆角底板）、`build/tray-icon.svg`（单色 `#4D6BFE` 的 S 剪影，50×50）。`generate-windows-app-icon.mjs`（ICO 16–256，≤40px 用剪影黑/白圆角底）、`generate-mac-app-icon.mjs`（824px 内缩）、`generate-tray-icons.mjs`（蓝/黑模板 PNG）。Beta 版按历史规则 = 稳定版 RGB 反相（alpha 不变）。
+- 应用内：`src/client/BrandMark.tsx` 用渐变描边/矩形注册 `conversation.hero.brand.mark`（single/root）替换官方鱼标；在 AI Shell 模式下启动即打开会话，hero 一般不出现，界面内可见品牌位以托盘/任务栏图标为主。
+- 测试：`tests/package.spec.ts` 图标摘要与 macOS 内缩断言已按新标记更新。
 
 ### 20 首次启动向导全部移除
 - 决策（用户）：首启流程全去掉；市场/手机连接/浏览器访问页删除；API Key 引导保留给用户自己填；不做旧数据目录迁移。

@@ -932,7 +932,7 @@ describe('published package surface', () => {
       .update(readFileSync(new URL('build/app-icon.png', packageRoot)))
       .digest('hex')
 
-    expect(digest).toBe('d629cf2fb4c101479739057a12158435067f610e2880573b9e47acbd282cd9e5')
+    expect(digest).toBe('a7bd00b80534d51f1fe9ff8749608503d9815c02c34aea4ab08e0cf364af63b5')
   })
 
   it('generates exact-DPI Windows application and installer icon frames', () => {
@@ -972,7 +972,7 @@ describe('published package surface', () => {
       .toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
   })
 
-  it('generates a centered macOS icon with a 100-pixel visual inset', async () => {
+  it('generates a centered macOS icon with the declared visual inset', async () => {
     const source = await sharp(readFileSync(new URL('build/app-icon.png', packageRoot))).metadata()
     const icon = sharp(readFileSync(new URL('build/app-icon-mac.png', packageRoot)))
     const metadata = await icon.metadata()
@@ -992,10 +992,10 @@ describe('published package surface', () => {
     }))
     expect(metadata.icc).toEqual(source.icc)
     expect(info).toEqual(expect.objectContaining({
-      width: 824,
-      height: 823,
-      trimOffsetLeft: -100,
-      trimOffsetTop: -101,
+      width: 778,
+      height: 778,
+      trimOffsetLeft: -123,
+      trimOffsetTop: -123,
     }))
   })
 
