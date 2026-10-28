@@ -1018,10 +1018,10 @@ describe('published package surface', () => {
       .update(readFileSync(new URL('build/app-icon.png', packageRoot)))
       .digest('hex')
 
-    expect(digest).toBe('c43abe99890e31d6dec0ddb0b7f21317d4e2c2a0c12ca4b62a0562fd26f3c404')
+    expect(digest).toBe('42a4352f1fb4a9bc169663b389a5e87dd203f1adb8fa6325d1ac890ab38161fc')
   })
 
-  it('generates a centered macOS icon with a 100-pixel visual inset', async () => {
+  it('generates a centered macOS icon with the declared visual inset', async () => {
     const source = await sharp(readFileSync(new URL('build/app-icon.png', packageRoot))).metadata()
     const icon = sharp(readFileSync(new URL('build/app-icon-mac.png', packageRoot)))
     const metadata = await icon.metadata()
@@ -1041,10 +1041,10 @@ describe('published package surface', () => {
     }))
     expect(metadata.icc).toEqual(source.icc)
     expect(info).toEqual(expect.objectContaining({
-      width: 824,
-      height: 823,
-      trimOffsetLeft: -100,
-      trimOffsetTop: -101,
+      width: 778,
+      height: 778,
+      trimOffsetLeft: -123,
+      trimOffsetTop: -123,
     }))
   })
 
