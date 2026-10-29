@@ -61,6 +61,8 @@ Launcher 私有的 `desktopRuntime`、`desktopPnpmBootstrap`、Electron executab
 
 根 workspace 使用 Yarn；固定的 `deepseek-harness/` 子模块保持上游自己的 pnpm workspace。稳定版与 Beta 的桌面代码分别位于 `shell-desktop/` 和 `shell-desktop-beta/`，共享功能由变体同步检查约束；两者都不修改上游子模块。
 
+发布目标包括 Windows NSIS / 免安装 zip、macOS universal DMG，以及 Linux x64 / ARM64 的 AppImage、deb、tar.gz。Linux 产物必须在目标架构的原生 Linux 上构建：`fs-ext` 等原生依赖按目标 ABI 编译，`linux-unpacked` 与 `linux-<arch>-unpacked` 由 Electron Builder 按默认架构决定。
+
 ## 发行通道
 
 稳定版与 Beta 是两个实体 npm 包和两个系统应用，不由 Git 分支区分。稳定版使用 `shell-desktop`、`AI Shell Desktop` 与 `com.shelldesktop.app`；Beta 使用 `shell-desktop-beta`、`AI Shell Desktop Beta` 与 `com.shelldesktop.app.beta`。`upstream.json` 同时记录两个通道的上游版本、提交和 vendored runtime 清单，根级精确 resolution 保证每个 workspace 只能解析自己的 DSH 运行时。发行包通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases) 分发，应用内不提供自动更新入口。

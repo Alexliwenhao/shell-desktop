@@ -32,7 +32,7 @@ AI Shell Desktop 的目标不是重新实现 Harness，而是把同一个运行�
 - 多 profile 选择。当前 generation 的 profile 身份由 Desktop 明确提供，切换通过有序重启生效。
 - 内置终端和固定版本 pnpm 环境。它们只作用于 Desktop 自己创建的进程，不修改用户的全局 PATH。
 - 面向插件开发者的一组受控扩展接口（详见[插件开发](plugin-development.md)）。
-- macOS DMG / Windows NSIS 的打包与发布流程（发行包通过 GitHub Releases 分发）。
+- Windows NSIS / 免安装包、macOS universal DMG，以及 Linux x64 / ARM64 的 AppImage、deb、tar.gz 打包与发布流程（发行包通过 GitHub Releases 分发）。
 
 ## 我们刻意不做什么
 

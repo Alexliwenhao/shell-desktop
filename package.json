@@ -609,6 +609,8 @@
     "dist:mac-smoke": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:mac-smoke",
     "dist:win": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:win",
     "dist:win-portable": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:win-portable",
+    "dist:linux": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:linux",
+    "dist:linux-arm64": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:linux-arm64",
     "upstream:version": "cd deepseek-harness && corepack pnpm --version",
     "upstream:install": "cd deepseek-harness && CI=true corepack pnpm install --frozen-lockfile",
     "upstream:build": "cd deepseek-harness && corepack pnpm run build",
@@ -622,6 +624,8 @@
     "dist:mac-smoke:beta": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:mac-smoke",
     "dist:win:beta": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:win",
     "dist:win-portable:beta": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:win-portable",
+    "dist:linux:beta": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:linux",
+    "dist:linux-arm64:beta": "yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:linux-arm64",
     "aa:check": "node scripts/prepare-agents-anywhere-release.mjs --check",
     "aa:prepare-release": "node scripts/prepare-agents-anywhere-release.mjs"
   }

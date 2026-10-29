@@ -14,7 +14,7 @@ No. AI Shell Desktop is an independent, community-maintained open-source project
 
 ## Which operating systems are supported?
 
-The currently published installers target Windows x64; the macOS packaging flow is included in the source tree but no macOS installer has been published yet, and there is no Linux installer. Cross-platform compatibility code in the source tree does not imply that an installer has been released for that platform.
+The currently published installers target Windows x64. Packaging flows for universal macOS (Intel and Apple Silicon) and Linux x64 / ARM64 AppImage, deb, and tar.gz artifacts are included in the source tree and are built unsigned by CI on the matching native platform. A platform is published only when its files appear in the release assets; cross-platform compatibility code in the source tree does not imply that an installer has been released for that platform.
 
 ## Do I need to install Node.js, pnpm, or DSH?
 
@@ -42,7 +42,7 @@ No plugins are copied automatically. Each profile has its own bundle and depende
 
 ## How are updates installed?
 
-Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place; upgrades never install silently.
+Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place; upgrades never install silently. Windows and macOS provide in-app entries to check for and download an installer; Linux currently supports only manual upgrades by downloading a new AppImage, deb, or tar.gz, and never updates itself in the background.
 
 ## Where can I download the app or report a problem?
 

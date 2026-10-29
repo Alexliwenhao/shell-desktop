@@ -61,6 +61,8 @@ Release artifacts use Electron Builder and `app.asar`, while dependencies that m
 
 The outer workspace uses Yarn. The pinned `deepseek-harness/` submodule keeps its own pnpm workspace. Stable and Beta Desktop sources live in `shell-desktop/` and `shell-desktop-beta/`, with a variant-alignment gate protecting shared behavior; neither package edits the upstream submodule.
 
+Release targets include Windows NSIS / portable zip, macOS universal DMG, and Linux x64 / ARM64 AppImage, deb, and tar.gz artifacts. Linux artifacts must be built on native Linux for the target architecture: native dependencies such as `fs-ext` are compiled against the target ABI, and Electron Builder derives `linux-unpacked` or `linux-<arch>-unpacked` from the default architecture.
+
 ## Release channels
 
 Stable and Beta are separate physical npm packages and system applications; Git branches do not define the channels. Stable uses `shell-desktop`, `AI Shell Desktop`, and `com.shelldesktop.app`; Beta uses `shell-desktop-beta`, `AI Shell Desktop Beta`, and `com.shelldesktop.app.beta`. `upstream.json` records both channels' upstream versions, commits, and vendored-runtime manifests. Exact root resolutions ensure that each workspace resolves only its own DSH runtime. Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases); the app provides no automatic-update entry point.

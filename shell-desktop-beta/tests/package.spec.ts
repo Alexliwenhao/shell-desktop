@@ -51,7 +51,16 @@ const manifest = JSON.parse(readFileSync(new URL('package.json', packageRoot), '
     win?: { compression?: unknown; icon?: unknown; asarUnpack?: unknown; target?: unknown; artifactName?: unknown }
     nsis?: Record<string, unknown>
     portable?: Record<string, unknown>
-    linux?: { icon?: unknown; asarUnpack?: unknown }
+    linux?: {
+      icon?: unknown
+      asar?: unknown
+      asarUnpack?: unknown
+      artifactName?: unknown
+      executableName?: unknown
+      category?: unknown
+      target?: unknown
+    }
+    deb?: { packageName?: unknown; packageCategory?: unknown; priority?: unknown }
   }
   dependencies?: Record<string, unknown>
   optionalDependencies?: Record<string, unknown>
@@ -872,7 +881,23 @@ describe('published package surface', () => {
       useZip: false,
       artifactName: 'AI-Shell-Desktop-Beta-${version}-${arch}-Setup.${ext}',
     })
-    expect(manifest.build?.linux?.icon).toBe('build/app-icon.png')
+    expect(manifest.build?.linux).toEqual(expect.objectContaining({
+      icon: 'build/app-icon.png',
+      asar: false,
+      artifactName: 'AI-Shell-Desktop-Beta-${version}-${arch}.${ext}',
+      executableName: 'ai-shell-desktop-beta',
+      category: 'Development',
+      target: [
+        { target: 'AppImage', arch: ['x64', 'arm64'] },
+        { target: 'deb', arch: ['x64', 'arm64'] },
+        { target: 'tar.gz', arch: ['x64', 'arm64'] },
+      ],
+    }))
+    expect(manifest.build?.deb).toEqual(expect.objectContaining({
+      packageName: 'ai-shell-desktop-beta',
+      packageCategory: 'devel',
+    }))
+    expect(manifest.build?.mac?.artifactName).toBe('AI-Shell-Desktop-Beta-${version}-${arch}.${ext}')
   })
 
   it('separates unsigned smoke packaging from the signed macOS release', () => {
@@ -895,6 +920,8 @@ describe('published package surface', () => {
     expect(manifest.scripts?.['dist:mac-smoke']).toBe('node scripts/package-mac.ts')
     expect(manifest.scripts?.['dist:win']).toBe('node scripts/package-win.ts')
     expect(manifest.scripts?.['dist:win-portable']).toBe('node scripts/package-win-portable.ts')
+    expect(manifest.scripts?.['dist:linux']).toBe('node scripts/package-linux.ts')
+    expect(manifest.scripts?.['dist:linux-arm64']).toBe('node scripts/package-linux.ts arm64')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn workspace dsh-community-market build')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run build')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run typecheck')
@@ -914,6 +941,12 @@ describe('published package surface', () => {
     expect(manifest.scripts?.['check:mac-package']).toContain('tests/verify-mac-smoke.spec.ts')
     expect(manifest.scripts?.['check:mac-package']).toContain('tests/mac-universal.spec.ts')
     expect(manifest.scripts?.['check:mac-package']).toContain('yarn run verify:closure')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn workspace dsh-community-market build')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn run build')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn run typecheck')
+    expect(manifest.scripts?.['check:linux-package']).toContain('tests/package-linux.spec.ts')
+    expect(manifest.scripts?.['check:linux-package']).toContain('tests/verify-linux-artifacts.spec.ts')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn run verify:closure')
     expect(manifest.scripts?.['verify:cli']).toBe('node scripts/verify-cli-runtime.mjs')
     expect(manifest.scripts?.check).toContain('yarn run verify:cli')
     expect(workspaceManifest.scripts?.['dist:mac:beta'])
@@ -924,6 +957,10 @@ describe('published package surface', () => {
       .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:win')
     expect(workspaceManifest.scripts?.['dist:win-portable:beta'])
       .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:win-portable')
+    expect(workspaceManifest.scripts?.['dist:linux:beta'])
+      .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:linux')
+    expect(workspaceManifest.scripts?.['dist:linux-arm64:beta'])
+      .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop-beta dist:linux-arm64')
     expect(manifest.build?.afterPack).toBe('./scripts/verify-packaged-runtime.ts')
     expect(manifest.build?.afterAllArtifactBuild).toBe('./scripts/verify-electron-fuses.ts')
     expect(manifest.build?.mac).toEqual(expect.objectContaining({

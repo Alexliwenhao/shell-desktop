@@ -108,6 +108,6 @@ $env:SHELL_DESKTOP_ONLY='11,12,13,14'; node scripts/capture-feature-screenshots.
 ## 需要补拍的镜头
 
 - CDP 抓不到的原生界面：系统托盘菜单（打开窗口 / 退出）
-- 安装包与桌面/开始菜单快捷方式、应用图标（Windows NSIS、macOS DMG）
+- 安装包与桌面/开始菜单快捷方式、应用图标（Windows NSIS、macOS DMG、Linux AppImage / deb）
 - 启动恢复窗口（需要构造启动故障）
 - 多主机同时连接的会话分组演示（当前环境仅存两台主机）

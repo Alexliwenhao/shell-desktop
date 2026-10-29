@@ -32,7 +32,7 @@ The current Desktop product provides:
 - Multiple profile selection. Desktop exposes the active profile identity for the current generation, and switching takes effect through an orderly restart.
 - A bundled terminal and pinned pnpm environment. They apply only to processes created by Desktop and do not modify the user's global PATH.
 - A controlled set of extension interfaces for plugin developers (see [plugin development](plugin-development.en.md)).
-- macOS DMG / Windows NSIS packaging and release flows (artifacts ship through GitHub Releases).
+- Windows NSIS / portable, macOS universal DMG, and Linux x64 / ARM64 AppImage, deb, and tar.gz packaging and release flows (artifacts ship through GitHub Releases).
 
 ## What we deliberately do not do
 

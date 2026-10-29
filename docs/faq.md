@@ -14,7 +14,7 @@ AI Shell Desktop 是面向 Windows 和 macOS 的开源 DeepSeek Harness 桌面�
 
 ## 支持哪些操作系统？
 
-当前发布的正式安装包为 Windows x64；macOS 的打包流程已内置，但尚未发布正式安装包；没有 Linux 安装包。不要根据源码中存在跨平台兼容代码推断已经发布了对应安装包。
+当前正式发布的安装包为 Windows x64。macOS universal（Intel 与 Apple Silicon）以及 Linux x64 / ARM64 的 AppImage、deb、tar.gz 打包流程已内置，并由 CI 在对应原生平台构建未签名产物。只有在 Release 资产中看到对应文件时才表示该平台已经发布；不要根据源码中存在跨平台兼容代码推断已经发布了对应安装包。
 
 ## 需要安装 Node.js、pnpm 或 DSH 吗？
 
@@ -42,7 +42,7 @@ Desktop Host、profile 和 DSH home 位于本机。是否向外部服务发送�
 
 ## 应用如何更新？
 
-发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可，升级不会静默进行。
+发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可，升级不会静默进行。Windows 与 macOS 提供应用内检查与下载安装包的入口；Linux 目前只支持手动下载新的 AppImage、deb 或 tar.gz 覆盖使用，应用不会在后台自动更新。
 
 ## 在哪里下载和报告问题？
 

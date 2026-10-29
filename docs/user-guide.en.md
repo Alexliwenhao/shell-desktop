@@ -2,7 +2,7 @@
 
 ## Installation and first launch
 
-Download the Windows x64 installer (`AI-Shell-Desktop-<version>-x64-Setup.exe`) or the portable archive (`AI-Shell-Desktop-<version>-x64-Portable.zip`) from [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest). AI Shell Desktop includes Electron, Node, and its pinned DSH dependencies, so normal users do not need to install Node.js or pnpm separately. Builds are currently unsigned, so Windows may warn about an unknown publisher on first run.
+Download the artifact for your platform from [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): the Windows x64 installer (`AI-Shell-Desktop-<version>-x64-Setup.exe`) or portable archive (`AI-Shell-Desktop-<version>-x64-Portable.zip`), the macOS universal DMG (`AI-Shell-Desktop-<version>-universal.dmg`), and Linux x64 / ARM64 AppImage, deb, and tar.gz artifacts. AI Shell Desktop includes Electron, Node, and its pinned DSH dependencies, so normal users do not need to install Node.js or pnpm separately. Builds are currently unsigned, so Windows may warn about an unknown publisher on first run and unsigned macOS artifacts need to be allowed in **Privacy & Security**. Linux AppImages require a system that can mount FUSE (`libfuse2`); the tar.gz archive runs `ai-shell-desktop` after extraction.
 
 On first launch, the application prepares the default profile and starts the DSH Host and the AI Shell interface locally. Closing the window normally hides it; use **Quit** from the tray when you want to stop the application and Host process.
 
@@ -49,7 +49,7 @@ An explicit `--profile <name>` always wins. Restart AI Shell Desktop after plugi
 
 ## Updates
 
-Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place.
+Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest): download the newer installer or portable archive and use it in place. Windows and macOS can check for updates and download an installer in the app; on Linux, download a new AppImage, deb, or tar.gz manually, because the app never updates itself.
 
 ## Troubleshooting
 

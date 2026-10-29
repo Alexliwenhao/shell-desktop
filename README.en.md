@@ -70,16 +70,23 @@ All 24 screenshots, per-shot narration, and a storyboard live in [`docs/screensh
 - **Plan mode**: type `/plan`; commands arrive as cards and run only when a human clicks
 - **Appearance**: light / dark / system, with a terminal that stays readable in dark mode
 - **Desktop surfaces**: system tray (open, quit) and startup recovery
-- **Packaging**: Windows NSIS installer and portable zip; the macOS packaging flow is included
+- **Packaging**: Windows NSIS installer and portable zip, macOS universal DMG, and Linux x64 / ARM64 AppImage, deb, and tar.gz artifacts
 
 ## Download
 
-Windows x64 builds are published on [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest):
+Releases are distributed through [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest). The table lists each platform's build artifacts; a platform is published only when the matching files appear in the release assets:
 
-| Artifact | Notes |
-| --- | --- |
-| `AI-Shell-Desktop-<version>-x64-Setup.exe` | NSIS installer; builds are currently unsigned, so Windows may warn about an unknown publisher on first run |
-| `AI-Shell-Desktop-<version>-x64-Portable.zip` | Portable archive; extract it and run `AI Shell Desktop.exe` inside |
+| Platform | Artifact | Notes |
+| --- | --- | --- |
+| Windows x64 | `AI-Shell-Desktop-<version>-x64-Setup.exe` | NSIS installer; builds are currently unsigned, so Windows may warn about an unknown publisher on first run |
+| Windows x64 | `AI-Shell-Desktop-<version>-x64-Portable.zip` | Portable archive; extract it and run `AI Shell Desktop.exe` inside |
+| macOS Universal · Apple Silicon / Intel | `AI-Shell-Desktop-<version>-universal.dmg` | Universal DMG; a public release requires signing and notarization |
+| Linux x64 | `AI-Shell-Desktop-<version>-x86_64.AppImage` | AppImage; the system must be able to mount FUSE (`libfuse2`) |
+| Linux x64 | `AI-Shell-Desktop-<version>-amd64.deb` | Debian / Ubuntu package |
+| Linux x64 | `AI-Shell-Desktop-<version>-linux-x64.tar.gz` | Portable archive; extract it and run `ai-shell-desktop` |
+| Linux ARM64 | `AI-Shell-Desktop-<version>-arm64.AppImage` | AppImage; the system must be able to mount FUSE (`libfuse2`) |
+| Linux ARM64 | `AI-Shell-Desktop-<version>-arm64.deb` | Debian / Ubuntu package |
+| Linux ARM64 | `AI-Shell-Desktop-<version>-linux-arm64.tar.gz` | Portable archive; extract it and run `ai-shell-desktop` |
 
 ## Build from source
 
@@ -88,9 +95,13 @@ Requires Node.js 22.19+ or 24+, with Yarn 4 through Corepack:
 ```sh
 git submodule update --init --recursive
 corepack yarn install --immutable
-corepack yarn dev            # develop
-corepack yarn check          # build, typecheck, tests
-corepack yarn dist:win       # Windows installer (run on Windows)
+corepack yarn dev              # develop
+corepack yarn check            # build, typecheck, tests
+corepack yarn dist:win         # Windows installer (run on Windows)
+corepack yarn dist:mac         # macOS universal DMG (requires signing and notarization credentials)
+corepack yarn dist:mac-smoke   # unsigned macOS DMG smoke (run on macOS)
+corepack yarn dist:linux       # Linux x64 AppImage / deb / tar.gz (run on Linux x64)
+corepack yarn dist:linux-arm64 # Linux ARM64 AppImage / deb / tar.gz (run on Linux ARM64)
 ```
 
 ## Documentation

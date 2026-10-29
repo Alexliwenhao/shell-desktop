@@ -70,16 +70,23 @@
 - **计划模式**：输入 `/plan` 进入，命令逐条以卡片提交、由人点击执行
 - **外观**：浅色 / 深色 / 跟随系统；深色下终端保持清晰可读
 - **桌面能力**：系统托盘（打开窗口 / 退出）、启动恢复
-- **打包**：Windows NSIS 安装包与免安装 zip；macOS 打包流程已内置
+- **打包**：Windows NSIS 安装包与免安装 zip、macOS universal DMG、Linux x64 / ARM64 的 AppImage、deb 与 tar.gz
 
 ## 下载
 
-Windows x64 构建发布在 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest)：
+发布版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发。下表列出各平台的构建产物；只有在 Release 资产中实际看到对应文件时，才表示该平台已经发布：
 
-| 产物 | 说明 |
-| --- | --- |
-| `AI-Shell-Desktop-<版本>-x64-Setup.exe` | NSIS 安装包；当前未签名，首次运行可能提示「未知发布者」 |
-| `AI-Shell-Desktop-<版本>-x64-Portable.zip` | 免安装包；解压后运行目录内的 `AI Shell Desktop.exe` |
+| 平台 | 产物 | 说明 |
+| --- | --- | --- |
+| Windows x64 | `AI-Shell-Desktop-<版本>-x64-Setup.exe` | NSIS 安装包；当前未签名，首次运行可能提示「未知发布者」 |
+| Windows x64 | `AI-Shell-Desktop-<版本>-x64-Portable.zip` | 免安装包；解压后运行目录内的 `AI Shell Desktop.exe` |
+| macOS Universal · Apple Silicon / Intel | `AI-Shell-Desktop-<版本>-universal.dmg` | universal DMG；正式发布需签名与公证 |
+| Linux x64 | `AI-Shell-Desktop-<版本>-x86_64.AppImage` | AppImage；运行前需保证系统可挂载 FUSE（`libfuse2`） |
+| Linux x64 | `AI-Shell-Desktop-<版本>-amd64.deb` | Debian / Ubuntu 安装包 |
+| Linux x64 | `AI-Shell-Desktop-<版本>-linux-x64.tar.gz` | 免安装压缩包；解压后运行 `ai-shell-desktop` |
+| Linux ARM64 | `AI-Shell-Desktop-<版本>-arm64.AppImage` | AppImage；运行前需保证系统可挂载 FUSE（`libfuse2`） |
+| Linux ARM64 | `AI-Shell-Desktop-<版本>-arm64.deb` | Debian / Ubuntu 安装包 |
+| Linux ARM64 | `AI-Shell-Desktop-<版本>-linux-arm64.tar.gz` | 免安装压缩包；解压后运行 `ai-shell-desktop` |
 
 ## 从源码构建
 
@@ -88,9 +95,13 @@ Windows x64 构建发布在 [GitHub Releases](https://github.com/Alexliwenhao/sh
 ```sh
 git submodule update --init --recursive
 corepack yarn install --immutable
-corepack yarn dev            # 开发启动
-corepack yarn check          # 构建 / 类型检查 / 测试
-corepack yarn dist:win       # Windows 安装包（需在 Windows 上执行）
+corepack yarn dev              # 开发启动
+corepack yarn check            # 构建 / 类型检查 / 测试
+corepack yarn dist:win         # Windows 安装包（需在 Windows 上执行）
+corepack yarn dist:mac         # macOS universal DMG（需签名与公证凭据）
+corepack yarn dist:mac-smoke   # 未签名 macOS DMG 冒烟（需在 macOS 上执行）
+corepack yarn dist:linux       # Linux x64 AppImage / deb / tar.gz（需在 Linux x64 上执行）
+corepack yarn dist:linux-arm64 # Linux ARM64 AppImage / deb / tar.gz（需在 Linux ARM64 上执行）
 ```
 
 ## 文档

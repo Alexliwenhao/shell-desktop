@@ -45,12 +45,22 @@ const manifest = JSON.parse(readFileSync(new URL('package.json', packageRoot), '
       notarize?: unknown
       signIgnore?: unknown
       target?: unknown
+      artifactName?: unknown
       x64ArchFiles?: unknown
     }
     win?: { asar?: unknown; compression?: unknown; icon?: unknown; asarUnpack?: unknown; target?: unknown; artifactName?: unknown }
     nsis?: Record<string, unknown>
     portable?: Record<string, unknown>
-    linux?: { icon?: unknown; asarUnpack?: unknown }
+    linux?: {
+      icon?: unknown
+      asar?: unknown
+      asarUnpack?: unknown
+      artifactName?: unknown
+      executableName?: unknown
+      category?: unknown
+      target?: unknown
+    }
+    deb?: { packageName?: unknown; packageCategory?: unknown; priority?: unknown }
   }
   dependencies?: Record<string, unknown>
   optionalDependencies?: Record<string, unknown>
@@ -795,7 +805,23 @@ describe('published package surface', () => {
       useZip: false,
       artifactName: 'AI-Shell-Desktop-${version}-${arch}-Setup.${ext}',
     })
-    expect(manifest.build?.linux?.icon).toBe('build/app-icon.png')
+    expect(manifest.build?.linux).toEqual(expect.objectContaining({
+      icon: 'build/app-icon.png',
+      asar: false,
+      artifactName: 'AI-Shell-Desktop-${version}-${arch}.${ext}',
+      executableName: 'ai-shell-desktop',
+      category: 'Development',
+      target: [
+        { target: 'AppImage', arch: ['x64', 'arm64'] },
+        { target: 'deb', arch: ['x64', 'arm64'] },
+        { target: 'tar.gz', arch: ['x64', 'arm64'] },
+      ],
+    }))
+    expect(manifest.build?.deb).toEqual(expect.objectContaining({
+      packageName: 'ai-shell-desktop',
+      packageCategory: 'devel',
+    }))
+    expect(manifest.build?.mac?.artifactName).toBe('AI-Shell-Desktop-${version}-${arch}.${ext}')
   })
 
   it('separates unsigned smoke packaging from the signed macOS release', () => {
@@ -813,6 +839,8 @@ describe('published package surface', () => {
     expect(manifest.scripts?.['dist:mac-smoke']).toBe('node scripts/package-mac.ts')
     expect(manifest.scripts?.['dist:win']).toBe('node scripts/package-win.ts')
     expect(manifest.scripts?.['dist:win-portable']).toBe('node scripts/package-win-portable.ts')
+    expect(manifest.scripts?.['dist:linux']).toBe('node scripts/package-linux.ts')
+    expect(manifest.scripts?.['dist:linux-arm64']).toBe('node scripts/package-linux.ts arm64')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn workspace dsh-community-market build')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run build')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run typecheck')
@@ -832,6 +860,12 @@ describe('published package surface', () => {
     expect(manifest.scripts?.['check:mac-package']).toContain('tests/verify-mac-smoke.spec.ts')
     expect(manifest.scripts?.['check:mac-package']).toContain('tests/mac-universal.spec.ts')
     expect(manifest.scripts?.['check:mac-package']).toContain('yarn run verify:closure')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn workspace dsh-community-market build')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn run build')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn run typecheck')
+    expect(manifest.scripts?.['check:linux-package']).toContain('tests/package-linux.spec.ts')
+    expect(manifest.scripts?.['check:linux-package']).toContain('tests/verify-linux-artifacts.spec.ts')
+    expect(manifest.scripts?.['check:linux-package']).toContain('yarn run verify:closure')
     expect(manifest.scripts?.['verify:cli']).toBe('node scripts/verify-cli-runtime.mjs')
     expect(manifest.scripts?.check).toContain('yarn run verify:cli')
     expect(workspaceManifest.scripts?.['dist:mac'])
@@ -842,6 +876,10 @@ describe('published package surface', () => {
       .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:win')
     expect(workspaceManifest.scripts?.['dist:win-portable'])
       .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:win-portable')
+    expect(workspaceManifest.scripts?.['dist:linux'])
+      .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:linux')
+    expect(workspaceManifest.scripts?.['dist:linux-arm64'])
+      .toBe('yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace shell-desktop dist:linux-arm64')
     expect(manifest.build?.afterPack).toBe('./scripts/verify-packaged-runtime.ts')
     expect(manifest.build?.afterAllArtifactBuild).toBe('./scripts/verify-electron-fuses.ts')
     expect(manifest.build?.mac).toEqual(expect.objectContaining({
@@ -869,6 +907,10 @@ describe('published package surface', () => {
     )
     const macosJob = ciWorkflow.slice(
       ciWorkflow.indexOf('  desktop-macos:'),
+      ciWorkflow.indexOf('  desktop-linux:'),
+    )
+    const linuxJob = ciWorkflow.slice(
+      ciWorkflow.indexOf('  desktop-linux:'),
       ciWorkflow.indexOf('  upstream-command-windows:'),
     )
 
@@ -878,12 +920,34 @@ describe('published package surface', () => {
     expect(windowsJob).toContain('run: yarn workspace ${{ matrix.workspace }} dist:win')
     expect(windowsJob).toContain('run: yarn workspace ${{ matrix.workspace }} dist:win-portable')
     expect(windowsJob).toContain('DSH_PACKAGE_CHECK_ALREADY_RAN: \'1\'')
+    expect(windowsJob).toContain('actions/upload-artifact@v4')
+    expect(windowsJob).toContain('name: ${{ matrix.workspace }}-windows-x64')
+    expect(windowsJob).toContain('${{ matrix.workspace }}/dist/AI-Shell-Desktop-*-x64-Setup.exe')
     expect(macosJob).not.toContain('- run: yarn check')
     expect(macosJob).toContain('workspace: [shell-desktop, shell-desktop-beta]')
     expect(macosJob).toContain('- run: yarn workspace ${{ matrix.workspace }} check:mac-package')
     expect(macosJob).toContain('run: yarn workspace ${{ matrix.workspace }} dist:mac-smoke')
     expect(macosJob).toContain('DSH_PACKAGE_CHECK_ALREADY_RAN: \'1\'')
+    expect(macosJob).toContain('actions/upload-artifact@v4')
+    expect(macosJob).toContain('name: ${{ matrix.workspace }}-macos-universal')
+    expect(macosJob).toContain('${{ matrix.workspace }}/dist/mac-smoke/*.dmg')
     expect(macosJob).not.toContain('- run: yarn dist:mac-smoke')
+    expect(linuxJob).not.toContain('- run: yarn check')
+    expect(linuxJob).toContain('workspace: shell-desktop')
+    expect(linuxJob).toContain('workspace: shell-desktop-beta')
+    expect(linuxJob).toContain('- run: yarn workspace ${{ matrix.workspace }} check:linux-package')
+    expect(linuxJob).toContain('run: yarn workspace ${{ matrix.workspace }} ${{ matrix.script }}')
+    expect(linuxJob).toContain('script: dist:linux')
+    expect(linuxJob).toContain('script: dist:linux-arm64')
+    expect(linuxJob).toContain('runner: ubuntu-latest')
+    expect(linuxJob).toContain('runner: ubuntu-24.04-arm')
+    expect(linuxJob).toContain('DSH_PACKAGE_CHECK_ALREADY_RAN: \'1\'')
+    expect(linuxJob).toContain('DSH_LINUX_PACKAGE_COMPRESSION: store')
+    expect(linuxJob).toContain('actions/upload-artifact@v4')
+    expect(linuxJob).toContain('name: ${{ matrix.workspace }}-linux-${{ matrix.arch }}')
+    expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.AppImage')
+    expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.deb')
+    expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.tar.gz')
   })
 
   it('skips product packaging only for documentation-only changes', () => {

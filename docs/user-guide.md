@@ -2,7 +2,7 @@
 
 ## 安装与首次启动
 
-从 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 下载 Windows x64 安装包（`AI-Shell-Desktop-<版本>-x64-Setup.exe`）或免安装包（`AI-Shell-Desktop-<版本>-x64-Portable.zip`）。安装包自带运行所需的 Electron、Node 与 DSH 依赖，普通用户不需要另行安装 Node.js 或 pnpm。当前构建未签名，Windows 首次运行可能提示「未知发布者」。
+从 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 下载对应平台的产物：Windows x64 安装包（`AI-Shell-Desktop-<版本>-x64-Setup.exe`）或免安装包（`AI-Shell-Desktop-<版本>-x64-Portable.zip`）、macOS universal DMG（`AI-Shell-Desktop-<版本>-universal.dmg`），以及 Linux x64 / ARM64 的 AppImage、deb 与 tar.gz。安装包自带运行所需的 Electron、Node 与 DSH 依赖，普通用户不需要另行安装 Node.js 或 pnpm。当前构建未签名，Windows 首次运行可能提示「未知发布者」；macOS 未签名产物需要在「隐私与安全性」中手动允许。Linux AppImage 需要系统能够挂载 FUSE（`libfuse2`），tar.gz 解压后运行 `ai-shell-desktop`。
 
 首次启动时，应用会准备默认 profile，并在本机启动 DSH Host 与 AI Shell 界面。关闭窗口通常只会隐藏窗口；可以从托盘重新打开，选择「退出」才会结束应用和 Host 进程。
 
@@ -49,7 +49,7 @@ dsh plugin --profile desktop update
 
 ## 更新
 
-发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可。
+发行版通过 [GitHub Releases](https://github.com/Alexliwenhao/shell-desktop/releases/latest) 分发：下载新版本的安装包或免安装包覆盖使用即可。Windows 与 macOS 可以在应用内检查更新并下载安装包；Linux 需手动下载新的 AppImage、deb 或 tar.gz 覆盖使用，应用不会自动更新。
 
 ## 排查
 

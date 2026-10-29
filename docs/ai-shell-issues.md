@@ -282,6 +282,16 @@
 - 文案：`desktop-settings-locales.ts` zh/en 新增 `aishellSessionDeleteTitle/Body`、`aishellSessionsBatch*`、`aishellSessionsDeleteSelected*`、`aishellDialogDelete/Cancel`。
 - 样式：`aishell-styles.ts` 新增 `.dshAishellDialogBackdrop`/`.dshAishellDialog*`、`.dshAishellDangerAction`、`.dshAishellSelectBox`。
 - 证据：新增 `tests/client-confirm-dialog.spec.ts`（静态 3 例）与 `tests/client-session-batch.spec.ts`（jsdom 4 例：批量选择→确认→回调、单条弹窗、取消保留选择、全选计数）；`client-host-panel.spec.ts` +3 例（打开弹窗 / 取消 / 确认）；`client-session-history.spec.ts` 适配 `onDeleteSessions`；两版 typecheck 0；4 个相关 spec 21 例 ×2 版通过；全量 stable 20 / beta 19 与改动前基线一致（均为平台基线失败，重跑后超时类噪音消失）；`check:desktop-variants` 201 对齐；README 与截图清单改为「弹窗确认」，`capture-feature-screenshots.cjs` 的 23/24 步骤改为弹窗流程并重拍。
+### 46 全平台打包补齐（macOS universal / Windows x64 / Linux x64+ARM64）
+- 目标（用户）：参考 `anywhere-labs/dsh-desktop`，补齐 macOS universal DMG、Windows x64 安装包，以及 Linux x64 / ARM64 的 AppImage、deb、tar.gz。
+- 配置：两版 `package.json` 的 `build.linux` 改为 AppImage / deb / tar.gz（x64 + arm64），补 `artifactName`、`executableName`、`category`、`synopsis`、`maintainer` 与 `build.deb`；stable 的 `build.mac.artifactName` 统一为 `AI-Shell-Desktop-${version}-${arch}.${ext}`（universal DMG 即 `-universal.dmg`）。
+- 脚本：新增 `scripts/linux-artifact-names.ts`（从 manifest 的 `productName` 推导前缀，保证配置与产物命名同源）、`scripts/package-linux.ts`（校验宿主/架构/Node、按目标架构编译 fs-ext、调用 electron-builder、把 tar.gz 重命名为 `-linux-<arch>.tar.gz`）、`scripts/verify-linux-artifacts.ts`（AppImage ELF+magic、deb ar+debian-binary、tar.gz gzip 头、unpacked ELF 与 `resources/app/package.json`）。新增 `dist:linux` / `dist:linux-arm64`（含根目录与 beta 转发脚本）与 `check:linux-package`。
+- CI：新增 `desktop-linux` 矩阵，x64 用 `ubuntu-latest`、arm64 用 `ubuntu-24.04-arm`（fs-ext 需按目标架构原生编译），两版各自构建未签名产物，`DSH_LINUX_PACKAGE_COMPRESSION=store`。
+- 文档：README 中英下载表补齐 9 类产物与构建命令；FAQ 平台说明、用户指南、架构/选型说明同步；`README.i18n.yaml` 哈希重算。
+- 证据：新增 `tests/package-linux.spec.ts`、`tests/verify-linux-artifacts.spec.ts`（两版）；`package.spec.ts` 增加 linux 配置、脚本与 CI 任务断言；两版 typecheck 0；相关 spec 全绿；`check:layout`（含双语、架构、vendored runtime、变体）通过。
+- AppImage 重启：新增 `desktopAppImagePath` / `desktopAppImageExtractingRuntimePid` / `desktopAppImageRelaunchEnvironment` / `relaunchDesktopApp`（`src/relaunch-arguments.ts`），`main.ts` 的正常重启与致命恢复重启都改走该入口：AppImage 内由脱离的 bash 等待旧进程（与 `--appimage-extract-and-run` 的 runtime）退出后 exec 外层 `.AppImage`，并清理本轮 mount 追加的搜索路径；非 AppImage 仍使用 Electron `app.relaunch()`。
+- 证据：新增 `tests/relaunch-arguments.spec.ts`（两版）：APPIMAGE 仅在 Linux 生效、非 AppImage 回退、detached 交接参数、提取式重启、runtime 父进程识别、搜索路径清理，以及 Linux 下真实 bash 脚本的「关闭继承 fd + 等待进程退出」用例；两版 typecheck 0；`check:desktop-variants` 201 对齐。
+- 待办：Linux 产物由 CI 构建，尚未随 Release 发布；发布前需在真实 Linux 桌面与 ARM64 机器上做一次安装/启动/重启验证。
 ## 已知未完成 / 待确认
 
 - #15 需要人工确认体验（点“新建会话”应出现空白新对话，且左栏仍归在该主机分组下）。
