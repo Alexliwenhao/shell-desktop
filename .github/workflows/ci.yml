@@ -5,6 +5,7 @@ on:
     branches: [master]
   push:
     branches: [master]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -273,6 +274,53 @@ jobs:
             ${{ matrix.workspace }}/dist/*.AppImage
             ${{ matrix.workspace }}/dist/*.deb
             ${{ matrix.workspace }}/dist/*.tar.gz
+
+  # Publish the stable artifacts to a GitHub Release when a version tag is
+  # pushed. The build jobs above stay unsigned; macOS signing and notarization
+  # remain a separate credentialed step, so the published DMG needs manual
+  # Gatekeeper approval.
+  publish:
+    needs: [desktop-windows, desktop-macos, desktop-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: shell-desktop-windows-x64
+          path: release/windows
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: shell-desktop-macos-universal
+          path: release/macos
+      - name: Download Linux x64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: shell-desktop-linux-x64
+          path: release/linux-x64
+      - name: Download Linux ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: shell-desktop-linux-arm64
+          path: release/linux-arm64
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: AI Shell Desktop ${{ github.ref_name }}
+          draft: false
+          fail_on_unmatched_files: true
+          body: |
+            AI Shell Desktop ${{ github.ref_name }}
+
+            Unsigned build artifacts for Windows x64, macOS universal, and
+            Linux x64 / ARM64. Windows may warn about an unknown publisher;
+            the macOS DMG requires manual approval in Privacy & Security;
+            Linux AppImages require FUSE (libfuse2).
+          files: release/**/*
 
   # Upstream toolchain smoke: the portable-shell scripts must resolve the
   # pinned submodule's own Yarn/pnpm release on Windows.

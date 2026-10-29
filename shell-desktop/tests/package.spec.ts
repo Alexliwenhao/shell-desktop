@@ -911,6 +911,10 @@ describe('published package surface', () => {
     )
     const linuxJob = ciWorkflow.slice(
       ciWorkflow.indexOf('  desktop-linux:'),
+      ciWorkflow.indexOf('  publish:'),
+    )
+    const publishJob = ciWorkflow.slice(
+      ciWorkflow.indexOf('  publish:'),
       ciWorkflow.indexOf('  upstream-command-windows:'),
     )
 
@@ -948,6 +952,17 @@ describe('published package surface', () => {
     expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.AppImage')
     expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.deb')
     expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.tar.gz')
+    expect(publishJob).toContain('startsWith(github.ref, \'refs/tags/v\')')
+    expect(publishJob).toContain('contents: write')
+    expect(publishJob).toContain('actions/download-artifact@v4')
+    expect(publishJob).toContain('name: shell-desktop-windows-x64')
+    expect(publishJob).toContain('name: shell-desktop-macos-universal')
+    expect(publishJob).toContain('name: shell-desktop-linux-x64')
+    expect(publishJob).toContain('name: shell-desktop-linux-arm64')
+    expect(publishJob).toContain('softprops/action-gh-release@v2')
+    expect(publishJob).toContain('tag_name: ${{ github.ref_name }}')
+    expect(publishJob).toContain('draft: false')
+    expect(ciWorkflow).toContain("tags: ['v*']")
   })
 
   it('skips product packaging only for documentation-only changes', () => {

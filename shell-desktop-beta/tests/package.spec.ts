@@ -992,6 +992,14 @@ describe('published package surface', () => {
     )
     const macosJob = ciWorkflow.slice(
       ciWorkflow.indexOf('  desktop-macos:'),
+      ciWorkflow.indexOf('  desktop-linux:'),
+    )
+    const linuxJob = ciWorkflow.slice(
+      ciWorkflow.indexOf('  desktop-linux:'),
+      ciWorkflow.indexOf('  publish:'),
+    )
+    const publishJob = ciWorkflow.slice(
+      ciWorkflow.indexOf('  publish:'),
       ciWorkflow.indexOf('  upstream-command-windows:'),
     )
 
@@ -1001,12 +1009,45 @@ describe('published package surface', () => {
     expect(windowsJob).toContain('run: yarn workspace ${{ matrix.workspace }} dist:win')
     expect(windowsJob).toContain('run: yarn workspace ${{ matrix.workspace }} dist:win-portable')
     expect(windowsJob).toContain('DSH_PACKAGE_CHECK_ALREADY_RAN: \'1\'')
+    expect(windowsJob).toContain('actions/upload-artifact@v4')
+    expect(windowsJob).toContain('name: ${{ matrix.workspace }}-windows-x64')
+    expect(windowsJob).toContain('${{ matrix.workspace }}/dist/AI-Shell-Desktop-*-x64-Setup.exe')
     expect(macosJob).not.toContain('- run: yarn check')
     expect(macosJob).toContain('workspace: [shell-desktop, shell-desktop-beta]')
     expect(macosJob).toContain('- run: yarn workspace ${{ matrix.workspace }} check:mac-package')
     expect(macosJob).toContain('run: yarn workspace ${{ matrix.workspace }} dist:mac-smoke')
     expect(macosJob).toContain('DSH_PACKAGE_CHECK_ALREADY_RAN: \'1\'')
     expect(macosJob).not.toContain('- run: yarn dist:mac-smoke')
+    expect(macosJob).toContain('actions/upload-artifact@v4')
+    expect(macosJob).toContain('name: ${{ matrix.workspace }}-macos-universal')
+    expect(macosJob).toContain('${{ matrix.workspace }}/dist/mac-smoke/*.dmg')
+    expect(linuxJob).not.toContain('- run: yarn check')
+    expect(linuxJob).toContain('workspace: shell-desktop')
+    expect(linuxJob).toContain('workspace: shell-desktop-beta')
+    expect(linuxJob).toContain('- run: yarn workspace ${{ matrix.workspace }} check:linux-package')
+    expect(linuxJob).toContain('run: yarn workspace ${{ matrix.workspace }} ${{ matrix.script }}')
+    expect(linuxJob).toContain('script: dist:linux')
+    expect(linuxJob).toContain('script: dist:linux-arm64')
+    expect(linuxJob).toContain('runner: ubuntu-latest')
+    expect(linuxJob).toContain('runner: ubuntu-24.04-arm')
+    expect(linuxJob).toContain('DSH_PACKAGE_CHECK_ALREADY_RAN: \'1\'')
+    expect(linuxJob).toContain('DSH_LINUX_PACKAGE_COMPRESSION: store')
+    expect(linuxJob).toContain('actions/upload-artifact@v4')
+    expect(linuxJob).toContain('name: ${{ matrix.workspace }}-linux-${{ matrix.arch }}')
+    expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.AppImage')
+    expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.deb')
+    expect(linuxJob).toContain('${{ matrix.workspace }}/dist/*.tar.gz')
+    expect(publishJob).toContain('startsWith(github.ref, \'refs/tags/v\')')
+    expect(publishJob).toContain('contents: write')
+    expect(publishJob).toContain('actions/download-artifact@v4')
+    expect(publishJob).toContain('name: shell-desktop-windows-x64')
+    expect(publishJob).toContain('name: shell-desktop-macos-universal')
+    expect(publishJob).toContain('name: shell-desktop-linux-x64')
+    expect(publishJob).toContain('name: shell-desktop-linux-arm64')
+    expect(publishJob).toContain('softprops/action-gh-release@v2')
+    expect(publishJob).toContain('tag_name: ${{ github.ref_name }}')
+    expect(publishJob).toContain('draft: false')
+    expect(ciWorkflow).toContain("tags: ['v*']")
   })
 
   it('skips product packaging only for documentation-only changes', () => {
